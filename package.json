@@ -29,7 +29,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/node": "^20",
-		"better-auth": "^1.4.18",
+		"better-auth": "1.3.4",
 		"drizzle-kit": "^0.31.8",
 		"drizzle-orm": "^0.45.1",
 		"eslint": "^9.39.2",
