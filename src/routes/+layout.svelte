@@ -35,7 +35,7 @@
 <div class="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
 	<header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-			<h1 class="text-2xl font-bold">Etoshokan</h1>
+			<h1 class="text-2xl font-bold">@e-toshokan</h1>
 			<div class="flex items-center gap-2">
 				<Button 
 					variant={theme === 'system' ? 'default' : 'outline'} 
