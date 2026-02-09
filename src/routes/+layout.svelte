@@ -65,15 +65,11 @@
 				<a
 					href="/"
 					class="relative px-4 py-3 text-sm font-medium transition-colors
-						{$page.url.pathname === '/'
-						? 'text-foreground'
-						: 'text-muted-foreground hover:text-foreground'}"
+						{$page.url.pathname === '/' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}"
 				>
 					Dictionary
 					{#if $page.url.pathname === '/'}
-						<div
-							class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-						></div>
+						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
 					{/if}
 				</a>
 				<a
@@ -85,16 +81,14 @@
 				>
 					Ebook Reader
 					{#if $page.url.pathname === '/ebook'}
-						<div
-							class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-						></div>
+						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
 					{/if}
 				</a>
 			</div>
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-6xl px-6 py-8 reading-mode-main">
+	<main class="reading-mode-main mx-auto max-w-6xl px-6 py-8">
 		{@render children()}
 	</main>
 </div>

@@ -2,12 +2,17 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
 		%sveltekit.head%
 		<script>
 			const THEME_KEY = 'etoshokan:theme';
 			const theme = localStorage.getItem(THEME_KEY) || 'system';
-			const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+			const isDark =
+				theme === 'dark' ||
+				(theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 			if (isDark) document.documentElement.classList.add('dark');
 		</script>
 	</head>

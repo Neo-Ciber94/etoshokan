@@ -4,10 +4,12 @@
 	import { goto } from '$app/navigation';
 	import ePub, { type Book, type Rendition } from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
-	import { getBook, getBooksMetadata, updateBookProgress } from '$lib/ebook/storage';
+	import { getBook, getBooksMetadata, updateBookProgress, updateBookZoom } from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import { usePointer } from '$lib/runes/pointer.svelte';
+	import LanguagesIcon from '@lucide/svelte/icons/languages';
+	import SearchIcon from '@lucide/svelte/icons/search';
 
 	const pointer = usePointer();
 
@@ -22,6 +24,11 @@
 	// Context menu state
 	let contextMenuText = $state('');
 	let contextMenuOpen = $state(false);
+
+	// Zoom state
+	let zoom = $state(100);
+	let initialPinchDistance = 0;
+	let initialPinchZoom = 0;
 
 	// Swipe detection
 	let touchStartX = 0;
@@ -124,6 +131,36 @@
 						(iframeRect?.top || 0) + e.clientY
 					);
 				});
+
+				// Pinch zoom detection
+				contents.document.documentElement.style.touchAction = 'pan-y';
+
+				contents.document.addEventListener('touchstart', (e: TouchEvent) => {
+					if (e.touches.length === 2) {
+						const dx = e.touches[0].clientX - e.touches[1].clientX;
+						const dy = e.touches[0].clientY - e.touches[1].clientY;
+						initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+						initialPinchZoom = zoom;
+					}
+				}, { passive: true });
+
+				contents.document.addEventListener('touchmove', (e: TouchEvent) => {
+					if (e.touches.length === 2 && initialPinchDistance > 0) {
+						e.preventDefault();
+						const dx = e.touches[0].clientX - e.touches[1].clientX;
+						const dy = e.touches[0].clientY - e.touches[1].clientY;
+						const distance = Math.sqrt(dx * dx + dy * dy);
+						const scale = distance / initialPinchDistance;
+						zoom = Math.min(200, Math.max(100, Math.round(initialPinchZoom * scale)));
+					}
+				}, { passive: false });
+
+				contents.document.addEventListener('touchend', (e: TouchEvent) => {
+					if (initialPinchDistance > 0 && e.touches.length < 2) {
+						applyZoom(zoom);
+						initialPinchDistance = 0;
+					}
+				}, { passive: true });
 			});
 
 			// Restore reading position
@@ -131,6 +168,12 @@
 				await rendition.display(bookMetadata.currentCfi);
 			} else {
 				await rendition.display();
+			}
+
+			// Restore zoom level
+			if (bookMetadata.zoom && bookMetadata.zoom > 100) {
+				zoom = bookMetadata.zoom;
+				rendition.themes.fontSize(`${zoom}%`);
 			}
 
 			// Track reading progress
@@ -199,6 +242,23 @@
 
 	function prevPage() {
 		rendition?.prev();
+	}
+
+	// Zoom functions
+	function applyZoom(newZoom: number) {
+		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
+		if (rendition) {
+			rendition.themes.fontSize(`${zoom}%`);
+		}
+		updateBookZoom(bookId, zoom);
+	}
+
+	function handleZoomIn() {
+		applyZoom(zoom + 10);
+	}
+
+	function handleZoomOut() {
+		applyZoom(zoom - 10);
 	}
 
 	// Swipe gesture handlers
@@ -289,11 +349,25 @@
 			<ContextMenu.Trigger class="reader-content">
 				<div bind:this={readerContainer} class="h-full w-full"></div>
 			</ContextMenu.Trigger>
-			<ContextMenu.Content>
-				<ContextMenu.Item onclick={handleTranslate}>Translate</ContextMenu.Item>
-				<ContextMenu.Item onclick={handleSearch}>Search</ContextMenu.Item>
+			<ContextMenu.Content class="min-w-40">
+				<ContextMenu.Item onclick={handleTranslate} class="text-base gap-3 px-3 py-2.5 md:text-sm md:gap-2 md:px-2 md:py-1.5">
+					<LanguagesIcon class="size-5 md:size-4" />
+					Translate
+				</ContextMenu.Item>
+				<ContextMenu.Item onclick={handleSearch} class="text-base gap-3 px-3 py-2.5 md:text-sm md:gap-2 md:px-2 md:py-1.5">
+					<SearchIcon class="size-5 md:size-4" />
+					Search
+				</ContextMenu.Item>
 			</ContextMenu.Content>
 		</ContextMenu.Root>
+
+		{#if zoom > 100}
+			<div class="zoom-controls">
+				<button onclick={handleZoomIn} class="zoom-btn" disabled={zoom >= 200}>+</button>
+				<span class="zoom-level">{zoom}%</span>
+				<button onclick={handleZoomOut} class="zoom-btn">&minus;</button>
+			</div>
+		{/if}
 	{/if}
 </section>
 
@@ -323,11 +397,59 @@
 		flex: 1;
 		overflow: auto;
 		position: relative;
-		touch-action: pan-y pinch-zoom;
+		touch-action: pan-y;
 		-webkit-overflow-scrolling: touch;
 	}
 
 	:global(.reader-content iframe) {
-		touch-action: pan-y pinch-zoom;
+		touch-action: pan-y;
+	}
+
+	.zoom-controls {
+		position: fixed;
+		right: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		background: hsl(var(--card) / 0.9);
+		border: 1px solid hsl(var(--border));
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		z-index: 50;
+		backdrop-filter: blur(4px);
+	}
+
+	.zoom-btn {
+		width: 2rem;
+		height: 2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.25rem;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: hsl(var(--foreground));
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		transition: background 150ms;
+	}
+
+	.zoom-btn:hover {
+		background: hsl(var(--accent));
+	}
+
+	.zoom-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	.zoom-level {
+		font-size: 0.75rem;
+		color: hsl(var(--muted-foreground));
+		font-variant-numeric: tabular-nums;
 	}
 </style>

@@ -41,6 +41,16 @@ export async function getBooksMetadata(): Promise<BookMetadata[]> {
 	return metadata || [];
 }
 
+export async function updateBookZoom(id: string, zoom: number): Promise<void> {
+	const metadata = await getBooksMetadata();
+	const book = metadata.find((m) => m.id === id);
+
+	if (book) {
+		book.zoom = zoom;
+		await set(METADATA_KEY, metadata);
+	}
+}
+
 export async function updateBookProgress(
 	id: string,
 	cfi: string,
