@@ -6,9 +6,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { getBook, getBooksMetadata, updateBookProgress } from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
-	import { dictionary } from '$lib/dictionary';
-	import type { WordEntry } from '$lib/dictionary/core/dictionary';
-	import DictionaryPopup from '$lib/components/DictionaryPopup.svelte';
+	import * as ContextMenu from '$lib/components/ui/context-menu';
+	import { usePointer } from '$lib/runes/pointer.svelte';
+
+	const pointer = usePointer();
 
 	let bookId = $derived($page.params.id || "");
 	let currentBook = $state<Book | null>(null);
@@ -18,11 +19,9 @@
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
-	// Dictionary popup state
-	let dictionaryEntries = $state<WordEntry[]>([]);
-	let selectedWord = $state<string>('');
-	let popupPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 });
-	let showDictionary = $state(false);
+	// Context menu state
+	let contextMenuText = $state('');
+	let contextMenuOpen = $state(false);
 
 	// Swipe detection
 	let touchStartX = 0;
@@ -30,12 +29,7 @@
 	let touchEndX = 0;
 	let touchEndY = 0;
 
-	// Initialize dictionary on mount
 	onMount(async () => {
-		dictionary.initialize().catch((err) => {
-			console.error('Failed to initialize dictionary:', err);
-		});
-
 		await loadBook();
 	});
 
@@ -117,6 +111,21 @@
 				}
 			});
 
+			// Register content hooks before display so they fire for the initial page
+			rendition.hooks.content.register((contents: any) => {
+				contents.document.addEventListener('contextmenu', (e: Event) => {
+					e.preventDefault();
+				});
+				contents.document.addEventListener('pointermove', (e: PointerEvent) => {
+					const iframe = readerContainer.querySelector('iframe');
+					const iframeRect = iframe?.getBoundingClientRect();
+					pointer.update(
+						(iframeRect?.left || 0) + e.clientX,
+						(iframeRect?.top || 0) + e.clientY
+					);
+				});
+			});
+
 			// Restore reading position
 			if (bookMetadata.currentCfi) {
 				await rendition.display(bookMetadata.currentCfi);
@@ -137,38 +146,28 @@
 				}
 			});
 
-			// Track text selection and lookup in dictionary
+			// Track text selection and show context menu
 			rendition.on('selected', async (cfiRange: string, contents: any) => {
 				const selection = contents.window.getSelection();
 				if (selection && selection.toString()) {
 					const selectedText = selection.toString().trim();
-					console.log('Selected text:', selectedText);
+					if (!selectedText) return;
 
-					// Look up word in dictionary
-					try {
-						const entries = await dictionary.lookup(selectedText);
-						console.log(entries);
+					contextMenuText = selectedText;
 
-						if (entries.length > 0) {
-							selectedWord = selectedText;
-							dictionaryEntries = entries;
-
-							// Get selection position
-							const range = selection.getRangeAt(0);
-							const rect = range.getBoundingClientRect();
-
-							// Position popup below the selection
-							popupPosition = {
-								x: Math.min(rect.left, window.innerWidth - 400),
-								y: rect.bottom + 8
-							};
-
-							showDictionary = true;
-						}
-					} catch (error) {
-						console.error('Dictionary lookup error:', error);
-					}
+					readerContainer.dispatchEvent(
+						new PointerEvent('contextmenu', {
+							bubbles: true,
+							clientX: pointer.x,
+							clientY: pointer.y
+						})
+					);
 				}
+			});
+
+			// Close context menu when clicking inside iframe
+			rendition.on('click', () => {
+				contextMenuOpen = false;
 			});
 
 			// Add swipe gesture support
@@ -186,10 +185,12 @@
 		goto('/ebook');
 	}
 
-	function closeDictionary() {
-		showDictionary = false;
-		dictionaryEntries = [];
-		selectedWord = '';
+	function handleTranslate() {
+		console.log(contextMenuText);
+	}
+
+	function handleSearch() {
+		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenuText)}`, '_blank');
 	}
 
 	function nextPage() {
@@ -243,7 +244,7 @@
 </script>
 
 <!-- Book Reader -->
-<section class="reader-container">
+<section class="reader-container" oncontextmenu={(e) => e.preventDefault()} onpointerdown={() => { contextMenuOpen = false; }} role="application">
 	<div class="reader-controls">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
@@ -280,19 +281,17 @@
 			</div>
 		</div>
 	{:else}
-		<div bind:this={readerContainer} class="reader-content"></div>
+		<ContextMenu.Root bind:open={contextMenuOpen}>
+			<ContextMenu.Trigger class="reader-content">
+				<div bind:this={readerContainer} class="h-full w-full"></div>
+			</ContextMenu.Trigger>
+			<ContextMenu.Content>
+				<ContextMenu.Item onclick={handleTranslate}>Translate</ContextMenu.Item>
+				<ContextMenu.Item onclick={handleSearch}>Search</ContextMenu.Item>
+			</ContextMenu.Content>
+		</ContextMenu.Root>
 	{/if}
 </section>
-
-<!-- Dictionary Popup -->
-{#if showDictionary}
-	<DictionaryPopup
-		word={selectedWord}
-		entries={dictionaryEntries}
-		position={popupPosition}
-		onClose={closeDictionary}
-	/>
-{/if}
 
 <style>
 	.reader-container {
@@ -316,7 +315,7 @@
 		background: hsl(var(--card));
 	}
 
-	.reader-content {
+	:global(.reader-content) {
 		flex: 1;
 		overflow: auto;
 		position: relative;
@@ -324,8 +323,7 @@
 		-webkit-overflow-scrolling: touch;
 	}
 
-	/* Improve touch experience */
-	.reader-content :global(iframe) {
+	:global(.reader-content iframe) {
 		touch-action: pan-y pinch-zoom;
 	}
 </style>
