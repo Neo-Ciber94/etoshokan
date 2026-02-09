@@ -7,6 +7,7 @@ import {
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
+import wanakana from 'wanakana';
 
 interface JMDict_Root {
 	version: string;
@@ -174,7 +175,13 @@ export class JMDict_Dictionary extends Dictionary {
 			);
 		}
 
-		if (!this.loaded) await this.initialize();
+		if (!this.loaded) {
+			await this.initialize();
+		}
+
+		if (wanakana.isRomaji(term)) {
+			term = wanakana.toHiragana(term);
+		}
 
 		const normalize = (s: string) => s.trim().normalize('NFC');
 		const key = normalize(term);
