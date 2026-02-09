@@ -4,16 +4,22 @@
 	import { goto } from '$app/navigation';
 	import ePub, { type Book, type Rendition } from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
-	import { getBook, getBooksMetadata, updateBookProgress, updateBookZoom } from '$lib/ebook/storage';
+	import {
+		getBook,
+		getBooksMetadata,
+		updateBookProgress,
+		updateBookZoom
+	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import LanguagesIcon from '@lucide/svelte/icons/languages';
 	import SearchIcon from '@lucide/svelte/icons/search';
+	import { debounce } from '$lib/runes/debounce.svelte';
 
 	const pointer = usePointer();
 
-	let bookId = $derived($page.params.id || "");
+	let bookId = $derived($page.params.id || '');
 	let currentBook = $state<Book | null>(null);
 	let rendition = $state<Rendition | null>(null);
 	let loading = $state(false);
@@ -27,8 +33,18 @@
 
 	// Zoom state
 	let zoom = $state(100);
+	let zoomControlsVisible = $state(false);
 	let initialPinchDistance = 0;
 	let initialPinchZoom = 0;
+	const closeZoomControls = debounce(1000, () => {
+		zoomControlsVisible = false;
+	});
+
+	$effect(() => {
+		if (zoom > 0) {
+			closeZoomControls();
+		}
+	});
 
 	onMount(async () => {
 		await loadBook();
@@ -115,41 +131,50 @@
 				contents.document.addEventListener('pointermove', (e: PointerEvent) => {
 					const iframe = readerContainer.querySelector('iframe');
 					const iframeRect = iframe?.getBoundingClientRect();
-					pointer.update(
-						(iframeRect?.left || 0) + e.clientX,
-						(iframeRect?.top || 0) + e.clientY
-					);
+					pointer.update((iframeRect?.left || 0) + e.clientX, (iframeRect?.top || 0) + e.clientY);
 				});
 
 				// Pinch zoom detection
 				contents.document.documentElement.style.touchAction = 'pan-y';
 
-				contents.document.addEventListener('touchstart', (e: TouchEvent) => {
-					if (e.touches.length === 2) {
-						const dx = e.touches[0].clientX - e.touches[1].clientX;
-						const dy = e.touches[0].clientY - e.touches[1].clientY;
-						initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
-						initialPinchZoom = zoom;
-					}
-				}, { passive: true });
+				contents.document.addEventListener(
+					'touchstart',
+					(e: TouchEvent) => {
+						if (e.touches.length === 2) {
+							const dx = e.touches[0].clientX - e.touches[1].clientX;
+							const dy = e.touches[0].clientY - e.touches[1].clientY;
+							initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+							initialPinchZoom = zoom;
+						}
+					},
+					{ passive: true }
+				);
 
-				contents.document.addEventListener('touchmove', (e: TouchEvent) => {
-					if (e.touches.length === 2 && initialPinchDistance > 0) {
-						e.preventDefault();
-						const dx = e.touches[0].clientX - e.touches[1].clientX;
-						const dy = e.touches[0].clientY - e.touches[1].clientY;
-						const distance = Math.sqrt(dx * dx + dy * dy);
-						const scale = distance / initialPinchDistance;
-						zoom = Math.min(200, Math.max(100, Math.round(initialPinchZoom * scale)));
-					}
-				}, { passive: false });
+				contents.document.addEventListener(
+					'touchmove',
+					(e: TouchEvent) => {
+						if (e.touches.length === 2 && initialPinchDistance > 0) {
+							e.preventDefault();
+							const dx = e.touches[0].clientX - e.touches[1].clientX;
+							const dy = e.touches[0].clientY - e.touches[1].clientY;
+							const distance = Math.sqrt(dx * dx + dy * dy);
+							const scale = distance / initialPinchDistance;
+							zoom = Math.min(200, Math.max(100, Math.round(initialPinchZoom * scale)));
+						}
+					},
+					{ passive: false }
+				);
 
-				contents.document.addEventListener('touchend', (e: TouchEvent) => {
-					if (initialPinchDistance > 0 && e.touches.length < 2) {
-						applyZoom(zoom);
-						initialPinchDistance = 0;
-					}
-				}, { passive: true });
+				contents.document.addEventListener(
+					'touchend',
+					(e: TouchEvent) => {
+						if (initialPinchDistance > 0 && e.touches.length < 2) {
+							applyZoom(zoom);
+							initialPinchDistance = 0;
+						}
+					},
+					{ passive: true }
+				);
 			});
 
 			// Restore reading position
@@ -251,7 +276,14 @@
 </svelte:head>
 
 <!-- Book Reader -->
-<section class="reader-container" oncontextmenu={(e) => e.preventDefault()} onpointerdown={() => { contextMenuOpen = false; }} role="application">
+<section
+	class="reader-container"
+	oncontextmenu={(e) => e.preventDefault()}
+	onpointerdown={() => {
+		contextMenuOpen = false;
+	}}
+	role="application"
+>
 	<div class="reader-controls">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
@@ -270,17 +302,17 @@
 	{#if loading}
 		<div class="flex h-full items-center justify-center">
 			<div class="text-center">
-				<div class="text-6xl animate-pulse mb-4">📖</div>
+				<div class="mb-4 animate-pulse text-6xl">📖</div>
 				<p class="text-sm text-muted-foreground">Loading book...</p>
 			</div>
 		</div>
 	{:else if notFound}
 		<div class="flex h-full items-center justify-center">
-			<div class="text-center space-y-4">
-				<div class="text-6xl mb-4">❌</div>
+			<div class="space-y-4 text-center">
+				<div class="mb-4 text-6xl">❌</div>
 				<div class="space-y-2">
 					<h3 class="text-lg font-semibold">Book Not Found</h3>
-					<p class="text-sm text-muted-foreground max-w-md">
+					<p class="max-w-md text-sm text-muted-foreground">
 						The book you're looking for doesn't exist or may have been deleted.
 					</p>
 				</div>
@@ -293,18 +325,24 @@
 				<div bind:this={readerContainer} class="h-full w-full"></div>
 			</ContextMenu.Trigger>
 			<ContextMenu.Content class="min-w-40">
-				<ContextMenu.Item onclick={handleTranslate} class="text-base gap-3 px-3 py-2.5 md:text-sm md:gap-2 md:px-2 md:py-1.5">
+				<ContextMenu.Item
+					onclick={handleTranslate}
+					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+				>
 					<LanguagesIcon class="size-5 md:size-4" />
 					Translate
 				</ContextMenu.Item>
-				<ContextMenu.Item onclick={handleSearch} class="text-base gap-3 px-3 py-2.5 md:text-sm md:gap-2 md:px-2 md:py-1.5">
+				<ContextMenu.Item
+					onclick={handleSearch}
+					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+				>
 					<SearchIcon class="size-5 md:size-4" />
 					Search
 				</ContextMenu.Item>
 			</ContextMenu.Content>
 		</ContextMenu.Root>
 
-		{#if zoom > 100}
+		{#if zoomControlsVisible}
 			<div class="zoom-controls">
 				<button onclick={handleZoomIn} class="zoom-btn" disabled={zoom >= 200}>+</button>
 				<span class="zoom-level">{zoom}%</span>
