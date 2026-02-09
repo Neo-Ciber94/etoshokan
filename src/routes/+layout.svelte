@@ -43,7 +43,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-	<header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+	<header class="reading-mode-hide border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 			<h1 class="text-2xl font-bold">@e-toshokan</h1>
 			<select
@@ -58,7 +58,7 @@
 		</div>
 	</header>
 
-	<nav class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+	<nav class="reading-mode-hide border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
 		<div class="mx-auto max-w-6xl px-6">
 			<div class="flex space-x-1">
 				<a
@@ -93,7 +93,7 @@
 		</div>
 	</nav>
 
-	<main class="mx-auto max-w-6xl px-6 py-8">
+	<main class="mx-auto max-w-6xl px-6 py-8 reading-mode-main">
 		{@render children()}
 	</main>
 </div>
@@ -103,5 +103,15 @@
 		transition:
 			color 0.15s ease,
 			background-color 0.15s ease;
+	}
+
+	:global(body.reading-mode .reading-mode-hide) {
+		display: none;
+	}
+
+	:global(body.reading-mode .reading-mode-main) {
+		max-width: 100%;
+		padding: 0;
+		margin: 0;
 	}
 </style>
