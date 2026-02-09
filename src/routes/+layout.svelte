@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import { page } from '$app/stores';
 
 	type Theme = 'system' | 'light' | 'dark';
 
@@ -56,6 +57,41 @@
 			</select>
 		</div>
 	</header>
+
+	<nav class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+		<div class="mx-auto max-w-6xl px-6">
+			<div class="flex space-x-1">
+				<a
+					href="/"
+					class="relative px-4 py-3 text-sm font-medium transition-colors
+						{$page.url.pathname === '/'
+						? 'text-slate-900 dark:text-slate-50'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50'}"
+				>
+					Dictionary
+					{#if $page.url.pathname === '/'}
+						<div
+							class="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 dark:bg-slate-50"
+						></div>
+					{/if}
+				</a>
+				<a
+					href="/ebook"
+					class="relative px-4 py-3 text-sm font-medium transition-colors
+						{$page.url.pathname === '/ebook'
+						? 'text-slate-900 dark:text-slate-50'
+						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50'}"
+				>
+					Ebook Reader
+					{#if $page.url.pathname === '/ebook'}
+						<div
+							class="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 dark:bg-slate-50"
+						></div>
+					{/if}
+				</a>
+			</div>
+		</div>
+	</nav>
 
 	<main class="mx-auto max-w-6xl px-6 py-8">
 		{@render children()}
