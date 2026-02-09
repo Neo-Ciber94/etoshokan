@@ -14,6 +14,7 @@
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
+	import LanguageIcon from '@lucide/svelte/icons/languages';
 	import { debounce } from '$lib/runes/debounce.svelte';
 
 	const pointer = usePointer();
@@ -256,7 +257,6 @@
 	function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
 		zoomControlsVisible = true;
-		
 		if (rendition) {
 			rendition.themes.fontSize(`${zoom}%`);
 		}
@@ -330,7 +330,7 @@
 					onclick={handleTranslate}
 					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 				>
-					<LanguagesIcon class="size-5 md:size-4" />
+					<LanguageIcon class="size-5 md:size-4" />
 					Translate
 				</ContextMenu.Item>
 				<ContextMenu.Item
