@@ -53,6 +53,7 @@
 	},
 	"dependencies": {
 		"@zip.js/zip.js": "^2.8.17",
+		"epubjs": "^0.3.93",
 		"idb-keyval": "^6.2.2",
 		"wanakana": "^5.3.1"
 	}

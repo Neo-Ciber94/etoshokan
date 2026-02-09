@@ -136,7 +136,7 @@ export class JMDict_Dictionary extends Dictionary {
 		let data = (await ibkv.get(JM_DICT_KEY)) as JMDict_Root | undefined;
 
 		if (!data) {
-			console.log("fetch JSON")
+			console.log('fetch JSON');
 			data = await downloadJMDictJSON();
 			try {
 				await ibkv.set(JM_DICT_KEY, data);
@@ -145,7 +145,7 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
-		console.log("Generating map")
+		console.log('Generating map');
 		for (const w of data.words) {
 			const senses = this.makeSenses(w.sense);
 			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
