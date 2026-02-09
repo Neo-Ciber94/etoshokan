@@ -1,4 +1,4 @@
-import { get, set, del, keys } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 import type { BookMetadata, StoredBook } from './types';
 
 const BOOK_PREFIX = 'book:';
