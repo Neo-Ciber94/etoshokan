@@ -13,7 +13,6 @@
 	import type { BookMetadata } from '$lib/ebook/types';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import { usePointer } from '$lib/runes/pointer.svelte';
-	import LanguagesIcon from '@lucide/svelte/icons/languages';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import { debounce } from '$lib/runes/debounce.svelte';
 
@@ -256,6 +255,8 @@
 	// Zoom functions
 	function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
+		zoomControlsVisible = true;
+		
 		if (rendition) {
 			rendition.themes.fontSize(`${zoom}%`);
 		}
@@ -263,11 +264,11 @@
 	}
 
 	function handleZoomIn() {
-		applyZoom(zoom + 10);
+		applyZoom(zoom + 1);
 	}
 
 	function handleZoomOut() {
-		applyZoom(zoom - 10);
+		applyZoom(zoom - 1);
 	}
 </script>
 
