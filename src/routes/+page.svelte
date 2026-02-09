@@ -28,7 +28,7 @@
 			}
 		}
 
-        run();
+		run();
 	});
 
 	// Debounced search effect
@@ -111,9 +111,7 @@
 					class="flex-1"
 				/>
 				{#if loading}
-					<div
-						class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-					>
+					<div class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
 						<svg
 							class="h-4 w-4 animate-spin"
 							xmlns="http://www.w3.org/2000/svg"
@@ -208,14 +206,16 @@
 
 											<!-- Notes -->
 											{#if sense.notes && sense.notes.length > 0}
-												<div class="text-sm italic text-slate-600 dark:text-slate-400">
+												<div class="text-sm text-slate-600 italic dark:text-slate-400">
 													{sense.notes.join('; ')}
 												</div>
 											{/if}
 
 											<!-- Examples -->
 											{#if sense.examples && sense.examples.length > 0}
-												<div class="mt-2 space-y-1 border-l-2 border-slate-300 pl-3 dark:border-slate-600">
+												<div
+													class="mt-2 space-y-1 border-l-2 border-slate-300 pl-3 dark:border-slate-600"
+												>
 													{#each sense.examples as ex}
 														<div class="text-sm">
 															<div class="text-slate-700 dark:text-slate-300">
@@ -237,9 +237,9 @@
 									{#if entry.senses.some((s) => s.meta)}
 										<details class="group mt-4">
 											<summary
-												class="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+												class="cursor-pointer text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
 											>
-												<span class="select-none">⋯</span>
+												<span class="select-none">metadata</span>
 											</summary>
 											<div class="mt-2 space-y-2">
 												{#each entry.senses as sense, senseIdx}
@@ -249,8 +249,11 @@
 																Sense {senseIdx + 1} metadata:
 															</div>
 															<pre
-																class="mt-1 overflow-auto rounded bg-slate-100 p-2 text-xs dark:bg-slate-800"
-															>{JSON.stringify(sense.meta, null, 2)}</pre>
+																class="mt-1 overflow-auto rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">{JSON.stringify(
+																	sense.meta,
+																	null,
+																	2
+																)}</pre>
 														</div>
 													{/if}
 												{/each}
