@@ -106,11 +106,11 @@
 			const isDark = document.documentElement.classList.contains('dark');
 			rendition.themes.default({
 				body: {
-					color: isDark ? '#f1f5f9 !important' : '#0f172a !important',
-					background: isDark ? '#0f172a !important' : '#ffffff !important'
+					color: isDark ? '#f1f5f9 !important' : 'var(--background) !important',
+					background: isDark ? 'var(--background) !important' : '#ffffff !important'
 				},
 				'p, div, span, h1, h2, h3, h4, h5, h6': {
-					color: isDark ? '#f1f5f9 !important' : '#0f172a !important'
+					color: isDark ? '#f1f5f9 !important' : 'var(--background) !important'
 				},
 				a: {
 					color: isDark ? '#60a5fa !important' : '#3b82f6 !important'
