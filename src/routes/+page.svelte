@@ -1,2 +1,32 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+	import { dictionary } from '$lib/dictionary';
+
+	const dict = dictionary;
+	let loading = $state(false);
+
+	$effect(() => {
+		async function run() {
+			try {
+				loading = true;
+				console.log('Loading dictionary');
+				await dict.initialize();
+				console.log('Dictionary finished loader');
+				loading = false;
+			} catch (err) {
+				if (err instanceof Error) {
+					console.error(err.message);
+				} else {
+					console.error(err);
+				}
+			}
+		}
+
+		run();
+	});
+</script>
+
+{#if loading}
+	<h1>Loading dictionary...</h1>
+{:else}
+	<h1>Dictionary loaded</h1>
+{/if}
