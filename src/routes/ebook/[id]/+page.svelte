@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import ePub, { type Book, type Rendition } from 'epubjs';
@@ -80,7 +80,22 @@
 				return;
 			}
 
+			// Load the book but don't render yet
 			currentBook = ePub(bookData);
+
+			// Stop loading to render the container
+			loading = false;
+
+			// Wait for next tick to ensure container is in DOM
+			await tick();
+
+			// Check if container exists before rendering
+			if (!readerContainer) {
+				console.error('Reader container not found');
+				notFound = true;
+				return;
+			}
+
 			rendition = currentBook.renderTo(readerContainer, {
 				width: '100%',
 				height: '100%',
@@ -163,7 +178,6 @@
 		} catch (error) {
 			console.error('Error loading book:', error);
 			notFound = true;
-		} finally {
 			loading = false;
 		}
 	}
