@@ -8,7 +8,7 @@
 	import type { BookMetadata } from '$lib/ebook/types';
 
 	let books = $state<BookMetadata[]>([]);
-	let loading = $state(false);
+	let loading = $state(true);
 	let uploadingBook = $state(false);
 
 	onMount(async () => {
