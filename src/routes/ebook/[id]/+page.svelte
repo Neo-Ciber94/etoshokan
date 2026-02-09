@@ -30,6 +30,7 @@
 	let notFound = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
+	let isOnTextSelection = $state(false);
 
 	// Context menu state
 	let contextMenuText = $state('');
@@ -58,6 +59,7 @@
 		const selection = contents.window.getSelection();
 		if (selection && selection.toString().trim()) {
 			contextMenuText = selection.toString().trim();
+			isOnTextSelection = true;
 			readerContainer.dispatchEvent(
 				new PointerEvent('contextmenu', {
 					bubbles: true,
@@ -174,10 +176,10 @@
 					const selection = contents.window.getSelection();
 					const hasSelection = selection && selection.toString().trim().length > 0;
 
-					if (distance <= 10 && duration <= 500 && !hasSelection) {
+					if (distance <= 10 && duration <= 500 && !hasSelection && !isOnTextSelection) {
 						contextMenuOpen = false;
 						showPageIndicator = !showPageIndicator;
-						console.log("Show page indicator: " + showPageIndicator)
+						console.log('Show page indicator: ' + showPageIndicator);
 					}
 				});
 
@@ -230,8 +232,10 @@
 			});
 
 			// Toggle page indicator on click inside iframe
-			rendition.on('click', () => {
+			rendition.on('click', async () => {
 				contextMenuOpen = false;
+				await tick();
+				isOnTextSelection = false;
 			});
 		} catch (error) {
 			console.error('Error loading book:', error);
