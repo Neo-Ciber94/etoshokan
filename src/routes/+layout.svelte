@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.ico';
 	import { page } from '$app/stores';
+	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 
 	type Theme = 'system' | 'light' | 'dark';
 
@@ -97,6 +98,8 @@
 		{@render children()}
 	</main>
 </div>
+
+<PwaInstallPrompt />
 
 <style>
 	:global(html) {
