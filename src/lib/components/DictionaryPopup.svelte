@@ -33,15 +33,15 @@
 		onclick={(e) => e.stopPropagation()}
 		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
-		<Card.Root class="border border-slate-200 dark:border-slate-800 shadow-lg max-w-md">
+		<Card.Root class="border border-border shadow-lg max-w-md">
 			<Card.Content class="p-4">
 				<div class="flex items-start justify-between mb-3">
 					<div class="flex-1">
-						<h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+						<h3 class="text-lg font-semibold text-foreground">
 							{entries[0].term}
 						</h3>
 						{#if entries[0].reading && entries[0].reading !== entries[0].term}
-							<p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+							<p class="text-sm text-muted-foreground mt-1">
 								{entries[0].reading}
 							</p>
 						{/if}
@@ -57,19 +57,19 @@
 							{#each entry.senses as sense}
 								<div class="text-sm">
 									{#if sense.partOfSpeech}
-										<span class="inline-block px-2 py-0.5 text-xs rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 mb-1">
+										<span class="inline-block px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground mb-1">
 											{sense.partOfSpeech}
 										</span>
 									{/if}
 									<div class="space-y-1">
 										{#each sense.glosses as gloss}
-											<p class="text-slate-900 dark:text-slate-100">
+											<p class="text-foreground">
 												• {gloss.text}
 											</p>
 										{/each}
 									</div>
 									{#if sense.notes && sense.notes.length > 0}
-										<p class="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">
+										<p class="text-xs text-muted-foreground mt-1 italic">
 											{sense.notes.join(', ')}
 										</p>
 									{/if}
@@ -79,7 +79,7 @@
 					{/each}
 
 					{#if entries.length > 3}
-						<p class="text-xs text-slate-500 dark:text-slate-400 text-center pt-2 border-t border-slate-200 dark:border-slate-700">
+						<p class="text-xs text-muted-foreground text-center pt-2 border-t border-border">
 							+{entries.length - 3} more definitions
 						</p>
 					{/if}

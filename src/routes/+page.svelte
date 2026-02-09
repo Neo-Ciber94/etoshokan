@@ -98,7 +98,7 @@
 	<section class="space-y-4">
 		<div class="space-y-2">
 			<h2 class="text-xl font-semibold">Dictionary Search</h2>
-			<p class="text-sm text-slate-600 dark:text-slate-400">
+			<p class="text-sm text-muted-foreground">
 				Search for Japanese words, kanji, or romaji
 			</p>
 		</div>
@@ -111,7 +111,7 @@
 					class="flex-1"
 				/>
 				{#if loading}
-					<div class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
+					<div class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
 						<svg
 							class="h-4 w-4 animate-spin"
 							xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +143,7 @@
 
 		{#if error}
 			<div
-				class="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200"
+				class="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
 			>
 				{error}
 			</div>
@@ -154,20 +154,20 @@
 		{#if results && results.length > 0}
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
-					<Card.Root class="border border-slate-200 dark:border-slate-800">
+					<Card.Root class="border border-border">
 						<Card.Content class="p-6">
 							<div class="grid gap-6 md:grid-cols-[auto_1fr]">
 								<!-- Left side: Word and Reading -->
-								<div class="flex flex-col items-start border-r pr-6 dark:border-slate-700">
+								<div class="flex flex-col items-start border-r border-border pr-6">
 									{#if entry.reading}
-										<div class="mb-2 text-sm text-slate-600 dark:text-slate-400">
+										<div class="mb-2 text-sm text-muted-foreground">
 											{entry.reading}
 										</div>
 									{/if}
-									<div class="text-5xl font-bold text-slate-900 dark:text-slate-100">
+									<div class="text-5xl font-bold text-foreground">
 										{entry.term}
 									</div>
-									<div class="mt-2 text-xs text-slate-500">
+									<div class="mt-2 text-xs text-muted-foreground">
 										{entry.language}
 									</div>
 								</div>
@@ -178,12 +178,12 @@
 										<div class="space-y-2">
 											<!-- Sense number and part of speech -->
 											<div class="flex items-center gap-2">
-												<span class="text-lg font-semibold text-slate-700 dark:text-slate-300">
+												<span class="text-lg font-semibold text-foreground">
 													{senseIdx + 1}.
 												</span>
 												{#if sense.partOfSpeech}
 													<span
-														class="rounded bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+														class="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
 													>
 														{sense.partOfSpeech}
 													</span>
@@ -194,9 +194,9 @@
 											{#if sense.glosses}
 												<div class="space-y-1">
 													{#each sense.glosses as gloss, glossIdx}
-														<div class="text-base text-slate-800 dark:text-slate-200">
+														<div class="text-base text-foreground">
 															{#if sense.glosses.length > 1}
-																<span class="text-slate-500">{glossIdx + 1}.</span>
+																<span class="text-muted-foreground">{glossIdx + 1}.</span>
 															{/if}
 															{gloss.text}
 														</div>
@@ -206,7 +206,7 @@
 
 											<!-- Notes -->
 											{#if sense.notes && sense.notes.length > 0}
-												<div class="text-sm text-slate-600 italic dark:text-slate-400">
+												<div class="text-sm text-muted-foreground italic">
 													{sense.notes.join('; ')}
 												</div>
 											{/if}
@@ -214,15 +214,15 @@
 											<!-- Examples -->
 											{#if sense.examples && sense.examples.length > 0}
 												<div
-													class="mt-2 space-y-1 border-l-2 border-slate-300 pl-3 dark:border-slate-600"
+													class="mt-2 space-y-1 border-l-2 border-border pl-3"
 												>
 													{#each sense.examples as ex}
 														<div class="text-sm">
-															<div class="text-slate-700 dark:text-slate-300">
+															<div class="text-foreground">
 																{ex.text}
 															</div>
 															{#if ex.translation}
-																<div class="text-slate-600 dark:text-slate-400">
+																<div class="text-muted-foreground">
 																	{ex.translation}
 																</div>
 															{/if}
@@ -237,7 +237,7 @@
 									{#if entry.senses.some((s) => s.meta)}
 										<details class="group mt-4">
 											<summary
-												class="cursor-pointer text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+												class="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground"
 											>
 												<span class="select-none">metadata</span>
 											</summary>
@@ -245,11 +245,11 @@
 												{#each entry.senses as sense, senseIdx}
 													{#if sense.meta}
 														<div class="text-xs">
-															<div class="font-medium text-slate-600 dark:text-slate-400">
+															<div class="font-medium text-muted-foreground">
 																Sense {senseIdx + 1} metadata:
 															</div>
 															<pre
-																class="mt-1 overflow-auto rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">{JSON.stringify(
+																class="mt-1 overflow-auto rounded bg-muted p-2 text-xs text-muted-foreground">{JSON.stringify(
 																	sense.meta,
 																	null,
 																	2
@@ -268,9 +268,9 @@
 			</div>
 		{:else if !loading}
 			<div
-				class="rounded-md border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/40"
+				class="rounded-md border border-border bg-muted p-8 text-center"
 			>
-				<p class="text-sm text-slate-600 dark:text-slate-400">
+				<p class="text-sm text-muted-foreground">
 					No results yet. Try searching for a word.
 				</p>
 			</div>

@@ -289,7 +289,7 @@
 			<div class="flex items-center justify-between">
 				<div class="space-y-2">
 					<h2 class="text-xl font-semibold">Book Library</h2>
-					<p class="text-sm text-slate-600 dark:text-slate-400">Upload and read EPUB files</p>
+					<p class="text-sm text-muted-foreground">Upload and read EPUB files</p>
 				</div>
 				<div>
 					<input
@@ -309,15 +309,15 @@
 			</div>
 
 			{#if books.length === 0}
-				<Card.Root class="border border-slate-200 dark:border-slate-800">
+				<Card.Root class="border border-border">
 					<Card.Content class="p-8">
 						<div class="flex flex-col items-center justify-center space-y-4 text-center">
 							<div class="text-6xl">📚</div>
 							<div class="space-y-2">
-								<h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+								<h3 class="text-lg font-semibold text-foreground">
 									No books yet
 								</h3>
-								<p class="max-w-md text-sm text-slate-600 dark:text-slate-400">
+								<p class="max-w-md text-sm text-muted-foreground">
 									Upload your first EPUB file to start reading
 								</p>
 							</div>
@@ -328,7 +328,7 @@
 				<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{#each books as book (book.id)}
 						<Card.Root
-							class="border border-slate-200 transition-colors hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
+							class="border border-border transition-colors hover:border-primary/50"
 						>
 							<Card.Content class="p-4">
 								<div class="flex flex-col space-y-3">
@@ -340,27 +340,27 @@
 										/>
 									{:else}
 										<div
-											class="flex h-48 w-full items-center justify-center rounded bg-slate-100 dark:bg-slate-800"
+											class="flex h-48 w-full items-center justify-center rounded bg-muted"
 										>
 											<span class="text-4xl">📖</span>
 										</div>
 									{/if}
 									<div class="flex-1 space-y-1">
 										<h3 class="line-clamp-2 text-sm font-semibold">{book.title}</h3>
-										<p class="line-clamp-1 text-xs text-slate-600 dark:text-slate-400">
+										<p class="line-clamp-1 text-xs text-muted-foreground">
 											{book.author}
 										</p>
 										{#if book.progress}
 											<div class="pt-2">
 												<div
-													class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+													class="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
 												>
 													<div
-														class="h-full bg-slate-900 transition-all dark:bg-slate-50"
+														class="h-full bg-primary transition-all"
 														style="width: {book.progress}%"
 													></div>
 												</div>
-												<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+												<p class="mt-1 text-xs text-muted-foreground">
 													{book.progress}% complete
 												</p>
 											</div>
@@ -390,7 +390,7 @@
 		<section class="reader-container">
 			<div class="reader-controls">
 				<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
-				<div class="truncate text-sm text-slate-600 dark:text-slate-400">
+				<div class="truncate text-sm text-muted-foreground">
 					{books.find((b) => b.id === selectedBookId)?.title || 'Reading...'}
 				</div>
 				<div class="flex gap-2">
@@ -427,11 +427,7 @@
 		bottom: 0;
 		display: flex;
 		flex-direction: column;
-		background: white;
-	}
-
-	:global(.dark) .reader-container {
-		background: #0f172a;
+		background: hsl(var(--background));
 	}
 
 	.reader-controls {
@@ -440,13 +436,8 @@
 		justify-content: space-between;
 		gap: 1rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid rgb(226 232 240);
-		background: white;
-	}
-
-	:global(.dark) .reader-controls {
-		border-bottom-color: rgb(30 41 59);
-		background: #1e293b;
+		border-bottom: 1px solid hsl(var(--border));
+		background: hsl(var(--card));
 	}
 
 	.reader-content {

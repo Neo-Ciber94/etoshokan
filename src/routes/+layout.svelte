@@ -42,14 +42,14 @@
 	<title>etoshokan</title>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-	<header class="reading-mode-hide border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+<div class="min-h-screen bg-background text-foreground">
+	<header class="reading-mode-hide border-b border-border bg-card">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 			<h1 class="text-2xl font-bold">@e-toshokan</h1>
 			<select
 				value={theme}
 				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
-				class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+				class="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
 			>
 				<option value="system">System</option>
 				<option value="light">Light</option>
@@ -58,20 +58,20 @@
 		</div>
 	</header>
 
-	<nav class="reading-mode-hide border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+	<nav class="reading-mode-hide border-b border-border bg-card">
 		<div class="mx-auto max-w-6xl px-6">
 			<div class="flex space-x-1">
 				<a
 					href="/"
 					class="relative px-4 py-3 text-sm font-medium transition-colors
 						{$page.url.pathname === '/'
-						? 'text-slate-900 dark:text-slate-50'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50'}"
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'}"
 				>
 					Dictionary
 					{#if $page.url.pathname === '/'}
 						<div
-							class="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 dark:bg-slate-50"
+							class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
 						></div>
 					{/if}
 				</a>
@@ -79,13 +79,13 @@
 					href="/ebook"
 					class="relative px-4 py-3 text-sm font-medium transition-colors
 						{$page.url.pathname === '/ebook'
-						? 'text-slate-900 dark:text-slate-50'
-						: 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50'}"
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'}"
 				>
 					Ebook Reader
 					{#if $page.url.pathname === '/ebook'}
 						<div
-							class="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 dark:bg-slate-50"
+							class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
 						></div>
 					{/if}
 				</a>
