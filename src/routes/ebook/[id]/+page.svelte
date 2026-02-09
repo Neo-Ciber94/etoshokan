@@ -12,9 +12,13 @@
 	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
+	import * as Drawer from '$lib/components/ui/drawer';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import LanguageIcon from '@lucide/svelte/icons/languages';
+	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import MinusIcon from '@lucide/svelte/icons/minus';
+	import PlusIcon from '@lucide/svelte/icons/plus';
 	import { debounce } from '$lib/runes/debounce.svelte';
 
 	const pointer = usePointer();
@@ -33,16 +37,34 @@
 
 	// Zoom state
 	let zoom = $state(100);
-	let zoomControlsVisible = $state(false);
-	let initialPinchDistance = 0;
-	let initialPinchZoom = 0;
-	const closeZoomControls = debounce(1000, () => {
-		zoomControlsVisible = false;
+
+	// Drawer state
+	let drawerOpen = $state(false);
+
+	// Page indicator state
+	let showPageIndicator = $state(false);
+	let currentPage = $state(0);
+	let totalPages = $state(0);
+
+	// Pointer tracking for fast-click detection
+	let pagePointer = $state({
+		pointerDownX: 0,
+		pointerDownY: 0,
+		pointerDownTime: 0
 	});
 
-	$effect(() => {
-		if (zoom > 0) {
-			closeZoomControls();
+	// Debounced context menu trigger on pointer up
+	const showContextMenuIfSelection = debounce(100, (contents: any) => {
+		const selection = contents.window.getSelection();
+		if (selection && selection.toString().trim()) {
+			contextMenuText = selection.toString().trim();
+			readerContainer.dispatchEvent(
+				new PointerEvent('contextmenu', {
+					bubbles: true,
+					clientX: pointer.x,
+					clientY: pointer.y
+				})
+			);
 		}
 	});
 
@@ -134,47 +156,32 @@
 					pointer.update((iframeRect?.left || 0) + e.clientX, (iframeRect?.top || 0) + e.clientY);
 				});
 
-				// Pinch zoom detection
+				contents.document.addEventListener('pointerdown', (e: PointerEvent) => {
+					pagePointer.pointerDownX = e.clientX;
+					pagePointer.pointerDownY = e.clientY;
+					pagePointer.pointerDownTime = Date.now();
+				});
+
+				contents.document.addEventListener('pointerup', (e: PointerEvent) => {
+					// Check for text selection and show context menu (debounced)
+					showContextMenuIfSelection(contents);
+
+					// Fast-click toggle for page indicator
+					const dx = e.clientX - pagePointer.pointerDownX;
+					const dy = e.clientY - pagePointer.pointerDownY;
+					const distance = Math.sqrt(dx * dx + dy * dy);
+					const duration = Date.now() - pagePointer.pointerDownTime;
+					const selection = contents.window.getSelection();
+					const hasSelection = selection && selection.toString().trim().length > 0;
+
+					if (distance <= 10 && duration <= 500 && !hasSelection) {
+						contextMenuOpen = false;
+						showPageIndicator = !showPageIndicator;
+						console.log("Show page indicator: " + showPageIndicator)
+					}
+				});
+
 				contents.document.documentElement.style.touchAction = 'pan-y';
-
-				contents.document.addEventListener(
-					'touchstart',
-					(e: TouchEvent) => {
-						if (e.touches.length === 2) {
-							const dx = e.touches[0].clientX - e.touches[1].clientX;
-							const dy = e.touches[0].clientY - e.touches[1].clientY;
-							initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
-							initialPinchZoom = zoom;
-						}
-					},
-					{ passive: true }
-				);
-
-				contents.document.addEventListener(
-					'touchmove',
-					(e: TouchEvent) => {
-						if (e.touches.length === 2 && initialPinchDistance > 0) {
-							e.preventDefault();
-							const dx = e.touches[0].clientX - e.touches[1].clientX;
-							const dy = e.touches[0].clientY - e.touches[1].clientY;
-							const distance = Math.sqrt(dx * dx + dy * dy);
-							const scale = distance / initialPinchDistance;
-							zoom = Math.min(200, Math.max(100, Math.round(initialPinchZoom * scale)));
-						}
-					},
-					{ passive: false }
-				);
-
-				contents.document.addEventListener(
-					'touchend',
-					(e: TouchEvent) => {
-						if (initialPinchDistance > 0 && e.touches.length < 2) {
-							applyZoom(zoom);
-							initialPinchDistance = 0;
-						}
-					},
-					{ passive: true }
-				);
 			});
 
 			// Restore reading position
@@ -190,7 +197,7 @@
 				rendition.themes.fontSize(`${zoom}%`);
 			}
 
-			// Track reading progress
+			// Track reading progress and page numbers
 			rendition.on('relocated', async (location: any) => {
 				const progress = Math.round((location.start.percentage || 0) * 100);
 				await updateBookProgress(bookId, location.start.cfi, progress);
@@ -201,6 +208,12 @@
 					bookMetadata.progress = progress;
 					bookMetadata.lastReadAt = Date.now();
 				}
+
+				// Update page numbers
+				if (location.start.displayed) {
+					currentPage = location.start.displayed.page;
+					totalPages = location.start.displayed.total;
+				}
 			});
 
 			// Track text selection and show context menu
@@ -208,21 +221,15 @@
 				const selection = contents.window.getSelection();
 				if (selection && selection.toString()) {
 					const selectedText = selection.toString().trim();
-					if (!selectedText) return;
+					if (!selectedText) {
+						return;
+					}
 
 					contextMenuText = selectedText;
-
-					readerContainer.dispatchEvent(
-						new PointerEvent('contextmenu', {
-							bubbles: true,
-							clientX: pointer.x,
-							clientY: pointer.y
-						})
-					);
 				}
 			});
 
-			// Close context menu when clicking inside iframe
+			// Toggle page indicator on click inside iframe
 			rendition.on('click', () => {
 				contextMenuOpen = false;
 			});
@@ -256,7 +263,6 @@
 	// Zoom functions
 	function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
-		zoomControlsVisible = true;
 		if (rendition) {
 			rendition.themes.fontSize(`${zoom}%`);
 		}
@@ -264,11 +270,11 @@
 	}
 
 	function handleZoomIn() {
-		applyZoom(zoom + 1);
+		applyZoom(zoom + 10);
 	}
 
 	function handleZoomOut() {
-		applyZoom(zoom - 1);
+		applyZoom(zoom - 10);
 	}
 </script>
 
@@ -290,7 +296,10 @@
 		<div class="truncate text-sm text-muted-foreground">
 			{bookMetadata?.title || 'Loading...'}
 		</div>
-		<div class="flex gap-2">
+		<div class="flex items-center gap-2">
+			<Button onclick={() => (drawerOpen = true)} variant="ghost" size="icon-sm">
+				<SettingsIcon class="size-4" />
+			</Button>
 			<Button onclick={prevPage} variant="outline" size="sm" disabled={!rendition || loading}>
 				← Prev
 			</Button>
@@ -343,15 +352,52 @@
 			</ContextMenu.Content>
 		</ContextMenu.Root>
 
-		{#if zoomControlsVisible}
-			<div class="zoom-controls">
-				<button onclick={handleZoomIn} class="zoom-btn" disabled={zoom >= 200}>+</button>
-				<span class="zoom-level">{zoom}%</span>
-				<button onclick={handleZoomOut} class="zoom-btn">&minus;</button>
+		<!-- Page indicator -->
+		{#if showPageIndicator && totalPages > 0}
+			<div class="page-indicator">
+				{currentPage} / {totalPages}
 			</div>
 		{/if}
 	{/if}
 </section>
+
+<!-- Options Drawer -->
+<Drawer.Root bind:open={drawerOpen} direction="bottom">
+	<Drawer.Content>
+		<Drawer.Header>
+			<Drawer.Title>Options</Drawer.Title>
+		</Drawer.Header>
+		<div class="flex flex-col gap-6 px-4 pb-6">
+			<!-- Zoom control -->
+			<div class="flex items-center justify-between">
+				<span class="text-sm font-medium">Zoom</span>
+				<div class="flex items-center gap-3">
+					<Button onclick={handleZoomOut} variant="outline" size="icon-sm" disabled={zoom <= 100}>
+						<MinusIcon class="size-4" />
+					</Button>
+					<span class="w-12 text-center text-sm tabular-nums">{zoom}%</span>
+					<Button onclick={handleZoomIn} variant="outline" size="icon-sm" disabled={zoom >= 200}>
+						<PlusIcon class="size-4" />
+					</Button>
+				</div>
+			</div>
+			<!-- Page indicator toggle -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Show page number</span>
+				<button
+					class="toggle"
+					title="Page Number"
+					class:toggle-on={showPageIndicator}
+					onclick={() => (showPageIndicator = !showPageIndicator)}
+					role="switch"
+					aria-checked={showPageIndicator}
+				>
+					<span class="toggle-thumb" class:toggle-thumb-on={showPageIndicator}></span>
+				</button>
+			</label>
+		</div>
+	</Drawer.Content>
+</Drawer.Root>
 
 <style>
 	.reader-container {
@@ -387,51 +433,50 @@
 		touch-action: pan-y;
 	}
 
-	.zoom-controls {
+	.page-indicator {
 		position: fixed;
-		right: 1rem;
-		top: 50%;
-		transform: translateY(-50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.25rem;
-		background: hsl(var(--card) / 0.9);
+		bottom: 1rem;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 0.75rem;
+		color: hsl(var(--muted-foreground));
+		background: hsl(var(--card) / 0.85);
 		border: 1px solid hsl(var(--border));
-		border-radius: 0.5rem;
-		padding: 0.5rem;
-		z-index: 50;
+		border-radius: 9999px;
+		padding: 0.25rem 0.75rem;
+		z-index: 40;
 		backdrop-filter: blur(4px);
+		font-variant-numeric: tabular-nums;
+		pointer-events: none;
 	}
 
-	.zoom-btn {
-		width: 2rem;
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 0.25rem;
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: hsl(var(--foreground));
-		background: transparent;
+	.toggle {
+		position: relative;
+		width: 2.5rem;
+		height: 1.5rem;
+		border-radius: 9999px;
+		background: hsl(var(--muted));
 		border: none;
 		cursor: pointer;
 		transition: background 150ms;
 	}
 
-	.zoom-btn:hover {
-		background: hsl(var(--accent));
+	.toggle-on {
+		background: hsl(var(--primary));
 	}
 
-	.zoom-btn:disabled {
-		opacity: 0.5;
-		cursor: default;
+	.toggle-thumb {
+		position: absolute;
+		top: 0.125rem;
+		left: 0.125rem;
+		width: 1.25rem;
+		height: 1.25rem;
+		border-radius: 9999px;
+		background: white;
+		transition: transform 150ms;
 	}
 
-	.zoom-level {
-		font-size: 0.75rem;
-		color: hsl(var(--muted-foreground));
-		font-variant-numeric: tabular-nums;
+	.toggle-thumb-on {
+		transform: translateX(1rem);
 	}
 </style>
