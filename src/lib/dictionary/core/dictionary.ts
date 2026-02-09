@@ -19,9 +19,17 @@ export interface Sense {
 	/** Usage notes, examples, tags */
 	notes?: string[];
 	examples?: Example[];
+	glosses: Gloss[];
 
 	/** Extra metadata (frequency, JLPT level, etc.) */
 	meta?: Record<string, unknown>;
+}
+
+export interface Gloss {
+	lang: Language;
+	gender?: string | null;
+	type?: string | null;
+	text: string;
 }
 
 export type PartOfSpeech =

@@ -5,24 +5,29 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import type { WordEntry } from '$lib/dictionary/core/dictionary';
 
 	const dict = dictionary;
 
 	let loading = $state(false);
 	let query = $state('');
-	let results = $state<any[]>([]);
+	let results = $state<WordEntry[]>([]);
 	let error = $state('');
 
-	onMount(async () => {
-		try {
-			loading = true;
-			await dict.initialize();
-		} catch (err) {
-			console.error(err);
-			error = (err && (err as any).message) || String(err);
-		} finally {
-			loading = false;
+	$effect(() => {
+		async function run() {
+			try {
+				loading = true;
+				await dict.initialize();
+			} catch (err) {
+				console.error(err);
+				error = (err && (err as any).message) || String(err);
+			} finally {
+				loading = false;
+			}
 		}
+
+        run();
 	});
 
 	async function search() {
@@ -32,6 +37,7 @@
 		try {
 			loading = true;
 			const res = await dict.lookup(query.trim(), { targetLanguage: 'en' });
+			console.log(res);
 			results = res;
 		} catch (err) {
 			console.error(err);
@@ -79,13 +85,15 @@
 				<Button onclick={search} disabled={loading}>
 					{loading ? 'Searching...' : 'Search'}
 				</Button>
-				<Button variant="outline" onclick={clearResults}> Clear </Button>
-				<Button variant="destructive" onclick={clearCache}> Reset Cache </Button>
+				<Button variant="outline" onclick={clearResults}>Clear</Button>
+				<Button variant="destructive" onclick={clearCache}>Reset Cache</Button>
 			</div>
 		</div>
 
 		{#if error}
-			<div class="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200">
+			<div
+				class="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200"
+			>
 				{error}
 			</div>
 		{/if}
@@ -110,15 +118,30 @@
 							</div>
 						</Card.Header>
 
-						<Card.Content class="space-y-4 pt-0">
+						<Card.Content class="space-y-4 pt-4">
 							{#each entry.senses as sense, senseIdx (senseIdx)}
-								<div class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40">
+								<div
+									class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40"
+								>
 									<div class="flex items-baseline justify-between">
 										<span class="font-medium text-slate-900 dark:text-slate-100">
 											{sense.partOfSpeech ?? '—'}
 										</span>
 										<span class="text-xs text-slate-500">Sense {senseIdx + 1}</span>
 									</div>
+
+									{#if sense.glosses}
+										<div class="text-sm text-slate-700 dark:text-slate-300">
+											<!-- <span class="font-medium">Glosses:</span> -->
+											<ul class="space-y-1 pl-4">
+												{#each sense.glosses as gloss}
+													<li class="ml-4 list-disc text-sm text-slate-700 dark:text-slate-300">
+														<span>{gloss.text}</span>
+													</li>
+												{/each}
+											</ul>
+										</div>
+									{/if}
 
 									{#if sense.notes}
 										<p class="text-sm text-slate-700 dark:text-slate-300">
@@ -129,13 +152,17 @@
 
 									{#if sense.examples && sense.examples.length > 0}
 										<div class="space-y-1">
-											<p class="text-xs font-medium text-slate-600 dark:text-slate-400">Examples:</p>
+											<p class="text-xs font-medium text-slate-600 dark:text-slate-400">
+												Examples:
+											</p>
 											<ul class="space-y-1 pl-4">
 												{#each sense.examples as ex}
 													<li class="text-sm text-slate-700 dark:text-slate-300">
 														• {ex.text}
 														{#if ex.translation}
-															<span class="text-slate-600 dark:text-slate-400">— {ex.translation}</span>
+															<span class="text-slate-600 dark:text-slate-400"
+																>— {ex.translation}</span
+															>
 														{/if}
 													</li>
 												{/each}
@@ -148,7 +175,8 @@
 											<summary class="font-medium text-slate-700 dark:text-slate-300">
 												Metadata
 											</summary>
-											<pre class="mt-2 overflow-auto rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">
+											<pre
+												class="mt-2 overflow-auto rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">
 {JSON.stringify(sense.meta, null, 2)}
 											</pre>
 										</details>
@@ -160,7 +188,9 @@
 				{/each}
 			</div>
 		{:else if !loading}
-			<div class="rounded-md border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/40">
+			<div
+				class="rounded-md border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/40"
+			>
 				<p class="text-sm text-slate-600 dark:text-slate-400">
 					No results yet. Try searching for a word.
 				</p>

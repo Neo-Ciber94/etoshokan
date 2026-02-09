@@ -1,64 +1,59 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { Button } from '$lib/components/ui/button';
+
+	type Theme = 'system' | 'light' | 'dark';
 
 	const THEME_KEY = 'etoshokan:theme';
-	//(typeof window !== 'undefined' ? localStorage.getItem(THEME_KEY) : null) || 'system' as const
-	let theme = $state<'system' | 'light' | 'dark'>('system');
+	let theme = $state<Theme>('system');
 
-	// $effect(() => {
-	// 	theme = localStorage.getItem(THEME_KEY);
-	// })
-
-	function applyTheme(t: 'system' | 'light' | 'dark') {
+	function setTheme(value: Theme) {
 		const root = document.documentElement;
-		if (t === 'system') {
-			const useDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			root.classList.toggle('dark', useDark);
-		} else {
-			root.classList.toggle('dark', t === 'dark');
-		}
-		localStorage.setItem(THEME_KEY, t);
-	}
+		let isDark = false;
+		theme = value;
 
-	function setTheme(t: 'system' | 'light' | 'dark') {
-		theme = t;
-		applyTheme(t);
+		switch (value) {
+			case 'system':
+				isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				break;
+			case 'light':
+				isDark = false;
+				break;
+			case 'dark':
+				isDark = true;
+				break;
+		}
+
+		if (isDark) {
+			root.classList.add('dark');
+		} else {
+			root.classList.remove('dark');
+		}
+
+		localStorage.setItem(THEME_KEY, value);
 	}
 
 	let { children } = $props();
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href={favicon} />
+	<title>etoshokan</title>
+</svelte:head>
 
-<div class="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
-	<header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+<div class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+	<header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 			<h1 class="text-2xl font-bold">@e-toshokan</h1>
-			<div class="flex items-center gap-2">
-				<Button 
-					variant={theme === 'system' ? 'default' : 'outline'} 
-					size="sm" 
-					onclick={() => setTheme('system')}
-				>
-					System
-				</Button>
-				<Button 
-					variant={theme === 'light' ? 'default' : 'outline'} 
-					size="sm" 
-					onclick={() => setTheme('light')}
-				>
-					Light
-				</Button>
-				<Button 
-					variant={theme === 'dark' ? 'default' : 'outline'} 
-					size="sm" 
-					onclick={() => setTheme('dark')}
-				>
-					Dark
-				</Button>
-			</div>
+			<select
+				value={theme}
+				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
+				class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+			>
+				<option value="system">System</option>
+				<option value="light">Light</option>
+				<option value="dark">Dark</option>
+			</select>
 		</div>
 	</header>
 
@@ -68,7 +63,9 @@
 </div>
 
 <style>
-	:global(html) { 
-		transition: color 0.15s ease, background-color 0.15s ease; 
+	:global(html) {
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
 	}
 </style>

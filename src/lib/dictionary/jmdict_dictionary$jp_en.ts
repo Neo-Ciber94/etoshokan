@@ -3,7 +3,8 @@ import {
 	type Language,
 	type WordEntry,
 	type Sense,
-	type PartOfSpeech
+	type PartOfSpeech,
+	type Gloss
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
@@ -79,12 +80,63 @@ export class JMDict_Dictionary extends Dictionary {
 	private kanjiMap: Map<string, WordEntry[]> = new Map();
 	private loaded = false;
 
+	normalize = (s: string) => s.trim().normalize('NFC');
+
+	mapPos = (posArr?: string[]): PartOfSpeech | undefined => {
+		if (!posArr || posArr.length === 0) return undefined;
+		const p = posArr[0].toLowerCase();
+
+		if (p.startsWith('n')) return 'noun';
+		if (p.startsWith('v')) return 'verb';
+		if (p.startsWith('adj')) return 'adjective';
+		if (p.startsWith('adv')) return 'adverb';
+		if (p.startsWith('pron')) return 'pronoun';
+		if (p === 'prt' || p.includes('particle')) return 'particle';
+		if (p === 'conj' || p.includes('conjunction')) return 'conjunction';
+		if (p === 'int' || p.includes('interjection')) return 'interjection';
+		if (p === 'aux') return 'auxiliary';
+		if (p === 'pref') return 'prefix';
+		if (p === 'suf') return 'suffix';
+		if (p.includes('expression')) return 'expression';
+
+		return undefined;
+	};
+
+	makeSenses = (senses: JMDict_Sense[]): Sense[] =>
+		senses.map((s) => {
+			// const glosses = s.gloss.filter((g) => g.lang === 'en').map((g) => g.text);
+			const glosses: Gloss[] = s.gloss.map((g) => ({
+				lang: g.lang as Language,
+				text: g.text,
+				gender: g.gender,
+				type: g.type
+			}));
+
+			const notes: string[] = [];
+			if (s.info?.length) notes.push(...s.info);
+			if (s.misc?.length) notes.push(...s.misc);
+
+			return {
+				partOfSpeech: this.mapPos(s.partOfSpeech),
+				notes: notes.length ? notes : undefined,
+				glosses,
+				meta: {
+					pos: s.partOfSpeech,
+					appliesToKanji: s.appliesToKanji,
+					appliesToKana: s.appliesToKana
+				}
+			};
+		});
+
 	async initialize(): Promise<void> {
-		if (this.loaded) return;
+		if (this.loaded) {
+			return;
+		}
 
 		let data = (await ibkv.get(JM_DICT_KEY)) as JMDict_Root | undefined;
 
 		if (!data) {
+			console.log("fetch JSON")
 			data = await downloadJMDictJSON();
 			try {
 				await ibkv.set(JM_DICT_KEY, data);
@@ -93,49 +145,9 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
-		const normalize = (s: string) => s.trim().normalize('NFC');
-
-		const mapPos = (posArr?: string[]): PartOfSpeech | undefined => {
-			if (!posArr || posArr.length === 0) return undefined;
-			const p = posArr[0].toLowerCase();
-
-			if (p.startsWith('n')) return 'noun';
-			if (p.startsWith('v')) return 'verb';
-			if (p.startsWith('adj')) return 'adjective';
-			if (p.startsWith('adv')) return 'adverb';
-			if (p.startsWith('pron')) return 'pronoun';
-			if (p === 'prt' || p.includes('particle')) return 'particle';
-			if (p === 'conj' || p.includes('conjunction')) return 'conjunction';
-			if (p === 'int' || p.includes('interjection')) return 'interjection';
-			if (p === 'aux') return 'auxiliary';
-			if (p === 'pref') return 'prefix';
-			if (p === 'suf') return 'suffix';
-			if (p.includes('expression')) return 'expression';
-
-			return undefined;
-		};
-
-		const makeSenses = (senses: JMDict_Sense[]): Sense[] =>
-			senses.map((s) => {
-				const glosses = s.gloss.filter((g) => g.lang === 'en').map((g) => g.text);
-				const notes: string[] = [];
-				if (s.info?.length) notes.push(...s.info);
-				if (s.misc?.length) notes.push(...s.misc);
-
-				return {
-					partOfSpeech: mapPos(s.partOfSpeech),
-					notes: notes.length ? notes : undefined,
-					meta: {
-						glosses,
-						pos: s.partOfSpeech,
-						appliesToKanji: s.appliesToKanji,
-						appliesToKana: s.appliesToKana
-					}
-				};
-			});
-
+		console.log("Generating map")
 		for (const w of data.words) {
-			const senses = makeSenses(w.sense);
+			const senses = this.makeSenses(w.sense);
 			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
 
 			const baseEntry: WordEntry = {
@@ -146,7 +158,7 @@ export class JMDict_Dictionary extends Dictionary {
 			};
 
 			const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
-				const k = normalize(key);
+				const k = this.normalize(key);
 				const arr = map.get(k) || [];
 				arr.push(entry);
 				map.set(k, arr);
@@ -163,6 +175,7 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
+		console.log('Finished generating map');
 		this.loaded = true;
 	}
 
@@ -190,16 +203,17 @@ export class JMDict_Dictionary extends Dictionary {
 		const fromKana = this.kanaMap.get(key) ?? [];
 
 		const seen = new Set<string>();
-		const out: WordEntry[] = [];
+		const result: WordEntry[] = [];
+
 		for (const e of [...fromKanji, ...fromKana]) {
 			const id = `${e.term}||${e.reading ?? ''}`;
 			if (!seen.has(id)) {
 				seen.add(id);
-				out.push(e);
+				result.push(e);
 			}
 		}
 
-		return out;
+		return result;
 	}
 
 	async clear() {
