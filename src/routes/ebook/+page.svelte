@@ -5,6 +5,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { saveBook, getBook, getBooksMetadata, updateBookProgress, deleteBook } from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
+	import { dictionary } from '$lib/dictionary';
+	import type { WordEntry } from '$lib/dictionary/core/dictionary';
+	import DictionaryPopup from '$lib/components/DictionaryPopup.svelte';
 
 	let books = $state<BookMetadata[]>([]);
 	let currentBook = $state<Book | null>(null);
@@ -13,15 +16,25 @@
 	let loading = $state(false);
 	let readerContainer: HTMLDivElement;
 
+	// Dictionary popup state
+	let dictionaryEntries = $state<WordEntry[]>([]);
+	let selectedWord = $state<string>('');
+	let popupPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+	let showDictionary = $state(false);
+
 	// Swipe detection
 	let touchStartX = 0;
 	let touchStartY = 0;
 	let touchEndX = 0;
 	let touchEndY = 0;
 
-	// Load books on mount
+	// Load books and initialize dictionary on mount
 	onMount(async () => {
 		books = await getBooksMetadata();
+		// Initialize dictionary in the background
+		dictionary.initialize().catch(err => {
+			console.error('Failed to initialize dictionary:', err);
+		});
 	});
 
 	// Toggle reading mode class on body
@@ -133,12 +146,35 @@
 				}
 			});
 
-			// Track text selection
-			rendition.on('selected', (cfiRange: string, contents: any) => {
+			// Track text selection and lookup in dictionary
+			rendition.on('selected', async (cfiRange: string, contents: any) => {
 				const selection = contents.window.getSelection();
 				if (selection && selection.toString()) {
 					const selectedText = selection.toString().trim();
 					console.log('Selected text:', selectedText);
+
+					// Look up word in dictionary
+					try {
+						const entries = await dictionary.lookup(selectedText);
+						if (entries.length > 0) {
+							selectedWord = selectedText;
+							dictionaryEntries = entries;
+
+							// Get selection position
+							const range = selection.getRangeAt(0);
+							const rect = range.getBoundingClientRect();
+
+							// Position popup below the selection
+							popupPosition = {
+								x: Math.min(rect.left, window.innerWidth - 400),
+								y: rect.bottom + 8
+							};
+
+							showDictionary = true;
+						}
+					} catch (error) {
+						console.error('Dictionary lookup error:', error);
+					}
 				}
 			});
 
@@ -168,6 +204,13 @@
 		currentBook = null;
 		rendition = null;
 		selectedBookId = null;
+		closeDictionary();
+	}
+
+	function closeDictionary() {
+		showDictionary = false;
+		dictionaryEntries = [];
+		selectedWord = '';
 	}
 
 	function nextPage() {
@@ -358,6 +401,16 @@
 		</section>
 	{/if}
 </div>
+
+<!-- Dictionary Popup -->
+{#if showDictionary}
+	<DictionaryPopup
+		word={selectedWord}
+		entries={dictionaryEntries}
+		position={popupPosition}
+		onClose={closeDictionary}
+	/>
+{/if}
 
 <style>
 	.reader-container {
