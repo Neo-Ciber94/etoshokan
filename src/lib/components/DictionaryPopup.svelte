@@ -62,7 +62,7 @@
 										</span>
 									{/if}
 									<div class="space-y-1">
-										{#each sense.glosses.filter(g => g.lang === 'en') as gloss}
+										{#each sense.glosses as gloss}
 											<p class="text-slate-900 dark:text-slate-100">
 												• {gloss.text}
 											</p>

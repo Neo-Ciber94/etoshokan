@@ -3,7 +3,13 @@
 	import ePub, { type Book, type Rendition } from 'epubjs';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { saveBook, getBook, getBooksMetadata, updateBookProgress, deleteBook } from '$lib/ebook/storage';
+	import {
+		saveBook,
+		getBook,
+		getBooksMetadata,
+		updateBookProgress,
+		deleteBook
+	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import { dictionary } from '$lib/dictionary';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
@@ -32,7 +38,7 @@
 	onMount(async () => {
 		books = await getBooksMetadata();
 		// Initialize dictionary in the background
-		dictionary.initialize().catch(err => {
+		dictionary.initialize().catch((err) => {
 			console.error('Failed to initialize dictionary:', err);
 		});
 	});
@@ -72,12 +78,12 @@
 				title: metadata.title || 'Unknown Title',
 				author: metadata.creator || 'Unknown Author',
 				cover: cover || undefined,
-				addedAt: Date.now(),
+				addedAt: Date.now()
 			};
 
 			await saveBook({
 				metadata: bookMetadata,
-				file: arrayBuffer,
+				file: arrayBuffer
 			});
 
 			books = await getBooksMetadata();
@@ -106,7 +112,7 @@
 			rendition = currentBook.renderTo(readerContainer, {
 				width: '100%',
 				height: '100%',
-				spread: 'none',
+				spread: 'none'
 			});
 
 			// Apply custom styles for light/dark mode
@@ -114,13 +120,13 @@
 			rendition.themes.default({
 				body: {
 					color: isDark ? '#f1f5f9 !important' : '#0f172a !important',
-					background: isDark ? '#0f172a !important' : '#ffffff !important',
+					background: isDark ? '#0f172a !important' : '#ffffff !important'
 				},
 				'p, div, span, h1, h2, h3, h4, h5, h6': {
-					color: isDark ? '#f1f5f9 !important' : '#0f172a !important',
+					color: isDark ? '#f1f5f9 !important' : '#0f172a !important'
 				},
 				a: {
-					color: isDark ? '#60a5fa !important' : '#3b82f6 !important',
+					color: isDark ? '#60a5fa !important' : '#3b82f6 !important'
 				}
 			});
 
@@ -156,6 +162,8 @@
 					// Look up word in dictionary
 					try {
 						const entries = await dictionary.lookup(selectedText);
+						console.log(entries);
+
 						if (entries.length > 0) {
 							selectedWord = selectedText;
 							dictionaryEntries = entries;
@@ -281,9 +289,7 @@
 			<div class="flex items-center justify-between">
 				<div class="space-y-2">
 					<h2 class="text-xl font-semibold">Book Library</h2>
-					<p class="text-sm text-slate-600 dark:text-slate-400">
-						Upload and read EPUB files
-					</p>
+					<p class="text-sm text-slate-600 dark:text-slate-400">Upload and read EPUB files</p>
 				</div>
 				<div>
 					<input
@@ -293,7 +299,10 @@
 						class="hidden"
 						id="book-upload"
 					/>
-					<Button onclick={() => document.getElementById('book-upload')?.click()} disabled={loading}>
+					<Button
+						onclick={() => document.getElementById('book-upload')?.click()}
+						disabled={loading}
+					>
 						{loading ? 'Uploading...' : 'Upload Book'}
 					</Button>
 				</div>
@@ -308,7 +317,7 @@
 								<h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
 									No books yet
 								</h3>
-								<p class="text-sm text-slate-600 dark:text-slate-400 max-w-md">
+								<p class="max-w-md text-sm text-slate-600 dark:text-slate-400">
 									Upload your first EPUB file to start reading
 								</p>
 							</div>
@@ -318,45 +327,47 @@
 			{:else}
 				<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{#each books as book (book.id)}
-						<Card.Root class="border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+						<Card.Root
+							class="border border-slate-200 transition-colors hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
+						>
 							<Card.Content class="p-4">
 								<div class="flex flex-col space-y-3">
 									{#if book.cover}
 										<img
 											src={book.cover}
 											alt={book.title}
-											class="h-48 w-full object-cover rounded"
+											class="h-48 w-full rounded object-cover"
 										/>
 									{:else}
-										<div class="h-48 w-full bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center">
+										<div
+											class="flex h-48 w-full items-center justify-center rounded bg-slate-100 dark:bg-slate-800"
+										>
 											<span class="text-4xl">📖</span>
 										</div>
 									{/if}
-									<div class="space-y-1 flex-1">
-										<h3 class="font-semibold text-sm line-clamp-2">{book.title}</h3>
-										<p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">
+									<div class="flex-1 space-y-1">
+										<h3 class="line-clamp-2 text-sm font-semibold">{book.title}</h3>
+										<p class="line-clamp-1 text-xs text-slate-600 dark:text-slate-400">
 											{book.author}
 										</p>
 										{#if book.progress}
 											<div class="pt-2">
-												<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+												<div
+													class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+												>
 													<div
-														class="h-full bg-slate-900 dark:bg-slate-50 transition-all"
+														class="h-full bg-slate-900 transition-all dark:bg-slate-50"
 														style="width: {book.progress}%"
 													></div>
 												</div>
-												<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+												<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
 													{book.progress}% complete
 												</p>
 											</div>
 										{/if}
 									</div>
 									<div class="flex gap-2">
-										<Button
-											onclick={() => openBook(book.id)}
-											class="flex-1"
-											size="sm"
-										>
+										<Button onclick={() => openBook(book.id)} class="flex-1" size="sm">
 											{book.progress ? 'Continue' : 'Read'}
 										</Button>
 										<Button
@@ -378,11 +389,9 @@
 		<!-- Book Reader -->
 		<section class="reader-container">
 			<div class="reader-controls">
-				<Button onclick={closeBook} variant="outline" size="sm">
-					← Back
-				</Button>
-				<div class="text-sm text-slate-600 dark:text-slate-400 truncate">
-					{books.find(b => b.id === selectedBookId)?.title || 'Reading...'}
+				<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
+				<div class="truncate text-sm text-slate-600 dark:text-slate-400">
+					{books.find((b) => b.id === selectedBookId)?.title || 'Reading...'}
 				</div>
 				<div class="flex gap-2">
 					<Button onclick={prevPage} variant="outline" size="sm" disabled={!rendition}>
@@ -394,10 +403,7 @@
 				</div>
 			</div>
 
-			<div
-				bind:this={readerContainer}
-				class="reader-content"
-			></div>
+			<div bind:this={readerContainer} class="reader-content"></div>
 		</section>
 	{/if}
 </div>
