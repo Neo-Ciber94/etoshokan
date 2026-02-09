@@ -7,7 +7,7 @@ import {
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
-import wanakana from 'wanakana';
+import * as wanakana from 'wanakana';
 
 interface JMDict_Root {
 	version: string;
