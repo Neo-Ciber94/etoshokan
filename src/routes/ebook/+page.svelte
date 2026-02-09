@@ -13,6 +13,12 @@
 	let loading = $state(false);
 	let readerContainer: HTMLDivElement;
 
+	// Swipe detection
+	let touchStartX = 0;
+	let touchStartY = 0;
+	let touchEndX = 0;
+	let touchEndY = 0;
+
 	// Load books on mount
 	onMount(async () => {
 		books = await getBooksMetadata();
@@ -126,6 +132,20 @@
 					bookMeta.lastReadAt = Date.now();
 				}
 			});
+
+			// Track text selection
+			rendition.on('selected', (cfiRange: string, contents: any) => {
+				const selection = contents.window.getSelection();
+				if (selection && selection.toString()) {
+					const selectedText = selection.toString().trim();
+					console.log('Selected text:', selectedText);
+				}
+			});
+
+			// Add swipe gesture support
+			readerContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+			readerContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+			readerContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
 		} catch (error) {
 			console.error('Error opening book:', error);
 		} finally {
@@ -137,6 +157,14 @@
 		if (rendition) {
 			rendition.destroy();
 		}
+
+		// Remove swipe event listeners
+		if (readerContainer) {
+			readerContainer.removeEventListener('touchstart', handleTouchStart);
+			readerContainer.removeEventListener('touchmove', handleTouchMove);
+			readerContainer.removeEventListener('touchend', handleTouchEnd);
+		}
+
 		currentBook = null;
 		rendition = null;
 		selectedBookId = null;
@@ -159,6 +187,47 @@
 
 		await deleteBook(id);
 		books = await getBooksMetadata();
+	}
+
+	// Swipe gesture handlers
+	function handleTouchStart(e: TouchEvent) {
+		touchStartX = e.changedTouches[0].screenX;
+		touchStartY = e.changedTouches[0].screenY;
+	}
+
+	function handleTouchMove(e: TouchEvent) {
+		// Prevent default behavior to stop browser navigation
+		const touch = e.changedTouches[0];
+		const deltaX = Math.abs(touch.screenX - touchStartX);
+		const deltaY = Math.abs(touch.screenY - touchStartY);
+
+		// If horizontal swipe is greater than vertical, prevent default
+		if (deltaX > deltaY) {
+			e.preventDefault();
+		}
+	}
+
+	function handleTouchEnd(e: TouchEvent) {
+		touchEndX = e.changedTouches[0].screenX;
+		touchEndY = e.changedTouches[0].screenY;
+		handleSwipe();
+	}
+
+	function handleSwipe() {
+		const deltaX = touchEndX - touchStartX;
+		const deltaY = touchEndY - touchStartY;
+		const minSwipeDistance = 50;
+
+		// Only trigger if horizontal swipe is greater than vertical
+		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+			if (deltaX > 0) {
+				// Swipe right - previous page
+				prevPage();
+			} else {
+				// Swipe left - next page
+				nextPage();
+			}
+		}
 	}
 </script>
 
@@ -325,5 +394,12 @@
 		flex: 1;
 		overflow: auto;
 		position: relative;
+		touch-action: pan-y pinch-zoom;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* Improve touch experience */
+	.reader-content :global(iframe) {
+		touch-action: pan-y pinch-zoom;
 	}
 </style>
