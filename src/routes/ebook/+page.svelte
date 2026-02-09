@@ -91,6 +91,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Etoshokan - EBook</title>
+</svelte:head>
+
 <div class="space-y-8">
 	<!-- Book Library -->
 	<section class="space-y-4">

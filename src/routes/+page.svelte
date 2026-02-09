@@ -94,6 +94,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Etoshokan - Dictionary</title>
+</svelte:head>
+
 <div class="space-y-8">
 	<section class="space-y-4">
 		<div class="space-y-2">

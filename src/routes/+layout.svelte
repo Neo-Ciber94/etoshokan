@@ -39,7 +39,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>etoshokan</title>
+	<title>Etoshokan</title>
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">

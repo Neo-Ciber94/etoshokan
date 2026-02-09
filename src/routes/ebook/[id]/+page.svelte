@@ -243,6 +243,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
+</svelte:head>
+
 <!-- Book Reader -->
 <section class="reader-container" oncontextmenu={(e) => e.preventDefault()} onpointerdown={() => { contextMenuOpen = false; }} role="application">
 	<div class="reader-controls">
