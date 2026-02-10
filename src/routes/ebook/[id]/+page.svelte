@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import ePub, { type Book, type Rendition } from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
@@ -20,10 +20,13 @@
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import { debounce } from '$lib/runes/debounce.svelte';
+	import TranslationBox from '$lib/components/TranslationBox.svelte';
+	import { dictionary } from '$lib/dictionary';
+	import type { WordEntry } from '$lib/dictionary/core/dictionary';
 
 	const pointer = usePointer();
 
-	let bookId = $derived($page.params.id || '');
+	let bookId = $derived(page.params.id || '');
 	let currentBook = $state<Book | null>(null);
 	let rendition = $state<Rendition | null>(null);
 	let loading = $state(false);
@@ -41,6 +44,11 @@
 
 	// Drawer state
 	let drawerOpen = $state(false);
+
+	// Translation state
+	let showTranslation = $state(false);
+	let translationEntries = $state<WordEntry[]>([]);
+	let translationLoading = $state(false);
 
 	// Page indicator state
 	let showPageIndicator = $state(false);
@@ -248,8 +256,21 @@
 		goto('/ebook');
 	}
 
-	function handleTranslate() {
-		console.log(contextMenuText);
+	async function handleTranslate() {
+		showTranslation = true;
+		translationLoading = true;
+		translationEntries = [];
+
+		try {
+			await dictionary.initialize();
+			translationEntries = await dictionary.lookup(contextMenuText.trim(), {
+				targetLanguage: 'en'
+			});
+		} catch {
+			translationEntries = [];
+		} finally {
+			translationLoading = false;
+		}
 	}
 
 	function handleSearch() {
@@ -364,6 +385,16 @@
 		{/if}
 	{/if}
 </section>
+
+<!-- Translation box -->
+{#if showTranslation}
+	<TranslationBox
+		selectedText={contextMenuText}
+		entries={translationEntries}
+		loading={translationLoading}
+		onClose={() => (showTranslation = false)}
+	/>
+{/if}
 
 <!-- Options Drawer -->
 <Drawer.Root bind:open={drawerOpen} direction="bottom">
