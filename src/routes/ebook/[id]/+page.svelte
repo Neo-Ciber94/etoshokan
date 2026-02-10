@@ -266,10 +266,9 @@
 
 			// Toggle page indicator on click inside iframe
 			rendition.on('click', async () => {
+				contextMenuOpen = false;
 				await tick();
-				if (!contextMenuOpen) {
-					isOnTextSelection = false;
-				}
+				isOnTextSelection = false;
 			});
 		} catch (error) {
 			console.error('Error loading book:', error);
@@ -333,16 +332,12 @@
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
 
-	<!-- onpointerdown={() => {
+<!-- onpointerdown={() => {
 		contextMenuOpen = false;
 	}}
 	oncontextmenu={(e) => e.preventDefault()} -->
 
-<section
-	class="reader-container"
-
-	role="application"
->
+<section class="reader-container" role="application">
 	<div class="reader-controls">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
