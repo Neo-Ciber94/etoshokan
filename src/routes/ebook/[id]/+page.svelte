@@ -387,7 +387,7 @@
 			<ContextMenu.Trigger class="reader-content">
 				<div bind:this={readerContainer} class="h-full w-full"></div>
 			</ContextMenu.Trigger>
-			<ContextMenu.Content class="min-w-40">
+			<ContextMenu.Content class="min-w-40" trapFocus={false}>
 				<ContextMenu.Item
 					onclick={handleTranslate}
 					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
@@ -537,5 +537,4 @@
 		font-variant-numeric: tabular-nums;
 		pointer-events: none;
 	}
-
 </style>
