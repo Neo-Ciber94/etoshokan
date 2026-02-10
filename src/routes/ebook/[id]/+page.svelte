@@ -256,6 +256,8 @@
 					contextMenu.text = selectedText;
 
 					if (searchOnSelection.value) {
+						// Close first so the menu re-anchors to the current pointer position
+						contextMenu.isOpen = false;
 						showContextMenuIfSelection(contents);
 					}
 				}
