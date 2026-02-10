@@ -11,14 +11,11 @@
 		updateBookZoom
 	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
-	// import * as ContextMenu from '$lib/components/ui/context-menu';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Switch } from '$lib/components/ui/switch';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import { useStorage } from '$lib/runes/local-storage.svelte';
-	import SearchIcon from '@lucide/svelte/icons/search';
-	import LanguageIcon from '@lucide/svelte/icons/languages';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -375,30 +372,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Old shadcn context menu (commented out - causes selection issues on mobile)
-		<ContextMenu.Root bind:open={contextMenuOpen}>
-			<ContextMenu.Trigger class="reader-content">
-				<div bind:this={readerContainer} class="h-full w-full"></div>
-			</ContextMenu.Trigger>
-			<ContextMenu.Content class="min-w-40" trapFocus={false}>
-				<ContextMenu.Item
-					onclick={handleTranslate}
-					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
-				>
-					<LanguageIcon class="size-5 md:size-4" />
-					Translate
-				</ContextMenu.Item>
-				<ContextMenu.Item
-					onclick={handleSearch}
-					class="gap-3 px-3 py-2.5 text-base md:gap-2 md:px-2 md:py-1.5 md:text-sm"
-				>
-					<SearchIcon class="size-5 md:size-4" />
-					Search
-				</ContextMenu.Item>
-			</ContextMenu.Content>
-		</ContextMenu.Root>
-		-->
-
 		<div class="reader-content">
 			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
