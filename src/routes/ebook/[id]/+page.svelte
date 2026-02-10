@@ -267,7 +267,9 @@
 			// Toggle page indicator on click inside iframe
 			rendition.on('click', async () => {
 				await tick();
-				isOnTextSelection = false;
+				if (!contextMenuOpen) {
+					isOnTextSelection = false;
+				}
 			});
 		} catch (error) {
 			console.error('Error loading book:', error);
