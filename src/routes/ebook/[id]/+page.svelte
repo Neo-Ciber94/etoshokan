@@ -53,6 +53,9 @@
 	// Search on selection
 	let searchOnSelection = $state(true);
 
+	// Selection time (debounce delay in ms)
+	let selectionTime = $state(100);
+
 	// Page indicator state
 	let showPageIndicator = $state(false);
 	let currentPage = $state(0);
@@ -66,7 +69,7 @@
 	});
 
 	// Debounced context menu trigger on pointer up
-	const showContextMenuIfSelection = debounce(100, (contents: any) => {
+	const showContextMenuIfSelection = debounce(() => selectionTime, (contents: any) => {
 		const selection = contents.window.getSelection();
 		if (selection && selection.toString().trim()) {
 			contextMenuText = selection.toString().trim();
@@ -452,6 +455,29 @@
 					<span class="toggle-thumb" class:toggle-thumb-on={searchOnSelection}></span>
 				</button>
 			</label>
+			<!-- Selection time control -->
+			<div class="flex items-center justify-between">
+				<span class="text-sm font-medium">Selection time</span>
+				<div class="flex items-center gap-3">
+					<Button
+						onclick={() => (selectionTime = Math.max(0, selectionTime - 50))}
+						variant="outline"
+						size="icon-sm"
+						disabled={selectionTime <= 0}
+					>
+						<MinusIcon class="size-4" />
+					</Button>
+					<span class="w-16 text-center text-sm tabular-nums">{selectionTime}ms</span>
+					<Button
+						onclick={() => (selectionTime = Math.min(500, selectionTime + 50))}
+						variant="outline"
+						size="icon-sm"
+						disabled={selectionTime >= 500}
+					>
+						<PlusIcon class="size-4" />
+					</Button>
+				</div>
+			</div>
 		</div>
 	</Drawer.Content>
 </Drawer.Root>
