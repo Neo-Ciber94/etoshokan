@@ -13,7 +13,9 @@
 	import type { BookMetadata } from '$lib/ebook/types';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import * as Drawer from '$lib/components/ui/drawer';
+	import { Switch } from '$lib/components/ui/switch';
 	import { usePointer } from '$lib/runes/pointer.svelte';
+	import { useLocalStorage } from '$lib/runes/local-storage.svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import LanguageIcon from '@lucide/svelte/icons/languages';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
@@ -35,7 +37,6 @@
 	let bookMetadata = $state<BookMetadata | null>(null);
 	let isOnTextSelection = $state(false);
 	let lastTextSelection = $state('');
-	let disableContextMenu = $state(false);
 
 	// Context menu state
 	let contextMenuText = $state('');
@@ -52,14 +53,13 @@
 	let translationEntries = $state<WordEntry[]>([]);
 	let translationLoading = $state(false);
 
-	// Search on selection
-	let searchOnSelection = $state(true);
+	// Options persisted in localStorage
+	const disableContextMenu = useLocalStorage('reader:disableContextMenu', false);
+	const searchOnSelection = useLocalStorage('reader:searchOnSelection', true);
+	const selectionTime = useLocalStorage('reader:selectionTime', 100);
+	const showPageIndicator = useLocalStorage('reader:showPageIndicator', false);
 
-	// Selection time (debounce delay in ms)
-	let selectionTime = $state(100);
-
-	// Page indicator state
-	let showPageIndicator = $state(false);
+	// Page state
 	let currentPage = $state(0);
 	let totalPages = $state(0);
 
@@ -72,9 +72,9 @@
 
 	// Debounced context menu trigger on pointer up
 	const showContextMenuIfSelection = debounce(
-		() => selectionTime,
+		() => selectionTime.value,
 		(contents: any) => {
-			if (disableContextMenu) {
+			if (disableContextMenu.value) {
 				return;
 			}
 
@@ -198,7 +198,7 @@
 
 				contents.document.addEventListener('pointerup', (e: PointerEvent) => {
 					// Check for text selection and show context menu (debounced)
-					if (!searchOnSelection) {
+					if (!searchOnSelection.value) {
 						showContextMenuIfSelection(contents);
 					}
 
@@ -212,8 +212,8 @@
 
 					if (distance <= 10 && duration <= 500 && !hasSelection && !isOnTextSelection) {
 						contextMenuOpen = false;
-						showPageIndicator = !showPageIndicator;
-						console.log('Show page indicator: ' + showPageIndicator);
+						showPageIndicator.value = !showPageIndicator.value;
+						console.log('Show page indicator: ' + showPageIndicator.value);
 					}
 				});
 
@@ -265,7 +265,7 @@
 
 					contextMenuText = selectedText;
 
-					if (searchOnSelection) {
+					if (searchOnSelection.value) {
 						showContextMenuIfSelection(contents);
 					}
 				}
@@ -406,7 +406,7 @@
 		</ContextMenu.Root>
 
 		<!-- Page indicator -->
-		{#if showPageIndicator && totalPages > 0}
+		{#if showPageIndicator.value && totalPages > 0}
 			<div class="page-indicator">
 				{currentPage} / {totalPages}
 			</div>
@@ -447,49 +447,31 @@
 			<!-- Page indicator toggle -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Show page number</span>
-				<button
-					class="toggle"
-					title="Page Number"
-					class:toggle-on={showPageIndicator}
-					onclick={() => (showPageIndicator = !showPageIndicator)}
-					role="switch"
-					aria-checked={showPageIndicator}
-				>
-					<span class="toggle-thumb" class:toggle-thumb-on={showPageIndicator}></span>
-				</button>
+				<Switch bind:checked={showPageIndicator.value} />
 			</label>
 			<!-- Search on selection toggle -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Search on selection</span>
-				<button
-					class="toggle"
-					title="Search on selection"
-					class:toggle-on={searchOnSelection}
-					onclick={() => (searchOnSelection = !searchOnSelection)}
-					role="switch"
-					aria-checked={searchOnSelection}
-				>
-					<span class="toggle-thumb" class:toggle-thumb-on={searchOnSelection}></span>
-				</button>
+				<Switch bind:checked={searchOnSelection.value} />
 			</label>
 			<!-- Selection time control -->
 			<div class="flex items-center justify-between">
 				<span class="text-sm font-medium">Selection time</span>
 				<div class="flex items-center gap-3">
 					<Button
-						onclick={() => (selectionTime = Math.max(0, selectionTime - 50))}
+						onclick={() => (selectionTime.value = Math.max(0, selectionTime.value - 50))}
 						variant="outline"
 						size="icon-sm"
-						disabled={selectionTime <= 0}
+						disabled={selectionTime.value <= 0}
 					>
 						<MinusIcon class="size-4" />
 					</Button>
-					<span class="w-16 text-center text-sm tabular-nums">{selectionTime}ms</span>
+					<span class="w-16 text-center text-sm tabular-nums">{selectionTime.value}ms</span>
 					<Button
-						onclick={() => (selectionTime = Math.min(500, selectionTime + 50))}
+						onclick={() => (selectionTime.value = Math.min(500, selectionTime.value + 50))}
 						variant="outline"
 						size="icon-sm"
-						disabled={selectionTime >= 500}
+						disabled={selectionTime.value >= 500}
 					>
 						<PlusIcon class="size-4" />
 					</Button>
@@ -499,16 +481,7 @@
 			<!-- Disable context menu -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Disable context menu</span>
-				<button
-					class="toggle"
-					title="Disable context menu"
-					class:toggle-on={disableContextMenu}
-					onclick={() => (disableContextMenu = !disableContextMenu)}
-					role="switch"
-					aria-checked={disableContextMenu}
-				>
-					<span class="toggle-thumb" class:toggle-thumb-on={disableContextMenu}></span>
-				</button>
+				<Switch bind:checked={disableContextMenu.value} />
 			</label>
 		</div>
 	</Drawer.Content>
@@ -565,33 +538,4 @@
 		pointer-events: none;
 	}
 
-	.toggle {
-		position: relative;
-		width: 2.5rem;
-		height: 1.5rem;
-		border-radius: 9999px;
-		background: hsl(var(--muted));
-		border: none;
-		cursor: pointer;
-		transition: background 150ms;
-	}
-
-	.toggle-on {
-		background: hsl(var(--primary));
-	}
-
-	.toggle-thumb {
-		position: absolute;
-		top: 0.125rem;
-		left: 0.125rem;
-		width: 1.25rem;
-		height: 1.25rem;
-		border-radius: 9999px;
-		background: white;
-		transition: transform 150ms;
-	}
-
-	.toggle-thumb-on {
-		transform: translateX(1rem);
-	}
 </style>
