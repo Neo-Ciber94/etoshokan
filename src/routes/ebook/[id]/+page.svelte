@@ -332,8 +332,8 @@
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
 
-<section class="reader-container" role="application" oncontextmenu={(e) => e.preventDefault()}>
-	<div class="reader-controls">
+<section class="fixed inset-0 flex flex-col bg-background" role="application" oncontextmenu={(e) => e.preventDefault()}>
+	<div class="flex items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
 			{bookMetadata?.title || 'Loading...'}
@@ -372,7 +372,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="reader-content">
+		<div class="relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none">
 			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
 
@@ -386,7 +386,7 @@
 
 		<!-- Page indicator -->
 		{#if showPageIndicator.value && totalPages > 0}
-			<div class="page-indicator">
+			<div class="pointer-events-none fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-border bg-card/85 px-3 py-1 text-xs tabular-nums text-muted-foreground backdrop-blur-sm">
 				{currentPage} / {totalPages}
 			</div>
 		{/if}
@@ -465,54 +465,3 @@
 		</div>
 	</Drawer.Content>
 </Drawer.Root>
-
-<style>
-	.reader-container {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		display: flex;
-		flex-direction: column;
-		background: hsl(var(--background));
-	}
-
-	.reader-controls {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid hsl(var(--border));
-		background: hsl(var(--card));
-	}
-
-	:global(.reader-content) {
-		flex: 1;
-		overflow: hidden;
-		position: relative;
-		touch-action: none;
-	}
-
-	:global(.reader-content iframe) {
-		touch-action: none;
-	}
-
-	.page-indicator {
-		position: fixed;
-		bottom: 1rem;
-		left: 50%;
-		transform: translateX(-50%);
-		font-size: 0.75rem;
-		color: hsl(var(--muted-foreground));
-		background: hsl(var(--card) / 0.85);
-		border: 1px solid hsl(var(--border));
-		border-radius: 9999px;
-		padding: 0.25rem 0.75rem;
-		z-index: 40;
-		backdrop-filter: blur(4px);
-		font-variant-numeric: tabular-nums;
-		pointer-events: none;
-	}
-</style>
