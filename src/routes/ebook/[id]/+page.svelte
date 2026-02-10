@@ -208,7 +208,7 @@
 					}
 				});
 
-				contents.document.documentElement.style.touchAction = 'pan-y';
+				contents.document.documentElement.style.touchAction = 'none';
 			});
 
 			// Restore reading position
@@ -517,14 +517,13 @@
 
 	:global(.reader-content) {
 		flex: 1;
-		overflow: auto;
+		overflow: hidden;
 		position: relative;
-		touch-action: pan-y;
-		-webkit-overflow-scrolling: touch;
+		touch-action: none;
 	}
 
 	:global(.reader-content iframe) {
-		touch-action: pan-y;
+		touch-action: none;
 	}
 
 	.page-indicator {
