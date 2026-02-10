@@ -78,7 +78,14 @@ export class JMDict_Dictionary extends Dictionary {
 
 	private kanaMap: Map<string, WordEntry[]> = new Map();
 	private kanjiMap: Map<string, WordEntry[]> = new Map();
+
+	private loadingPromise?: Promise<void> = undefined;
 	private loaded = false;
+
+	constructor() {
+		super();
+		this.initialize();
+	}
 
 	normalize = (s: string) => s.trim().normalize('NFC');
 
@@ -128,7 +135,7 @@ export class JMDict_Dictionary extends Dictionary {
 			};
 		});
 
-	async initialize(): Promise<void> {
+	async loadDictionary() {
 		if (this.loaded) {
 			return;
 		}
@@ -177,6 +184,14 @@ export class JMDict_Dictionary extends Dictionary {
 
 		console.log('Finished generating map');
 		this.loaded = true;
+	}
+
+	async initialize(): Promise<void> {
+		if (this.loadingPromise == null) {
+			this.loadingPromise = this.loadDictionary();
+		}
+
+		await this.loadingPromise;
 	}
 
 	fallbackStartWith(term: string, maxCount: number): WordEntry[] {
