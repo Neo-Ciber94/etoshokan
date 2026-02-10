@@ -10,7 +10,7 @@
 	const THEME_KEY = 'etoshokan:theme';
 	let theme = $state<Theme>('system');
 
-	$effect(() => {
+	$effect.pre(() => {
 		dictionary.initialize();
 	});
 
