@@ -69,7 +69,7 @@
 {#if open}
 	<!-- Invisible backdrop to catch outside clicks -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50" onpointerdown={handleBackdropPointerDown}></div>
+	<div class="fixed inset-0 z-50 w-full h-full" onpointerdown={handleBackdropPointerDown}></div>
 
 	<div
 		bind:this={menuEl}
