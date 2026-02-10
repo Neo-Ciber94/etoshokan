@@ -12,13 +12,10 @@
 	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
-	import * as Drawer from '$lib/components/ui/drawer';
-	import { Switch } from '$lib/components/ui/switch';
+	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import { useStorage } from '$lib/runes/local-storage.svelte';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import MinusIcon from '@lucide/svelte/icons/minus';
-	import PlusIcon from '@lucide/svelte/icons/plus';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { dictionary } from '$lib/dictionary';
@@ -41,7 +38,7 @@
 	let zoom = $state(100);
 
 	// Drawer state
-	let drawerOpen = $state(false);
+	let optionsDrawerOpen = $state(false);
 
 	// Translation state
 	let showTranslation = $state(false);
@@ -339,7 +336,7 @@
 			{bookMetadata?.title || 'Loading...'}
 		</div>
 		<div class="flex items-center gap-2">
-			<Button onclick={() => (drawerOpen = true)} variant="ghost" size="icon-sm">
+			<Button onclick={() => (optionsDrawerOpen = true)} variant="ghost" size="icon-sm">
 				<SettingsIcon class="size-4" />
 			</Button>
 			<Button onclick={prevPage} variant="outline" size="sm" disabled={!rendition || loading}>
@@ -403,65 +400,13 @@
 	/>
 {/if}
 
-<!-- Options Drawer -->
-<Drawer.Root bind:open={drawerOpen} direction="bottom">
-	<Drawer.Content>
-		<Drawer.Header>
-			<Drawer.Title>Options</Drawer.Title>
-		</Drawer.Header>
-		<div class="flex flex-col gap-6 px-4 pb-6">
-			<!-- Zoom control -->
-			<div class="flex items-center justify-between">
-				<span class="text-sm font-medium">Zoom</span>
-				<div class="flex items-center gap-3">
-					<Button onclick={handleZoomOut} variant="outline" size="icon-sm" disabled={zoom <= 100}>
-						<MinusIcon class="size-4" />
-					</Button>
-					<span class="w-12 text-center text-sm tabular-nums">{zoom}%</span>
-					<Button onclick={handleZoomIn} variant="outline" size="icon-sm" disabled={zoom >= 200}>
-						<PlusIcon class="size-4" />
-					</Button>
-				</div>
-			</div>
-			<!-- Page indicator toggle -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Show page number</span>
-				<Switch bind:checked={showPageIndicator.value} />
-			</label>
-			<!-- Search on selection toggle -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Search on selection</span>
-				<Switch bind:checked={searchOnSelection.value} />
-			</label>
-			<!-- Selection time control -->
-			<div class="flex items-center justify-between">
-				<span class="text-sm font-medium">Selection time</span>
-				<div class="flex items-center gap-3">
-					<Button
-						onclick={() => (selectionTime.value = Math.max(0, selectionTime.value - 50))}
-						variant="outline"
-						size="icon-sm"
-						disabled={selectionTime.value <= 0}
-					>
-						<MinusIcon class="size-4" />
-					</Button>
-					<span class="w-16 text-center text-sm tabular-nums">{selectionTime.value}ms</span>
-					<Button
-						onclick={() => (selectionTime.value = Math.min(500, selectionTime.value + 50))}
-						variant="outline"
-						size="icon-sm"
-						disabled={selectionTime.value >= 500}
-					>
-						<PlusIcon class="size-4" />
-					</Button>
-				</div>
-			</div>
-
-			<!-- Disable context menu -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Disable context menu</span>
-				<Switch bind:checked={disableContextMenu.value} />
-			</label>
-		</div>
-	</Drawer.Content>
-</Drawer.Root>
+<EBookOptionsDrawer
+	bind:open={optionsDrawerOpen}
+	{zoom}
+	onZoomIn={handleZoomIn}
+	onZoomOut={handleZoomOut}
+	{showPageIndicator}
+	{searchOnSelection}
+	{selectionTime}
+	{disableContextMenu}
+/>
