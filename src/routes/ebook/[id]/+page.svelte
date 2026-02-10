@@ -266,7 +266,7 @@
 
 			// Toggle page indicator on click inside iframe
 			rendition.on('click', async () => {
-				contextMenuOpen = false;
+				//contextMenuOpen = false;
 				await tick();
 				isOnTextSelection = false;
 			});
