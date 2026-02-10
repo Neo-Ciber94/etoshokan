@@ -10,7 +10,7 @@
 		userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 	}
 
-	onMount(() => {
+	$effect.pre(() => {
 		const handler = (e: Event) => {
 			e.preventDefault();
 			deferredPrompt = e as BeforeInstallPromptEvent;
@@ -39,20 +39,14 @@
 
 {#if show}
 	<div class="fixed bottom-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2">
-		<div
-			class="flex items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-lg"
-		>
+		<div class="flex items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-lg">
 			<div class="flex-1">
 				<p class="text-sm font-medium text-foreground">Install Etoshokan</p>
 				<p class="text-xs text-muted-foreground">Add to your home screen for quick access</p>
 			</div>
 			<div class="flex shrink-0 gap-2">
-				<Button variant="ghost" size="sm" onclick={dismiss}>
-					Dismiss
-				</Button>
-				<Button size="sm" onclick={install}>
-					Install
-				</Button>
+				<Button variant="ghost" size="sm" onclick={dismiss}>Dismiss</Button>
+				<Button size="sm" onclick={install}>Install</Button>
 			</div>
 		</div>
 	</div>
