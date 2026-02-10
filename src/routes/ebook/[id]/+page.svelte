@@ -37,7 +37,6 @@
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 	let isOnTextSelection = $state(false);
-	let lastTextSelection = $state('');
 
 	// Context menu state
 	let contextMenuText = $state('');
@@ -56,7 +55,7 @@
 
 	// Options persisted in localStorage
 	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
-	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: true });
+	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: false });
 	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 
@@ -87,13 +86,6 @@
 			}
 		}
 	);
-
-	$effect(() => {
-		console.log({ lastTextSelection });
-		if (lastTextSelection == '') {
-			contextMenuOpen = false;
-		}
-	});
 
 	onMount(async () => {
 		dictionary.initialize().catch((err) => console.error('Failed to load dictionary', err));
@@ -250,7 +242,6 @@
 			// Track text selection and show context menu
 			rendition.on('selected', async (cfiRange: string, contents: any) => {
 				const selection = contents.window.getSelection();
-				lastTextSelection = selection == null ? '' : selection.toString().trim();
 
 				if (selection && selection.toString()) {
 					const selectedText = selection.toString().trim();
@@ -268,7 +259,7 @@
 
 			// Toggle page indicator on click inside iframe
 			rendition.on('click', async () => {
-				//contextMenuOpen = false;
+				contextMenuOpen = false;
 				await tick();
 				isOnTextSelection = false;
 			});
