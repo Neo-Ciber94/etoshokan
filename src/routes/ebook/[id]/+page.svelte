@@ -50,6 +50,9 @@
 	let translationEntries = $state<WordEntry[]>([]);
 	let translationLoading = $state(false);
 
+	// Search on selection
+	let searchOnSelection = $state(true);
+
 	// Page indicator state
 	let showPageIndicator = $state(false);
 	let currentPage = $state(0);
@@ -174,7 +177,9 @@
 
 				contents.document.addEventListener('pointerup', (e: PointerEvent) => {
 					// Check for text selection and show context menu (debounced)
-					showContextMenuIfSelection(contents);
+					if (!searchOnSelection) {
+						showContextMenuIfSelection(contents);
+					}
 
 					// Fast-click toggle for page indicator
 					const dx = e.clientX - pagePointer.pointerDownX;
@@ -236,6 +241,9 @@
 					}
 
 					contextMenuText = selectedText;
+					if (searchOnSelection) {
+						showContextMenuIfSelection(contents);
+					}
 				}
 			});
 
@@ -428,6 +436,20 @@
 					aria-checked={showPageIndicator}
 				>
 					<span class="toggle-thumb" class:toggle-thumb-on={showPageIndicator}></span>
+				</button>
+			</label>
+			<!-- Search on selection toggle -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Search on selection</span>
+				<button
+					class="toggle"
+					title="Search on selection"
+					class:toggle-on={searchOnSelection}
+					onclick={() => (searchOnSelection = !searchOnSelection)}
+					role="switch"
+					aria-checked={searchOnSelection}
+				>
+					<span class="toggle-thumb" class:toggle-thumb-on={searchOnSelection}></span>
 				</button>
 			</label>
 		</div>
