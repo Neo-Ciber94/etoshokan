@@ -96,6 +96,7 @@
 	});
 
 	onMount(async () => {
+		dictionary.initialize().catch((err) => console.error('Failed to load dictionary', err));
 		await loadBook();
 	});
 
@@ -287,7 +288,6 @@
 		translationEntries = [];
 
 		try {
-			await dictionary.initialize();
 			translationEntries = await dictionary.lookup(contextMenuText.trim(), {
 				targetLanguage: 'en'
 			});
