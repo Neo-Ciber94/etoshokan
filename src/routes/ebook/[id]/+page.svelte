@@ -35,6 +35,7 @@
 	let bookMetadata = $state<BookMetadata | null>(null);
 	let isOnTextSelection = $state(false);
 	let lastTextSelection = $state('');
+	let disableContextMenu = $state(false);
 
 	// Context menu state
 	let contextMenuText = $state('');
@@ -73,6 +74,10 @@
 	const showContextMenuIfSelection = debounce(
 		() => selectionTime,
 		(contents: any) => {
+			if (disableContextMenu) {
+				return;
+			}
+
 			const selection = contents.window.getSelection();
 			if (selection && selection.toString().trim()) {
 				contextMenuText = selection.toString().trim();
@@ -489,6 +494,21 @@
 					</Button>
 				</div>
 			</div>
+
+			<!-- Disable context menu -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Disable context menu</span>
+				<button
+					class="toggle"
+					title="Disable context menu"
+					class:toggle-on={disableContextMenu}
+					onclick={() => (disableContextMenu = !disableContextMenu)}
+					role="switch"
+					aria-checked={disableContextMenu}
+				>
+					<span class="toggle-thumb" class:toggle-thumb-on={disableContextMenu}></span>
+				</button>
+			</label>
 		</div>
 	</Drawer.Content>
 </Drawer.Root>

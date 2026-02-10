@@ -84,7 +84,6 @@ export class JMDict_Dictionary extends Dictionary {
 
 	constructor() {
 		super();
-		this.initialize();
 	}
 
 	normalize = (s: string) => s.trim().normalize('NFC');

@@ -3,11 +3,16 @@
 	import favicon from '$lib/assets/favicon.ico';
 	import { page } from '$app/stores';
 	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
+	import { dictionary } from '$lib/dictionary';
 
 	type Theme = 'system' | 'light' | 'dark';
 
 	const THEME_KEY = 'etoshokan:theme';
 	let theme = $state<Theme>('system');
+
+	$effect(() => {
+		dictionary.initialize();
+	});
 
 	function setTheme(value: Theme) {
 		const root = document.documentElement;
