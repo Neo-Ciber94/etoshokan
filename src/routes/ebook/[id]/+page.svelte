@@ -15,7 +15,7 @@
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Switch } from '$lib/components/ui/switch';
 	import { usePointer } from '$lib/runes/pointer.svelte';
-	import { useLocalStorage } from '$lib/runes/local-storage.svelte';
+	import { useStorage } from '$lib/runes/local-storage.svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import LanguageIcon from '@lucide/svelte/icons/languages';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
@@ -54,10 +54,10 @@
 	let translationLoading = $state(false);
 
 	// Options persisted in localStorage
-	const disableContextMenu = useLocalStorage('reader:disableContextMenu', false);
-	const searchOnSelection = useLocalStorage('reader:searchOnSelection', true);
-	const selectionTime = useLocalStorage('reader:selectionTime', 100);
-	const showPageIndicator = useLocalStorage('reader:showPageIndicator', false);
+	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
+	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: true });
+	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
+	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 
 	// Page state
 	let currentPage = $state(0);
