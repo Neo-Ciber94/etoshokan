@@ -255,6 +255,18 @@
 
 					contextMenu.text = selectedText;
 
+					// Update pointer from selection rect (pointermove doesn't fire during selection on mobile)
+					if (selection.rangeCount > 0) {
+						const range = selection.getRangeAt(0);
+						const rect = range.getBoundingClientRect();
+						const iframe = readerContainer.querySelector('iframe');
+						const iframeRect = iframe?.getBoundingClientRect();
+						pointer.update(
+							(iframeRect?.left || 0) + rect.right,
+							(iframeRect?.top || 0) + rect.bottom
+						);
+					}
+
 					if (searchOnSelection.value) {
 						// Close first so the menu re-anchors to the current pointer position
 						contextMenu.isOpen = false;
