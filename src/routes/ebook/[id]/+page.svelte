@@ -34,6 +34,7 @@
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 	let isOnTextSelection = $state(false);
+	let lastTextSelection = $state('');
 
 	// Context menu state
 	let contextMenuText = $state('');
@@ -69,18 +70,28 @@
 	});
 
 	// Debounced context menu trigger on pointer up
-	const showContextMenuIfSelection = debounce(() => selectionTime, (contents: any) => {
-		const selection = contents.window.getSelection();
-		if (selection && selection.toString().trim()) {
-			contextMenuText = selection.toString().trim();
-			isOnTextSelection = true;
-			readerContainer.dispatchEvent(
-				new PointerEvent('contextmenu', {
-					bubbles: true,
-					clientX: pointer.x,
-					clientY: pointer.y
-				})
-			);
+	const showContextMenuIfSelection = debounce(
+		() => selectionTime,
+		(contents: any) => {
+			const selection = contents.window.getSelection();
+			if (selection && selection.toString().trim()) {
+				contextMenuText = selection.toString().trim();
+				isOnTextSelection = true;
+				readerContainer.dispatchEvent(
+					new PointerEvent('contextmenu', {
+						bubbles: true,
+						clientX: pointer.x,
+						clientY: pointer.y
+					})
+				);
+			}
+		}
+	);
+
+	$effect(() => {
+		console.log({ lastTextSelection });
+		if (lastTextSelection == '') {
+			contextMenuOpen = false;
 		}
 	});
 
@@ -163,9 +174,9 @@
 
 			// Register content hooks before display so they fire for the initial page
 			rendition.hooks.content.register((contents: any) => {
-				contents.document.addEventListener('contextmenu', (e: Event) => {
-					e.preventDefault();
-				});
+				// contents.document.addEventListener('contextmenu', (e: Event) => {
+				// 	e.preventDefault();
+				// });
 				contents.document.addEventListener('pointermove', (e: PointerEvent) => {
 					const iframe = readerContainer.querySelector('iframe');
 					const iframeRect = iframe?.getBoundingClientRect();
@@ -237,6 +248,8 @@
 			// Track text selection and show context menu
 			rendition.on('selected', async (cfiRange: string, contents: any) => {
 				const selection = contents.window.getSelection();
+				lastTextSelection = selection == null ? '' : selection.toString().trim();
+
 				if (selection && selection.toString()) {
 					const selectedText = selection.toString().trim();
 					if (!selectedText) {
@@ -244,6 +257,7 @@
 					}
 
 					contextMenuText = selectedText;
+
 					if (searchOnSelection) {
 						showContextMenuIfSelection(contents);
 					}
@@ -252,7 +266,6 @@
 
 			// Toggle page indicator on click inside iframe
 			rendition.on('click', async () => {
-				contextMenuOpen = false;
 				await tick();
 				isOnTextSelection = false;
 			});
@@ -318,13 +331,12 @@
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
 
-<!-- Book Reader -->
 <section
 	class="reader-container"
-	oncontextmenu={(e) => e.preventDefault()}
 	onpointerdown={() => {
 		contextMenuOpen = false;
 	}}
+	oncontextmenu={(e) => e.preventDefault()}
 	role="application"
 >
 	<div class="reader-controls">
