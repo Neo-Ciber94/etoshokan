@@ -2,7 +2,12 @@
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import ePub, { type Book, type Rendition, type Location, type Contents } from 'epubjs';
+	import ePub, {
+		type Book,
+		type Rendition,
+		type Location as EpubLocation,
+		type Contents as EpubContents
+	} from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		getBook,
@@ -54,6 +59,7 @@
 	// Page state
 	let currentPage = $state(0);
 	let totalPages = $state(0);
+	$inspect(currentPage, totalPages).with(console.log);
 
 	// Pointer tracking for fast-click detection
 	let pagePointer = $state({
@@ -141,6 +147,10 @@
 				spread: 'none'
 			});
 
+			currentBook.loaded.navigation.then((toc) => {
+				console.log(toc);
+			});
+
 			// Apply custom styles for light/dark mode
 			const isDark = document.documentElement.classList.contains('dark');
 			rendition.themes.default({
@@ -157,7 +167,7 @@
 			});
 
 			// Register content hooks before display so they fire for the initial page
-			rendition.hooks.content.register((contents: Contents) => {
+			rendition.hooks.content.register((contents: EpubContents) => {
 				contents.document.addEventListener('contextmenu', (e: Event) => {
 					e.preventDefault();
 				});
@@ -205,6 +215,11 @@
 				contents.document.documentElement.style.touchAction = 'none';
 			});
 
+			// Wait for book spine/metadata to load, then generate locations
+			await currentBook.ready;
+			const generatedLocations = await currentBook.locations.generate(1024);
+			totalPages = generatedLocations.length;
+
 			// Restore reading position
 			if (bookMetadata.currentCfi) {
 				await rendition.display(bookMetadata.currentCfi);
@@ -219,7 +234,7 @@
 			}
 
 			// Track reading progress and page numbers
-			rendition.on('relocated', async (location: Location) => {
+			rendition.on('relocated', async (location: EpubLocation) => {
 				const progress = Math.round((location.start.percentage || 0) * 100);
 				await updateBookProgress(bookId, location.start.cfi, progress);
 
@@ -230,15 +245,14 @@
 					bookMetadata.lastReadAt = Date.now();
 				}
 
-				// Update page numbers
-				if (location.start.displayed) {
-					currentPage = location.start.displayed.page;
-					totalPages = location.start.displayed.total;
+				// Update page numbers (book-wide, not per-chapter)
+				if (totalPages > 0) {
+					currentPage = location.start.location + 1;
 				}
 			});
 
 			// Track text selection and show context menu
-			rendition.on('selected', async (cfiRange: string, contents: Contents) => {
+			rendition.on('selected', async (cfiRange: string, contents: EpubContents) => {
 				const selection = contents.window.getSelection();
 
 				if (selection && selection.toString()) {
@@ -329,7 +343,11 @@
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
 
-<section class="fixed inset-0 flex flex-col bg-background" role="application" oncontextmenu={(e) => e.preventDefault()}>
+<section
+	class="fixed inset-0 flex flex-col bg-background"
+	role="application"
+	oncontextmenu={(e) => e.preventDefault()}
+>
 	<div class="flex items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
@@ -383,7 +401,9 @@
 
 		<!-- Page indicator -->
 		{#if showPageIndicator.value && totalPages > 0}
-			<div class="pointer-events-none fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-border bg-card/85 px-3 py-1 text-xs tabular-nums text-muted-foreground backdrop-blur-sm">
+			<div
+				class="pointer-events-none fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-border bg-card/85 px-3 py-1 text-xs text-muted-foreground tabular-nums backdrop-blur-sm"
+			>
 				{currentPage} / {totalPages}
 			</div>
 		{/if}
