@@ -342,7 +342,11 @@
 	}}
 	oncontextmenu={(e) => e.preventDefault()} -->
 
-<section class="reader-container" role="application">
+<section 
+class="reader-container" 
+role="application"
+oncontextmenu={(e) => e.preventDefault()}
+>
 	<div class="reader-controls">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
