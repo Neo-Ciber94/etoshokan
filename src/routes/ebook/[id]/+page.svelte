@@ -2,7 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import ePub, { type Book, type Rendition } from 'epubjs';
+	import ePub, { type Book, type Rendition, type Location, type Contents } from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		getBook,
@@ -157,7 +157,7 @@
 			});
 
 			// Register content hooks before display so they fire for the initial page
-			rendition.hooks.content.register((contents: any) => {
+			rendition.hooks.content.register((contents: Contents) => {
 				contents.document.addEventListener('contextmenu', (e: Event) => {
 					e.preventDefault();
 				});
@@ -219,7 +219,7 @@
 			}
 
 			// Track reading progress and page numbers
-			rendition.on('relocated', async (location: any) => {
+			rendition.on('relocated', async (location: Location) => {
 				const progress = Math.round((location.start.percentage || 0) * 100);
 				await updateBookProgress(bookId, location.start.cfi, progress);
 
@@ -238,7 +238,7 @@
 			});
 
 			// Track text selection and show context menu
-			rendition.on('selected', async (cfiRange: string, contents: any) => {
+			rendition.on('selected', async (cfiRange: string, contents: Contents) => {
 				const selection = contents.window.getSelection();
 
 				if (selection && selection.toString()) {
