@@ -11,7 +11,8 @@
 		updateBookZoom
 	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
-	import * as ContextMenu from '$lib/components/ui/context-menu';
+	// import * as ContextMenu from '$lib/components/ui/context-menu';
+	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Switch } from '$lib/components/ui/switch';
 	import { usePointer } from '$lib/runes/pointer.svelte';
@@ -82,13 +83,7 @@
 			if (selection && selection.toString().trim()) {
 				contextMenuText = selection.toString().trim();
 				isOnTextSelection = true;
-				readerContainer.dispatchEvent(
-					new PointerEvent('contextmenu', {
-						bubbles: true,
-						clientX: pointer.x,
-						clientY: pointer.y
-					})
-				);
+				contextMenuOpen = true;
 			}
 		}
 	);
@@ -383,6 +378,7 @@
 			</div>
 		</div>
 	{:else}
+		<!-- Old shadcn context menu (commented out - causes selection issues on mobile)
 		<ContextMenu.Root bind:open={contextMenuOpen}>
 			<ContextMenu.Trigger class="reader-content">
 				<div bind:this={readerContainer} class="h-full w-full"></div>
@@ -404,6 +400,19 @@
 				</ContextMenu.Item>
 			</ContextMenu.Content>
 		</ContextMenu.Root>
+		-->
+
+		<div class="reader-content">
+			<div bind:this={readerContainer} class="h-full w-full"></div>
+		</div>
+
+		<EBookContextMenu
+			bind:open={contextMenuOpen}
+			x={pointer.x}
+			y={pointer.y}
+			onTranslate={handleTranslate}
+			onSearch={handleSearch}
+		/>
 
 		<!-- Page indicator -->
 		{#if showPageIndicator.value && totalPages > 0}
