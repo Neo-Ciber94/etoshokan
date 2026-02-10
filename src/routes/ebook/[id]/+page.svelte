@@ -36,11 +36,9 @@
 	let notFound = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
-	let isOnTextSelection = $state(false);
 
-	// Context menu state
-	let contextMenuText = $state('');
-	let contextMenuOpen = $state(false);
+	// Context menu state (object so iframe closures see current values via the proxy)
+	let contextMenu = $state({ text: '', isOpen: false });
 
 	// Zoom state
 	let zoom = $state(100);
@@ -74,15 +72,14 @@
 	const showContextMenuIfSelection = debounce(
 		() => selectionTime.value,
 		(contents: any) => {
-			if (disableContextMenu.value) {
+			if (disableContextMenu.value || contextMenu.isOpen) {
 				return;
 			}
 
 			const selection = contents.window.getSelection();
 			if (selection && selection.toString().trim()) {
-				contextMenuText = selection.toString().trim();
-				isOnTextSelection = true;
-				contextMenuOpen = true;
+				contextMenu.text = selection.toString().trim();
+				contextMenu.isOpen = true;
 			}
 		}
 	);
@@ -178,12 +175,21 @@
 				});
 
 				contents.document.addEventListener('pointerdown', (e: PointerEvent) => {
+					if (contextMenu.isOpen) {
+						return;
+					}
+
 					pagePointer.pointerDownX = e.clientX;
 					pagePointer.pointerDownY = e.clientY;
 					pagePointer.pointerDownTime = Date.now();
 				});
 
 				contents.document.addEventListener('pointerup', (e: PointerEvent) => {
+					if (contextMenu.isOpen) {
+						contextMenu.isOpen = false;
+						return;
+					}
+
 					// Check for text selection and show context menu (debounced)
 					if (!searchOnSelection.value) {
 						showContextMenuIfSelection(contents);
@@ -197,10 +203,8 @@
 					const selection = contents.window.getSelection();
 					const hasSelection = selection && selection.toString().trim().length > 0;
 
-					if (distance <= 10 && duration <= 500 && !hasSelection && !isOnTextSelection) {
-						contextMenuOpen = false;
+					if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
 						showPageIndicator.value = !showPageIndicator.value;
-						console.log('Show page indicator: ' + showPageIndicator.value);
 					}
 				});
 
@@ -249,19 +253,12 @@
 						return;
 					}
 
-					contextMenuText = selectedText;
+					contextMenu.text = selectedText;
 
 					if (searchOnSelection.value) {
 						showContextMenuIfSelection(contents);
 					}
 				}
-			});
-
-			// Toggle page indicator on click inside iframe
-			rendition.on('click', async () => {
-				contextMenuOpen = false;
-				await tick();
-				isOnTextSelection = false;
 			});
 		} catch (error) {
 			console.error('Error loading book:', error);
@@ -280,7 +277,7 @@
 		translationEntries = [];
 
 		try {
-			translationEntries = await dictionary.lookup(contextMenuText.trim(), {
+			translationEntries = await dictionary.lookup(contextMenu.text.trim(), {
 				targetLanguage: 'en'
 			});
 		} catch {
@@ -291,7 +288,7 @@
 	}
 
 	function handleSearch() {
-		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenuText)}`, '_blank');
+		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`, '_blank');
 	}
 
 	function nextPage() {
@@ -323,11 +320,6 @@
 <svelte:head>
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
-
-<!-- onpointerdown={() => {
-		contextMenuOpen = false;
-	}}
-	oncontextmenu={(e) => e.preventDefault()} -->
 
 <section class="reader-container" role="application" oncontextmenu={(e) => e.preventDefault()}>
 	<div class="reader-controls">
@@ -398,7 +390,7 @@
 		</div>
 
 		<EBookContextMenu
-			bind:open={contextMenuOpen}
+			bind:open={contextMenu.isOpen}
 			x={pointer.x}
 			y={pointer.y}
 			onTranslate={handleTranslate}
@@ -417,7 +409,7 @@
 <!-- Translation box -->
 {#if showTranslation}
 	<TranslationBox
-		selectedText={contextMenuText}
+		selectedText={contextMenu.text}
 		entries={translationEntries}
 		loading={translationLoading}
 		onClose={() => (showTranslation = false)}

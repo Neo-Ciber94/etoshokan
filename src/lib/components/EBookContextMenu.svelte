@@ -60,17 +60,9 @@
 		open = false;
 		callback?.();
 	}
-
-	function handleBackdropPointerDown() {
-		open = false;
-	}
 </script>
 
 {#if open}
-	<!-- Invisible backdrop to catch outside clicks -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 w-full h-full" onpointerdown={handleBackdropPointerDown}></div>
-
 	<div
 		bind:this={menuEl}
 		class="fixed z-51 min-w-40 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
