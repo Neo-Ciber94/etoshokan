@@ -179,6 +179,45 @@ export class JMDict_Dictionary extends Dictionary {
 		this.loaded = true;
 	}
 
+	fallbackStartWith(term: string, maxCount: number): WordEntry[] {
+		const key = this.normalize(term);
+
+		const result: WordEntry[] = [];
+		const seen = new Set<string>();
+
+		const scan = (map: Map<string, WordEntry[]>) => {
+			if (result.length >= maxCount) {
+				return;
+			}
+
+			for (const [k, entries] of map) {
+				if (!k.startsWith(key)) {
+					continue;
+				}
+
+				for (const e of entries) {
+					const id = `${e.term}||${e.reading ?? ''}`;
+					if (seen.has(id)) {
+						continue;
+					}
+
+					seen.add(id);
+
+					if (result.length >= maxCount) {
+						return;
+					}
+
+					result.push(e);
+				}
+			}
+		};
+
+		scan(this.kanjiMap);
+		scan(this.kanaMap);
+
+		return result;
+	}
+
 	async lookup(term: string, options?: { targetLanguage: Language }): Promise<WordEntry[]> {
 		const lang = options?.targetLanguage || 'en';
 
@@ -196,16 +235,29 @@ export class JMDict_Dictionary extends Dictionary {
 			term = wanakana.toHiragana(term);
 		}
 
-		const normalize = (s: string) => s.trim().normalize('NFC');
+		const normalize = (s: string) => s.trim().normalize('NFKC');
 		const key = normalize(term);
 
 		const fromKanji = this.kanjiMap.get(key) ?? [];
 		const fromKana = this.kanaMap.get(key) ?? [];
+		const fallback: WordEntry[] = [];
+
+		if (fromKanji.length === 0 && fromKana.length === 0) {
+			fallback.push(...this.fallbackStartWith(term, 10));
+		}
+
+		console.log({
+			term,
+			key,
+			fromKanji,
+			fromKana,
+			fallback
+		});
 
 		const seen = new Set<string>();
 		const result: WordEntry[] = [];
 
-		for (const e of [...fromKanji, ...fromKana]) {
+		for (const e of [...fromKanji, ...fromKana, ...fallback]) {
 			const id = `${e.term}||${e.reading ?? ''}`;
 			if (!seen.has(id)) {
 				seen.add(id);

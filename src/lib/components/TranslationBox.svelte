@@ -51,7 +51,11 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-9998" onclick={onClose}></div>
+<button
+	class="fixed inset-0 z-9998 cursor-default appearance-none border-none bg-transparent"
+	onclick={onClose}
+	aria-label="Close dictionary lookup"
+></button>
 
 <div
 	bind:this={boxEl}
@@ -59,10 +63,15 @@
 	class:shadow-xl={isDragging}
 	style="transform: translateY({offsetY}px)"
 	onclick={(e) => e.stopPropagation()}
+	onkeydown={(e) => e.stopPropagation()}
+	role="dialog"
+	tabindex="-1"
+	aria-label="Dictionary lookup"
 >
 	<!-- Drag handle -->
 	<div
 		class="flex cursor-grab touch-none justify-center pt-2.5 pb-1 active:cursor-grabbing"
+		role="separator"
 		onpointerdown={onPointerDown}
 		onpointermove={onPointerMove}
 		onpointerup={onPointerUp}
@@ -73,6 +82,7 @@
 
 	<div class="flex max-h-[60vh] flex-col gap-2 overflow-y-auto px-4 pb-4">
 		<p class="text-2xl text-muted-foreground">{displayText}</p>
+		<div class="h-0.5 w-full bg-muted"></div>
 
 		{#if loading}
 			<p class="animate-pulse text-base text-muted-foreground">Looking up…</p>
@@ -85,9 +95,14 @@
 						class:border-border={i > 0}
 						class:pt-3={i > 0}
 					>
-						{#if entry.reading && entry.reading !== entry.term}
-							<span class="text-sm text-muted-foreground">{entry.reading}</span>
-						{/if}
+						<div class="flex flex-row items-center gap-4">
+							<div class="text-xl text-foreground">{entry.term}</div>
+							<div>
+								{#if entry.reading && entry.reading !== entry.term}
+									<span class="text-sm text-muted-foreground">{entry.reading}</span>
+								{/if}
+							</div>
+						</div>
 
 						{#each entry.senses as sense}
 							<div class="flex items-baseline gap-1.5 text-base leading-snug">
