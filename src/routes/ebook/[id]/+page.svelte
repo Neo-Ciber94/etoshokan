@@ -100,6 +100,17 @@
 		}
 	});
 
+	$effect(() => {
+		function handleContextMenu(ev: Event) {
+			ev.preventDefault()
+		}
+
+		window.addEventListener('contextmenu', handleContextMenu);
+		return () => {
+			window.addEventListener('contextmenu', handleContextMenu)
+		}
+	}) 
+
 	onMount(async () => {
 		dictionary.initialize().catch((err) => console.error('Failed to load dictionary', err));
 		await loadBook();
