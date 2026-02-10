@@ -100,17 +100,6 @@
 		}
 	});
 
-	$effect(() => {
-		function handleContextMenu(ev: Event) {
-			ev.preventDefault()
-		}
-
-		window.addEventListener('contextmenu', handleContextMenu);
-		return () => {
-			window.addEventListener('contextmenu', handleContextMenu)
-		}
-	}) 
-
 	onMount(async () => {
 		dictionary.initialize().catch((err) => console.error('Failed to load dictionary', err));
 		await loadBook();
@@ -191,9 +180,10 @@
 
 			// Register content hooks before display so they fire for the initial page
 			rendition.hooks.content.register((contents: any) => {
-				// contents.document.addEventListener('contextmenu', (e: Event) => {
-				// 	e.preventDefault();
-				// });
+				contents.document.addEventListener('contextmenu', (e: Event) => {
+					e.preventDefault();
+				});
+
 				contents.document.addEventListener('pointermove', (e: PointerEvent) => {
 					const iframe = readerContainer.querySelector('iframe');
 					const iframeRect = iframe?.getBoundingClientRect();
@@ -353,11 +343,7 @@
 	}}
 	oncontextmenu={(e) => e.preventDefault()} -->
 
-<section 
-class="reader-container" 
-role="application"
-oncontextmenu={(e) => e.preventDefault()}
->
+<section class="reader-container" role="application" oncontextmenu={(e) => e.preventDefault()}>
 	<div class="reader-controls">
 		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
 		<div class="truncate text-sm text-muted-foreground">
