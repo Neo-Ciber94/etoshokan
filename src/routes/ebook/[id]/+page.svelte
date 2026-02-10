@@ -333,12 +333,14 @@
 	<title>Etoshokan - Reading{bookMetadata?.title ? ` - ${bookMetadata.title}` : ''}</title>
 </svelte:head>
 
-<section
-	class="reader-container"
-	onpointerdown={() => {
+	<!-- onpointerdown={() => {
 		contextMenuOpen = false;
 	}}
-	oncontextmenu={(e) => e.preventDefault()}
+	oncontextmenu={(e) => e.preventDefault()} -->
+
+<section
+	class="reader-container"
+
 	role="application"
 >
 	<div class="reader-controls">
