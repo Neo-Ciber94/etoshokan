@@ -225,14 +225,20 @@
 	}
 
 	function handleSectionLoad(doc: Document) {
+		// Get the iframe element for accurate coordinate mapping.
+		// The foliate-view renders content inside an iframe nested within shadow DOMs
+		// with grid margins, so we need the iframe's actual position, not the outer element's.
+		const iframe = doc.defaultView?.frameElement as HTMLElement | null;
+
 		doc.addEventListener('contextmenu', (e: Event) => {
 			e.preventDefault();
 		});
 
 		doc.addEventListener('pointermove', (e: PointerEvent) => {
-			const viewEl = readerContainer.querySelector('foliate-view');
-			const rect = viewEl?.getBoundingClientRect();
-			pointer.update((rect?.left || 0) + e.clientX, (rect?.top || 0) + e.clientY);
+			if (iframe) {
+				const rect = iframe.getBoundingClientRect();
+				pointer.update(rect.left + e.clientX, rect.top + e.clientY);
+			}
 		});
 
 		doc.addEventListener('pointerdown', (e: PointerEvent) => {
@@ -282,22 +288,21 @@
 
 		// Handle text selection for search-on-selection
 		doc.addEventListener('selectionchange', () => {
-			if (!searchOnSelection.value) return;
+			if (!searchOnSelection.value) {
+				return;
+			}
+
 			const selection = doc.getSelection();
 			if (selection && selection.toString().trim()) {
 				const selectedText = selection.toString().trim();
 				contextMenu.text = selectedText;
 
 				// Update pointer from selection rect
-				if (selection.rangeCount > 0) {
+				if (selection.rangeCount > 0 && iframe) {
 					const range = selection.getRangeAt(0);
 					const rect = range.getBoundingClientRect();
-					const viewEl = readerContainer.querySelector('foliate-view');
-					const viewRect = viewEl?.getBoundingClientRect();
-					pointer.update(
-						(viewRect?.left || 0) + rect.right,
-						(viewRect?.top || 0) + rect.bottom
-					);
+					const iframeRect = iframe.getBoundingClientRect();
+					pointer.update(iframeRect.left + rect.right, iframeRect.top + rect.bottom);
 				}
 
 				// Close first so the menu re-anchors to the current pointer position
