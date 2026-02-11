@@ -72,24 +72,24 @@
 		role="menu"
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
+		<button
 			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
-			onpointerup={(ev) => handleItemClick(ev, onTranslate)}
+			onclick={(ev) => handleItemClick(ev, onTranslate)}
 		>
 			<LanguageIcon class="size-5 md:size-4" />
 			Translate
-		</div>
+		</button>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
+		<button
 			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
-			onpointerup={(ev) => handleItemClick(ev, onSearch)}
+			onclick={(ev) => handleItemClick(ev, onSearch)}
 		>
 			<SearchIcon class="size-5 md:size-4" />
 			Search
-		</div>
+		</button>
 	</div>
 {/if}
