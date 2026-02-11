@@ -4,8 +4,11 @@
 	import ePub from 'epubjs';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { saveBook, getBooksMetadata, deleteBook } from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
+	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
+	import TrashIcon from '@lucide/svelte/icons/trash-2';
 
 	let books = $state<BookMetadata[]>([]);
 	let loading = $state(true);
@@ -86,8 +89,12 @@
 		books = await getBooksMetadata();
 	}
 
-	function openBook(id: string) {
-		goto(`/ebook/${id}`);
+	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'epubjs') {
+		if (renderer === 'foliate') {
+			goto(`/ebook/foliate/${id}`);
+		} else {
+			goto(`/ebook/${id}`);
+		}
 	}
 </script>
 
@@ -186,16 +193,35 @@
 									{/if}
 								</div>
 								<div class="flex gap-2">
-									<Button onclick={() => openBook(book.id)} class="flex-1" size="sm">
+									<Button onclick={() => openBook(book.id, 'epubjs')} class="flex-1" size="sm">
 										{book.progress ? 'Continue' : 'Read'}
 									</Button>
-									<Button
-										onclick={() => handleDeleteBook(book.id)}
-										variant="destructive"
-										size="sm"
-									>
-										Delete
-									</Button>
+									<DropdownMenu.Root>
+										<DropdownMenu.Trigger>
+											{#snippet child({ props })}
+												<Button {...props} variant="outline" size="sm">
+													<EllipsisVerticalIcon class="size-4" />
+												</Button>
+											{/snippet}
+										</DropdownMenu.Trigger>
+										<DropdownMenu.Content align="end">
+											<DropdownMenu.Label>Open with</DropdownMenu.Label>
+											<DropdownMenu.Item onclick={() => openBook(book.id, 'epubjs')}>
+												epub.js
+											</DropdownMenu.Item>
+											<DropdownMenu.Item onclick={() => openBook(book.id, 'foliate')}>
+												foliate.js
+											</DropdownMenu.Item>
+											<DropdownMenu.Separator />
+											<DropdownMenu.Item
+												class="text-destructive"
+												onclick={() => handleDeleteBook(book.id)}
+											>
+												<TrashIcon class="size-4" />
+												Delete
+											</DropdownMenu.Item>
+										</DropdownMenu.Content>
+									</DropdownMenu.Root>
 								</div>
 							</div>
 						</Card.Content>
