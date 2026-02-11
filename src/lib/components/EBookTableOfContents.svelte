@@ -1,10 +1,10 @@
 <script lang="ts">
 	import * as Drawer from '$lib/components/ui/drawer';
-	import type { NavItem } from 'epubjs';
+	import type { TocItem } from '$lib/ebook/types';
 
 	interface Props {
 		open: boolean;
-		toc: NavItem[];
+		toc: TocItem[];
 		currentHref: string;
 		onNavigate: (href: string) => void;
 	}

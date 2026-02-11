@@ -14,3 +14,9 @@ export interface StoredBook {
 	metadata: BookMetadata;
 	file: ArrayBuffer;
 }
+
+export interface TocItem {
+	label: string;
+	href: string;
+	subitems?: TocItem[];
+}
