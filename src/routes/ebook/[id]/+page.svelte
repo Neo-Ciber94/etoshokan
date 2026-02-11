@@ -66,6 +66,7 @@
 	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
+	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
 
 	// Page state
 	let currentPage = $state(0);
@@ -339,11 +340,13 @@
 	}
 
 	function nextPage() {
-		rendition?.next();
+		if (invertDirection.value) rendition?.prev();
+		else rendition?.next();
 	}
 
 	function prevPage() {
-		rendition?.prev();
+		if (invertDirection.value) rendition?.next();
+		else rendition?.prev();
 	}
 
 	// Zoom functions
@@ -470,4 +473,5 @@
 	{selectionTime}
 	{disableContextMenu}
 	{swipeNavigation}
+	{invertDirection}
 />

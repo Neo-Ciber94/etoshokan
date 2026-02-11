@@ -15,6 +15,7 @@
 		selectionTime: { value: number };
 		disableContextMenu: { value: boolean };
 		swipeNavigation: { value: boolean };
+		invertDirection: { value: boolean };
 	}
 
 	let {
@@ -26,7 +27,8 @@
 		searchOnSelection,
 		selectionTime,
 		disableContextMenu,
-		swipeNavigation
+		swipeNavigation,
+		invertDirection
 	}: Props = $props();
 </script>
 
@@ -83,6 +85,11 @@
 				</div>
 			</div>
 
+			<!-- Invert direction -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Invert direction</span>
+				<Switch bind:checked={invertDirection.value} />
+			</label>
 			<!-- Swipe navigation -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Swipe navigation</span>
