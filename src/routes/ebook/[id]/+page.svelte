@@ -16,10 +16,15 @@
 		updateBookZoom
 	} from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
+	import type { NavItem } from 'epubjs';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
+	import EBookTableOfContents from '$lib/components/EBookTableOfContents.svelte';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import { useStorage } from '$lib/runes/local-storage.svelte';
+	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
@@ -44,6 +49,11 @@
 
 	// Drawer state
 	let optionsDrawerOpen = $state(false);
+	let tocDrawerOpen = $state(false);
+
+	// Table of contents
+	let toc = $state<NavItem[]>([]);
+	let currentHref = $state('');
 
 	// Translation state
 	let showTranslation = $state(false);
@@ -55,6 +65,7 @@
 	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: false });
 	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
+	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 
 	// Page state
 	let currentPage = $state(0);
@@ -147,8 +158,8 @@
 				spread: 'none'
 			});
 
-			currentBook.loaded.navigation.then((toc) => {
-				console.log(toc);
+			currentBook.loaded.navigation.then((nav) => {
+				toc = nav.toc;
 			});
 
 			// Apply custom styles for light/dark mode
@@ -210,6 +221,17 @@
 					if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
 						showPageIndicator.value = !showPageIndicator.value;
 					}
+
+					// Swipe navigation
+					if (
+						swipeNavigation.value &&
+						!hasSelection &&
+						Math.abs(dx) > 50 &&
+						Math.abs(dx) > Math.abs(dy) * 1.5
+					) {
+						if (dx > 0) prevPage();
+						else nextPage();
+					}
 				});
 
 				contents.document.documentElement.style.touchAction = 'none';
@@ -249,6 +271,9 @@
 				if (totalPages > 0) {
 					currentPage = location.start.location + 1;
 				}
+
+				// Track current chapter for TOC
+				currentHref = location.start.href;
 			});
 
 			// Track text selection and show context menu
@@ -349,19 +374,27 @@
 	oncontextmenu={(e) => e.preventDefault()}
 >
 	<div class="flex items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
-		<Button onclick={closeBook} variant="outline" size="sm">← Back</Button>
-		<div class="truncate text-sm text-muted-foreground">
+		<Button onclick={closeBook} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3">
+			<ArrowLeftIcon class="size-4" />
+			<span class="hidden sm:inline">Back</span>
+		</Button>
+		<button
+			class="min-w-0 truncate text-sm text-muted-foreground transition-colors hover:text-foreground"
+			onclick={() => (tocDrawerOpen = true)}
+		>
 			{bookMetadata?.title || 'Loading...'}
-		</div>
+		</button>
 		<div class="flex items-center gap-2">
 			<Button onclick={() => (optionsDrawerOpen = true)} variant="ghost" size="icon-sm">
 				<SettingsIcon class="size-4" />
 			</Button>
-			<Button onclick={prevPage} variant="outline" size="sm" disabled={!rendition || loading}>
-				← Prev
+			<Button onclick={prevPage} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3" disabled={!rendition || loading}>
+				<ChevronLeftIcon class="size-4" />
+				<span class="hidden sm:inline">Prev</span>
 			</Button>
-			<Button onclick={nextPage} variant="outline" size="sm" disabled={!rendition || loading}>
-				Next →
+			<Button onclick={nextPage} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3" disabled={!rendition || loading}>
+				<span class="hidden sm:inline">Next</span>
+				<ChevronRightIcon class="size-4" />
 			</Button>
 		</div>
 	</div>
@@ -420,6 +453,13 @@
 	/>
 {/if}
 
+<EBookTableOfContents
+	bind:open={tocDrawerOpen}
+	{toc}
+	{currentHref}
+	onNavigate={(href) => rendition?.display(href)}
+/>
+
 <EBookOptionsDrawer
 	bind:open={optionsDrawerOpen}
 	{zoom}
@@ -429,4 +469,5 @@
 	{searchOnSelection}
 	{selectionTime}
 	{disableContextMenu}
+	{swipeNavigation}
 />

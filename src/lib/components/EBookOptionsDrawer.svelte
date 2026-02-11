@@ -14,6 +14,7 @@
 		searchOnSelection: { value: boolean };
 		selectionTime: { value: number };
 		disableContextMenu: { value: boolean };
+		swipeNavigation: { value: boolean };
 	}
 
 	let {
@@ -24,7 +25,8 @@
 		showPageIndicator,
 		searchOnSelection,
 		selectionTime,
-		disableContextMenu
+		disableContextMenu,
+		swipeNavigation
 	}: Props = $props();
 </script>
 
@@ -81,6 +83,11 @@
 				</div>
 			</div>
 
+			<!-- Swipe navigation -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Swipe navigation</span>
+				<Switch bind:checked={swipeNavigation.value} />
+			</label>
 			<!-- Disable context menu -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Disable context menu</span>
