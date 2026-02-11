@@ -87,7 +87,7 @@ export class JMDict_Dictionary extends Dictionary {
 		super();
 	}
 
-	normalize = (s: string) => s.trim().normalize('NFC');
+	normalize = (s: string) => s.trim().normalize('NFKC');
 
 	mapPos = (posArr?: string[]): PartOfSpeech | undefined => {
 		if (!posArr || posArr.length === 0) return undefined;
@@ -194,9 +194,8 @@ export class JMDict_Dictionary extends Dictionary {
 		await this.loadingPromise;
 	}
 
-	fallbackStartWith(term: string, maxCount: number): WordEntry[] {
+	fallbackSearch(term: string, maxCount: number): WordEntry[] {
 		const key = this.normalize(term);
-
 		const result: WordEntry[] = [];
 		const seen = new Set<string>();
 
@@ -205,24 +204,30 @@ export class JMDict_Dictionary extends Dictionary {
 				return;
 			}
 
-			for (const [k, entries] of map) {
-				if (!k.startsWith(key)) {
-					continue;
-				}
+			// We search substrings of the search term
+			for (let i = 1; i < key.length; i++) {
+				const parts = splitAt(key, i);
 
-				for (const e of entries) {
-					const id = `${e.term}||${e.reading ?? ''}`;
-					if (seen.has(id)) {
-						continue;
+				for (const part of parts) {
+					for (const [k, entries] of map) {
+						if (!k.startsWith(part)) {
+							continue;
+						}
+
+						for (const e of entries) {
+							const id = `${e.term}||${e.reading ?? ''}`;
+							if (seen.has(id)) {
+								continue;
+							}
+
+							seen.add(id);
+							result.push(e);
+
+							if (result.length >= maxCount) {
+								return;
+							}
+						}
 					}
-
-					seen.add(id);
-
-					if (result.length >= maxCount) {
-						return;
-					}
-
-					result.push(e);
 				}
 			}
 		};
@@ -246,12 +251,20 @@ export class JMDict_Dictionary extends Dictionary {
 			await this.initialize();
 		}
 
+		term = term.trim();
+
+		if (term.length == 0) {
+			return {
+				found: false,
+				entries: []
+			};
+		}
+
 		if (wanakana.isRomaji(term)) {
 			term = wanakana.toHiragana(term);
 		}
 
-		const normalize = (s: string) => s.trim().normalize('NFKC');
-		const key = normalize(term);
+		const key = this.normalize(term);
 
 		let found = true;
 		const fromKanji = this.kanjiMap.get(key) ?? [];
@@ -259,7 +272,7 @@ export class JMDict_Dictionary extends Dictionary {
 		const fallback: WordEntry[] = [];
 
 		if (fromKanji.length === 0 && fromKana.length === 0) {
-			fallback.push(...this.fallbackStartWith(term, 10));
+			fallback.push(...this.fallbackSearch(term, 10));
 			found = false;
 		}
 
@@ -317,4 +330,8 @@ async function downloadJMDictJSON() {
 	const jsonText = await textPromise;
 	const json = JSON.parse(jsonText);
 	return json as JMDict_Root;
+}
+
+function splitAt(s: string, index: number): string[] {
+	return [s.slice(0, index), s.slice(index + 1)];
 }
