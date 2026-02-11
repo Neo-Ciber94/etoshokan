@@ -30,7 +30,9 @@
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
+	import { delay } from '$lib/utils';
 
+	const TRANSITION_DURATION_MS = 300;
 	const pointer = usePointer();
 
 	let bookId = $derived(page.params.id || '');
@@ -67,6 +69,11 @@
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
+	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: true });
+
+	// Page transition state
+	let transitionDir = $state<'next' | 'prev' | null>(null);
+	let transitionEnabled = $state(true);
 
 	// Page state
 	let currentPage = $state(0);
@@ -102,7 +109,7 @@
 	});
 
 	// Toggle reading mode class on body
-	$effect(() => {
+	$effect.pre(() => {
 		document.body.classList.add('reading-mode');
 
 		return () => {
@@ -275,6 +282,9 @@
 
 				// Track current chapter for TOC
 				currentHref = location.start.href;
+
+				// Clear page transition after new page renders
+				transitionDir = null;
 			});
 
 			// Track text selection and show context menu
@@ -339,14 +349,44 @@
 		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`, '_blank');
 	}
 
-	function nextPage() {
-		if (invertDirection.value) rendition?.prev();
-		else rendition?.next();
+	async function nextPage() {
+		if (pageTransitions.value) {
+			transitionDir = 'next'; // exit left
+			await delay(TRANSITION_DURATION_MS);
+
+			// Snap to opposite side without transition
+			transitionEnabled = false;
+			transitionDir = 'prev'; // position on right
+			await tick();
+			void readerContainer.offsetHeight; // force reflow
+			transitionEnabled = true;
+		}
+
+		if (invertDirection.value) {
+			rendition?.prev();
+		} else {
+			rendition?.next();
+		}
 	}
 
-	function prevPage() {
-		if (invertDirection.value) rendition?.next();
-		else rendition?.prev();
+	async function prevPage() {
+		if (pageTransitions.value) {
+			transitionDir = 'prev'; // exit right
+			await delay(TRANSITION_DURATION_MS);
+
+			// Snap to opposite side without transition
+			transitionEnabled = false;
+			transitionDir = 'next'; // position on left
+			await tick();
+			void readerContainer.offsetHeight; // force reflow
+			transitionEnabled = true;
+		}
+
+		if (invertDirection.value) {
+			rendition?.next();
+		} else {
+			rendition?.prev();
+		}
 	}
 
 	// Zoom functions
@@ -377,7 +417,12 @@
 	oncontextmenu={(e) => e.preventDefault()}
 >
 	<div class="flex items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
-		<Button onclick={closeBook} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3">
+		<Button
+			onclick={closeBook}
+			variant="outline"
+			size="icon-sm"
+			class="sm:w-auto sm:gap-1.5 sm:px-3"
+		>
 			<ArrowLeftIcon class="size-4" />
 			<span class="hidden sm:inline">Back</span>
 		</Button>
@@ -391,11 +436,23 @@
 			<Button onclick={() => (optionsDrawerOpen = true)} variant="ghost" size="icon-sm">
 				<SettingsIcon class="size-4" />
 			</Button>
-			<Button onclick={prevPage} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3" disabled={!rendition || loading}>
+			<Button
+				onclick={prevPage}
+				variant="outline"
+				size="icon-sm"
+				class="sm:w-auto sm:gap-1.5 sm:px-3"
+				disabled={!rendition || loading}
+			>
 				<ChevronLeftIcon class="size-4" />
 				<span class="hidden sm:inline">Prev</span>
 			</Button>
-			<Button onclick={nextPage} variant="outline" size="icon-sm" class="sm:w-auto sm:gap-1.5 sm:px-3" disabled={!rendition || loading}>
+			<Button
+				onclick={nextPage}
+				variant="outline"
+				size="icon-sm"
+				class="sm:w-auto sm:gap-1.5 sm:px-3"
+				disabled={!rendition || loading}
+			>
 				<span class="hidden sm:inline">Next</span>
 				<ChevronRightIcon class="size-4" />
 			</Button>
@@ -423,7 +480,16 @@
 			</div>
 		</div>
 	{:else}
-		<div class="relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none">
+		{@const TRANSITION_CLASS = { next: 'translateX(-50%)', prev: 'translateX(50%)', '': '' }}
+
+		<div
+			class="relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none {transitionEnabled
+				? 'transition-[transform,opacity] ease-in-out'
+				: ''}"
+			style:transition-duration={`${TRANSITION_DURATION_MS}ms`}
+			style:opacity={transitionDir ? '0' : '1'}
+			style:transform={TRANSITION_CLASS[transitionDir || '']}
+		>
 			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
 
@@ -474,4 +540,5 @@
 	{disableContextMenu}
 	{swipeNavigation}
 	{invertDirection}
+	{pageTransitions}
 />

@@ -16,6 +16,7 @@
 		disableContextMenu: { value: boolean };
 		swipeNavigation: { value: boolean };
 		invertDirection: { value: boolean };
+		pageTransitions: { value: boolean };
 	}
 
 	let {
@@ -28,7 +29,8 @@
 		selectionTime,
 		disableContextMenu,
 		swipeNavigation,
-		invertDirection
+		invertDirection,
+		pageTransitions
 	}: Props = $props();
 </script>
 
@@ -51,6 +53,11 @@
 					</Button>
 				</div>
 			</div>
+			<!-- Page transitions toggle -->
+			<label class="flex items-center justify-between">
+				<span class="text-sm font-medium">Page transitions</span>
+				<Switch bind:checked={pageTransitions.value} />
+			</label>
 			<!-- Page indicator toggle -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Show page number</span>
