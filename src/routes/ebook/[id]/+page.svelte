@@ -30,7 +30,7 @@
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
-	import { delay } from '$lib/utils';
+	import { delay, isMobile } from '$lib/utils';
 
 	const TRANSITION_DURATION_MS = 300;
 	const pointer = usePointer();
@@ -62,7 +62,7 @@
 
 	// Options persisted in localStorage
 	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
-	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: false });
+	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: isMobile() });
 	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
