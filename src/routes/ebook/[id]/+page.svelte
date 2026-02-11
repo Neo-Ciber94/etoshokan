@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import ePub, {
 		type Book,
 		type Rendition,
@@ -116,6 +116,15 @@
 				rendition.destroy();
 			}
 		};
+	});
+
+	$effect.pre(() => {
+		// Prevent exiting this page by error
+		beforeNavigate(({ cancel, to }) => {
+			if (!loading && to?.route.id != '/ebook/[id]') {
+				cancel();
+			}
+		});
 	});
 
 	async function loadBook() {
@@ -500,10 +509,7 @@
 
 <!-- Translation box -->
 {#if showTranslation}
-	<TranslationBox
-		searchTerm={contextMenu.text}
-		onClose={() => (showTranslation = false)}
-	/>
+	<TranslationBox searchTerm={contextMenu.text} onClose={() => (showTranslation = false)} />
 {/if}
 
 <EBookTableOfContents
