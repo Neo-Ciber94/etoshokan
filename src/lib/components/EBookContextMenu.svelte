@@ -56,8 +56,10 @@
 		}
 	});
 
-	function handleItemClick(callback?: () => void) {
+	function handleItemClick(ev: Event, callback?: () => void) {
 		open = false;
+		ev.stopPropagation();
+		ev.preventDefault();
 		callback?.();
 	}
 </script>
@@ -74,7 +76,7 @@
 			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
-			onpointerup={() => handleItemClick(onTranslate)}
+			onpointerup={(ev) => handleItemClick(ev, onTranslate)}
 		>
 			<LanguageIcon class="size-5 md:size-4" />
 			Translate
@@ -84,7 +86,7 @@
 			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
-			onpointerup={() => handleItemClick(onSearch)}
+			onpointerup={(ev) => handleItemClick(ev, onSearch)}
 		>
 			<SearchIcon class="size-5 md:size-4" />
 			Search
