@@ -81,7 +81,7 @@
 		books.invalidate();
 	}
 
-	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'epubjs') {
+	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'foliate') {
 		if (renderer === 'foliate') {
 			goto(`/ebook/${id}/foliate`);
 		} else {
