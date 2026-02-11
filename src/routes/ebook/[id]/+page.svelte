@@ -59,8 +59,6 @@
 
 	// Translation state
 	let showTranslation = $state(false);
-	let translationEntries = $state<WordEntry[]>([]);
-	let translationLoading = $state(false);
 
 	// Options persisted in localStorage
 	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
@@ -331,18 +329,6 @@
 
 	async function handleTranslate() {
 		showTranslation = true;
-		translationLoading = true;
-		translationEntries = [];
-
-		try {
-			translationEntries = await dictionary.lookup(contextMenu.text.trim(), {
-				targetLanguage: 'en'
-			});
-		} catch {
-			translationEntries = [];
-		} finally {
-			translationLoading = false;
-		}
 	}
 
 	function handleSearch() {
@@ -515,9 +501,7 @@
 <!-- Translation box -->
 {#if showTranslation}
 	<TranslationBox
-		selectedText={contextMenu.text}
-		entries={translationEntries}
-		loading={translationLoading}
+		searchTerm={contextMenu.text}
 		onClose={() => (showTranslation = false)}
 	/>
 {/if}

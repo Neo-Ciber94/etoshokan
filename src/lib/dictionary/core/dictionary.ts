@@ -53,15 +53,20 @@ export interface Example {
 
 export type Language = 'en' | 'jp';
 
-type LookupOptions = {
+export type LookupOptions = {
 	targetLanguage: Language;
 };
+
+export type LookupResult = {
+	found: boolean,
+	entries: WordEntry[]
+}
 
 export abstract class Dictionary {
 	abstract readonly name: string;
 	abstract readonly supportedLanguage: Language;
 
 	abstract initialize(): Promise<void>;
-	abstract lookup(term: string, options?: LookupOptions): Promise<WordEntry[]>;
+	abstract lookup(term: string, options?: LookupOptions): Promise<LookupResult>;
 	abstract clear(): Promise<void>;
 }

@@ -4,7 +4,8 @@ import {
 	type WordEntry,
 	type Sense,
 	type PartOfSpeech,
-	type Gloss
+	type Gloss,
+	type LookupResult
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
@@ -232,7 +233,7 @@ export class JMDict_Dictionary extends Dictionary {
 		return result;
 	}
 
-	async lookup(term: string, options?: { targetLanguage: Language }): Promise<WordEntry[]> {
+	async lookup(term: string, options?: { targetLanguage: Language }): Promise<LookupResult> {
 		const lang = options?.targetLanguage || 'en';
 
 		if (lang !== 'en') {
@@ -252,15 +253,18 @@ export class JMDict_Dictionary extends Dictionary {
 		const normalize = (s: string) => s.trim().normalize('NFKC');
 		const key = normalize(term);
 
+		let found = true;
 		const fromKanji = this.kanjiMap.get(key) ?? [];
 		const fromKana = this.kanaMap.get(key) ?? [];
 		const fallback: WordEntry[] = [];
 
 		if (fromKanji.length === 0 && fromKana.length === 0) {
 			fallback.push(...this.fallbackStartWith(term, 10));
+			found = false;
 		}
 
 		console.log({
+			found,
 			term,
 			key,
 			fromKanji,
@@ -269,17 +273,17 @@ export class JMDict_Dictionary extends Dictionary {
 		});
 
 		const seen = new Set<string>();
-		const result: WordEntry[] = [];
+		const entries: WordEntry[] = [];
 
 		for (const e of [...fromKanji, ...fromKana, ...fallback]) {
 			const id = `${e.term}||${e.reading ?? ''}`;
 			if (!seen.has(id)) {
 				seen.add(id);
-				result.push(e);
+				entries.push(e);
 			}
 		}
 
-		return result;
+		return { found, entries };
 	}
 
 	async clear() {

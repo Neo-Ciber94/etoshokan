@@ -1,14 +1,16 @@
 <script lang="ts">
-	import type { WordEntry } from '$lib/dictionary/core/dictionary';
+	import { dictionary } from '$lib/dictionary';
+	import { type LookupResult } from '$lib/dictionary/core/dictionary';
+	import { cn } from '$lib/utils';
+
+	const MAX_TEXT_LENGTH = 80;
 
 	interface Props {
-		selectedText: string;
-		entries: WordEntry[];
-		loading?: boolean;
+		searchTerm: string;
 		onClose: () => void;
 	}
 
-	let { selectedText, entries, loading = false, onClose }: Props = $props();
+	let { searchTerm, onClose }: Props = $props();
 
 	let boxEl: HTMLDivElement;
 	let isDragging = $state(false);
@@ -16,12 +18,29 @@
 	let dragStartY = 0;
 	let dragStartOffset = 0;
 
-	const MAX_TEXT_LENGTH = 80;
+	let searchResult = $state<LookupResult>();
+	let loading = $state(true);
+
 	let displayText = $derived(
-		selectedText.length > MAX_TEXT_LENGTH
-			? selectedText.slice(0, MAX_TEXT_LENGTH) + '…'
-			: selectedText
+		searchTerm.length > MAX_TEXT_LENGTH ? searchTerm.slice(0, MAX_TEXT_LENGTH) + '…' : searchTerm
 	);
+
+	$effect(() => {
+		async function run() {
+			loading = true;
+
+			try {
+				await dictionary.initialize();
+				searchResult = await dictionary.lookup(searchTerm);
+			} catch (err) {
+				console.error(err);
+			} finally {
+				loading = false;
+			}
+		}
+
+		run();
+	});
 
 	function onPointerDown(e: PointerEvent) {
 		isDragging = true;
@@ -46,6 +65,12 @@
 		offsetY = Math.max(minOffset, Math.min(maxOffset, newOffset));
 	}
 
+	function handleClose() {
+		onClose();
+		searchResult = undefined;
+		loading = false;
+	}
+
 	function onPointerUp() {
 		isDragging = false;
 	}
@@ -53,7 +78,7 @@
 
 <button
 	class="fixed inset-0 z-9998 cursor-default appearance-none border-none bg-transparent"
-	onclick={onClose}
+	onclick={handleClose}
 	aria-label="Close dictionary lookup"
 ></button>
 
@@ -81,14 +106,16 @@
 	</div>
 
 	<div class="flex max-h-[60vh] flex-col gap-2 overflow-y-auto px-4 pb-4">
-		<p class="text-2xl text-muted-foreground">{displayText}</p>
+		<p class={cn('text-2xl text-muted-foreground', !searchResult?.found && 'text-red-300')}>
+			{displayText}
+		</p>
 		<div class="h-0.5 w-full bg-muted"></div>
 
-		{#if loading}
+		{#if loading || searchResult == null}
 			<p class="animate-pulse text-base text-muted-foreground">Looking up…</p>
-		{:else if entries.length > 0}
+		{:else if searchResult.entries.length > 0}
 			<div class="flex flex-col gap-3">
-				{#each entries.slice(0, 3) as entry, i}
+				{#each searchResult.entries.slice(0, 3) as entry, i}
 					<div
 						class="flex flex-col gap-1"
 						class:border-t={i > 0}

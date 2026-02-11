@@ -68,7 +68,7 @@
 			loading = true;
 			const res = await dict.lookup(query.trim(), { targetLanguage: 'en' });
 			console.log(res);
-			results = res;
+			results = res.entries;
 		} catch (err) {
 			console.error(err);
 			error = (err && (err as any).message) || String(err);
