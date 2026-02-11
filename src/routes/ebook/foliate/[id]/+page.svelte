@@ -36,6 +36,7 @@
 	let view = $state<FoliateView | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
+	let isExiting = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
@@ -111,6 +112,10 @@
 
 	$effect.pre(() => {
 		beforeNavigate(({ cancel, to }) => {
+			if (isExiting) {
+				return;
+			}
+
 			if (!loading && to?.route.id != '/ebook/foliate/[id]') {
 				cancel();
 			}
@@ -329,6 +334,7 @@
 	}
 
 	function closeBook() {
+		isExiting = true;
 		goto('/ebook');
 	}
 

@@ -40,6 +40,7 @@
 	let rendition = $state<Rendition | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
+	let isExiting = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
@@ -121,6 +122,10 @@
 	$effect.pre(() => {
 		// Prevent exiting this page by error
 		beforeNavigate(({ cancel, to }) => {
+			if (isExiting) {
+				return;
+			}
+
 			if (!loading && to?.route.id != '/ebook/[id]') {
 				cancel();
 			}
@@ -333,6 +338,7 @@
 	}
 
 	function closeBook() {
+		isExiting = true;
 		goto('/ebook');
 	}
 
