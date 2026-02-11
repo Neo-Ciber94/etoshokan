@@ -91,7 +91,7 @@
 
 	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'epubjs') {
 		if (renderer === 'foliate') {
-			goto(`/ebook/foliate/${id}`);
+			goto(`/ebook/${id}/foliate`);
 		} else {
 			goto(`/ebook/${id}`);
 		}
@@ -131,7 +131,7 @@
 			<Card.Root class="border border-border">
 				<Card.Content class="p-8">
 					<div class="flex flex-col items-center justify-center space-y-4 text-center">
-						<div class="text-6xl animate-pulse">📚</div>
+						<div class="animate-pulse text-6xl">📚</div>
 						<div class="space-y-2">
 							<h3 class="text-lg font-semibold text-foreground">Loading books...</h3>
 						</div>
@@ -159,15 +159,9 @@
 						<Card.Content class="p-4">
 							<div class="flex flex-col space-y-3">
 								{#if book.cover}
-									<img
-										src={book.cover}
-										alt={book.title}
-										class="h-48 w-full rounded object-cover"
-									/>
+									<img src={book.cover} alt={book.title} class="h-48 w-full rounded object-cover" />
 								{:else}
-									<div
-										class="flex h-48 w-full items-center justify-center rounded bg-muted"
-									>
+									<div class="flex h-48 w-full items-center justify-center rounded bg-muted">
 										<span class="text-4xl">📖</span>
 									</div>
 								{/if}
@@ -178,9 +172,7 @@
 									</p>
 									{#if book.progress}
 										<div class="pt-2">
-											<div
-												class="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
-											>
+											<div class="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
 												<div
 													class="h-full bg-primary transition-all"
 													style="width: {book.progress}%"

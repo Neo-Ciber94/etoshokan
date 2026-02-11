@@ -116,7 +116,7 @@
 				return;
 			}
 
-			if (!loading && to?.route.id != '/ebook/foliate/[id]') {
+			if (!loading && to?.route.id != '/ebook/[id]/foliate') {
 				cancel();
 			}
 		});
