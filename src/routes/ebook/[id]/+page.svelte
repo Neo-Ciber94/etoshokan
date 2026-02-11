@@ -478,14 +478,14 @@
 		{@const TRANSITION_CLASS = { next: 'translateX(-50%)', prev: 'translateX(50%)', '': '' }}
 
 		<div
-			class="relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none {transitionEnabled
+			class="mb-10 md:mb-5 relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none {transitionEnabled
 				? 'transition-[transform,opacity] ease-in-out'
 				: ''}"
 			style:transition-duration={`${TRANSITION_DURATION_MS}ms`}
 			style:opacity={transitionDir ? '0' : '1'}
 			style:transform={TRANSITION_CLASS[transitionDir || '']}
 		>
-			<div bind:this={readerContainer} class="h-full w-full"></div>
+			<div bind:this={readerContainer} class="h-full w-full "></div>
 		</div>
 
 		<EBookContextMenu
