@@ -1,25 +1,17 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import ePub from 'epubjs';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { saveBook, getBooksMetadata, deleteBook } from '$lib/ebook/storage';
+	import { saveBook, deleteBook } from '$lib/ebook/storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
+	import { useAllBooksMetadata } from '$lib/ebook/books.svelte';
 
-	let books = $state<BookMetadata[]>([]);
-	let loading = $state(true);
+	let books = useAllBooksMetadata();
 	let uploadingBook = $state(false);
-
-	onMount(async () => {
-		// TODO: Handle error
-		loading = true;
-		books = await getBooksMetadata();
-		loading = false;
-	});
 
 	async function handleFileUpload(event: Event) {
 		const input = event.target as HTMLInputElement;
@@ -64,7 +56,7 @@
 				file: arrayBuffer
 			});
 
-			books = await getBooksMetadata();
+			books.invalidate();
 		} catch (error) {
 			console.error('Error uploading book:', error);
 		} finally {
@@ -86,7 +78,7 @@
 		if (!confirm('Are you sure you want to delete this book?')) return;
 
 		await deleteBook(id);
-		books = await getBooksMetadata();
+		books.invalidate();
 	}
 
 	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'epubjs') {
@@ -127,7 +119,7 @@
 			</div>
 		</div>
 
-		{#if loading}
+		{#if books.loading}
 			<Card.Root class="border border-border">
 				<Card.Content class="p-8">
 					<div class="flex flex-col items-center justify-center space-y-4 text-center">
@@ -138,7 +130,7 @@
 					</div>
 				</Card.Content>
 			</Card.Root>
-		{:else if books.length === 0}
+		{:else if books.value.length === 0}
 			<Card.Root class="border border-border">
 				<Card.Content class="p-8">
 					<div class="flex flex-col items-center justify-center space-y-4 text-center">
@@ -154,7 +146,7 @@
 			</Card.Root>
 		{:else}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each books as book (book.id)}
+				{#each books.value as book (book.id)}
 					<Card.Root class="border border-border transition-colors hover:border-primary/50">
 						<Card.Content class="p-4">
 							<div class="flex flex-col space-y-3">
