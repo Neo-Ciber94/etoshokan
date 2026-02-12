@@ -1,11 +1,14 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { dictionary } from '$lib/dictionary';
 
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
+	import { page } from '$app/state';
+	import { debounce } from '$lib/runes/debounce.svelte';
+	import { goto, replaceState } from '$app/navigation';
+	import { tick } from 'svelte';
 
 	const dict = dictionary;
 
@@ -13,7 +16,25 @@
 	let query = $state('');
 	let results = $state<WordEntry[]>([]);
 	let error = $state('');
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const search = debounce(300, async () => {
+		error = '';
+		if (!query || !query.trim()) {
+			results = [];
+			return;
+		}
+		try {
+			loading = true;
+			const res = await dict.lookup(query.trim(), { targetLanguage: 'en' });
+			console.log(res);
+			results = res.entries;
+		} catch (err) {
+			console.error(err);
+			error = (err && (err as any).message) || String(err);
+		} finally {
+			loading = false;
+		}
+	});
 
 	$effect(() => {
 		async function run() {
@@ -31,51 +52,27 @@
 		run();
 	});
 
-	// Debounced search effect
-	$effect(() => {
-		// Clear existing timer
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
+	$effect.pre(() => {
+		const currentSearch = page.url.searchParams.get('search');
+
+		if (currentSearch) {
+			query = currentSearch;
 		}
-
-		// Clear results if query is empty
-		if (!query || !query.trim()) {
-			results = [];
-			error = '';
-			return;
-		}
-
-		// Set new timer for debounced search
-		debounceTimer = setTimeout(() => {
-			search();
-		}, 300);
-
-		// Cleanup function
-		return () => {
-			if (debounceTimer) {
-				clearTimeout(debounceTimer);
-			}
-		};
 	});
 
-	async function search() {
-		error = '';
-		if (!query || !query.trim()) {
-			results = [];
-			return;
+	$effect(() => {
+		if (query) {
+			search();
 		}
-		try {
-			loading = true;
-			const res = await dict.lookup(query.trim(), { targetLanguage: 'en' });
-			console.log(res);
-			results = res.entries;
-		} catch (err) {
-			console.error(err);
-			error = (err && (err as any).message) || String(err);
-		} finally {
-			loading = false;
-		}
-	}
+
+		tick().then(() => {
+			if (query.length === 0) {
+				replaceState('.', {});
+			} else {
+				replaceState(`?search=${query.trim()}`, {});
+			}
+		});
+	});
 
 	function clearResults() {
 		query = '';
@@ -102,9 +99,7 @@
 	<section class="space-y-4">
 		<div class="space-y-2">
 			<h2 class="text-xl font-semibold">Dictionary Search</h2>
-			<p class="text-sm text-muted-foreground">
-				Search for Japanese words, kanji, or romaji
-			</p>
+			<p class="text-sm text-muted-foreground">Search for Japanese words, kanji, or romaji</p>
 		</div>
 
 		<div class="flex flex-col gap-3 sm:flex-row">
@@ -115,7 +110,9 @@
 					class="flex-1"
 				/>
 				{#if loading}
-					<div class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
+					<div
+						class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground"
+					>
 						<svg
 							class="h-4 w-4 animate-spin"
 							xmlns="http://www.w3.org/2000/svg"
@@ -146,9 +143,7 @@
 		</div>
 
 		{#if error}
-			<div
-				class="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-			>
+			<div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
 				{error}
 			</div>
 		{/if}
@@ -217,9 +212,7 @@
 
 											<!-- Examples -->
 											{#if sense.examples && sense.examples.length > 0}
-												<div
-													class="mt-2 space-y-1 border-l-2 border-border pl-3"
-												>
+												<div class="mt-2 space-y-1 border-l-2 border-border pl-3">
 													{#each sense.examples as ex}
 														<div class="text-sm">
 															<div class="text-foreground">
@@ -271,12 +264,8 @@
 				{/each}
 			</div>
 		{:else if !loading}
-			<div
-				class="rounded-md border border-border bg-muted p-8 text-center"
-			>
-				<p class="text-sm text-muted-foreground">
-					No results yet. Try searching for a word.
-				</p>
+			<div class="rounded-md border border-border bg-muted p-8 text-center">
+				<p class="text-sm text-muted-foreground">No results yet. Try searching for a word.</p>
 			</div>
 		{/if}
 	</section>
