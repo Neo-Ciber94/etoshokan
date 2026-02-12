@@ -2,7 +2,7 @@
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "etoshokan",
 	"version": "0.1.0",
-	"identifier": "com.tauri.dev",
+	"identifier": "com.neociber.etoshokan",
 	"build": {
 		"devUrl": "http://localhost:5173",
 		"frontendDist": "../build",
@@ -26,6 +26,10 @@
 	"bundle": {
 		"active": true,
 		"targets": "all",
+		"android": {
+			"minSdkVersion": 28,
+			"versionCode": 100
+		},
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
