@@ -81,12 +81,8 @@
 		books.invalidate();
 	}
 
-	function openBook(id: string, renderer: 'epubjs' | 'foliate' = 'foliate') {
-		if (renderer === 'foliate') {
-			goto(`/ebook/${id}/foliate`);
-		} else {
-			goto(`/ebook/${id}`);
-		}
+	function openBook(id: string) {
+		goto(`/ebook/${id}`);
 	}
 </script>
 
@@ -177,7 +173,7 @@
 									{/if}
 								</div>
 								<div class="flex gap-2">
-									<Button onclick={() => openBook(book.id, 'epubjs')} class="flex-1" size="sm">
+									<Button onclick={() => openBook(book.id)} class="flex-1" size="sm">
 										{book.progress ? 'Continue' : 'Read'}
 									</Button>
 									<DropdownMenu.Root>
@@ -190,10 +186,10 @@
 										</DropdownMenu.Trigger>
 										<DropdownMenu.Content align="end">
 											<DropdownMenu.Label>Open with</DropdownMenu.Label>
-											<DropdownMenu.Item onclick={() => openBook(book.id, 'epubjs')}>
+											<DropdownMenu.Item onclick={() => openBook(book.id)}>
 												epub.js
 											</DropdownMenu.Item>
-											<DropdownMenu.Item onclick={() => openBook(book.id, 'foliate')}>
+											<DropdownMenu.Item onclick={() => openBook(book.id)}>
 												foliate.js
 											</DropdownMenu.Item>
 											<DropdownMenu.Separator />

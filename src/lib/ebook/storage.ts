@@ -1,5 +1,6 @@
 import { get, set, del } from 'idb-keyval';
 import type { BookMetadata, StoredBook } from './types';
+import { Mutex } from '$lib/utils/mutex';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
@@ -41,32 +42,40 @@ export async function getBooksMetadata(): Promise<BookMetadata[]> {
 	return metadata || [];
 }
 
-export async function updateBookZoom(id: string, zoom: number): Promise<void> {
-	const metadata = await getBooksMetadata();
-	const book = metadata.find((m) => m.id === id);
-
-	if (book) {
-		book.zoom = zoom;
-		await set(METADATA_KEY, metadata);
-	}
+export async function getBookMetadataById(bookId: string) {
+	const books = await getBooksMetadata();
+	const bookMetadata = books.find((b) => b.id === bookId) || null;
+	return bookMetadata;
 }
 
-export async function updateBookProgress(
-	id: string,
-	cfi: string,
-	progress: number
-): Promise<void> {
-	const metadata = await getBooksMetadata();
-	const book = metadata.find((m) => m.id === id);
+const bookMutex = new Mutex();
 
-	if (book) {
-		book.currentCfi = cfi;
-		book.progress = progress;
-		book.lastReadAt = Date.now();
+export async function updateBookZoom(id: string, zoom: number): Promise<void> {
+	await bookMutex.run(async () => {
+		const metadata = await getBooksMetadata();
+		const book = metadata.find((m) => m.id === id);
 
-		// Sort by last read date
-		metadata.sort((a, b) => (b.lastReadAt || b.addedAt) - (a.lastReadAt || a.addedAt));
+		if (book) {
+			book.zoom = zoom;
+			await set(METADATA_KEY, metadata);
+		}
+	});
+}
 
-		await set(METADATA_KEY, metadata);
-	}
+export async function updateBookProgress(id: string, cfi: string, progress: number): Promise<void> {
+	await bookMutex.run(async () => {
+		const metadata = await getBooksMetadata();
+		const book = metadata.find((m) => m.id === id);
+
+		if (book) {
+			book.currentCfi = cfi;
+			book.progress = progress;
+			book.lastReadAt = Date.now();
+
+			// Sort by last read date
+			metadata.sort((a, b) => (b.lastReadAt || b.addedAt) - (a.lastReadAt || a.addedAt));
+
+			await set(METADATA_KEY, metadata);
+		}
+	});
 }

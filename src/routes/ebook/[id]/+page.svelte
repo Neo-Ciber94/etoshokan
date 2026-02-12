@@ -2,21 +2,20 @@
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { beforeNavigate, goto } from '$app/navigation';
-	import ePub, {
-		type Book,
-		type Rendition,
-		type Location as EpubLocation,
-		type Contents as EpubContents
-	} from 'epubjs';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		getBook,
-		getBooksMetadata,
+		getBookMetadataById,
 		updateBookProgress,
 		updateBookZoom
 	} from '$lib/ebook/storage';
-	import type { BookMetadata } from '$lib/ebook/types';
-	import type { NavItem } from 'epubjs';
+	import type { BookMetadata, TocItem } from '$lib/ebook/types';
+	import {
+		createFoliateView,
+		type FoliateView,
+		type FoliateRelocateDetail,
+		type FoliateLoadDetail
+	} from '$lib/types/view';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
 	import EBookTableOfContents from '$lib/components/EBookTableOfContents.svelte';
@@ -29,22 +28,19 @@
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { dictionary } from '$lib/dictionary';
-	import type { WordEntry } from '$lib/dictionary/core/dictionary';
-	import { delay, isMobile } from '$lib/utils';
+	import { isMobile } from '$lib/utils';
 
-	const TRANSITION_DURATION_MS = 300;
 	const pointer = usePointer();
 
 	let bookId = $derived(page.params.id || '');
-	let currentBook = $state<Book | null>(null);
-	let rendition = $state<Rendition | null>(null);
+	let view = $state<FoliateView | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
 	let isExiting = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
-	// Context menu state (object so iframe closures see current values via the proxy)
+	// Context menu state
 	let contextMenu = $state({ text: '', isOpen: false });
 
 	// Zoom state
@@ -55,7 +51,7 @@
 	let tocDrawerOpen = $state(false);
 
 	// Table of contents
-	let toc = $state<NavItem[]>([]);
+	let toc = $state<TocItem[]>([]);
 	let currentHref = $state('');
 
 	// Translation state
@@ -68,16 +64,11 @@
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
-	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: true });
-
-	// Page transition state
-	let transitionDir = $state<'next' | 'prev' | null>(null);
-	let transitionEnabled = $state(true);
+	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: false });
 
 	// Page state
 	let currentPage = $state(0);
 	let totalPages = $state(0);
-	$inspect(currentPage, totalPages).with(console.log);
 
 	// Pointer tracking for fast-click detection
 	let pagePointer = $state({
@@ -89,12 +80,12 @@
 	// Debounced context menu trigger on pointer up
 	const showContextMenuIfSelection = debounce(
 		() => selectionTime.value,
-		(contents: any) => {
+		(doc: Document) => {
 			if (disableContextMenu.value || contextMenu.isOpen) {
 				return;
 			}
 
-			const selection = contents.window.getSelection();
+			const selection = doc.getSelection();
 			if (selection && selection.toString().trim()) {
 				contextMenu.text = selection.toString().trim();
 				contextMenu.isOpen = true;
@@ -113,14 +104,13 @@
 
 		return () => {
 			document.body.classList.remove('reading-mode');
-			if (rendition) {
-				rendition.destroy();
+			if (view) {
+				view.close();
 			}
 		};
 	});
 
 	$effect.pre(() => {
-		// Prevent exiting this page by error
 		beforeNavigate(({ cancel, to }) => {
 			if (isExiting) {
 				return;
@@ -137,9 +127,7 @@
 		notFound = false;
 
 		try {
-			// Get book metadata
-			const books = await getBooksMetadata();
-			bookMetadata = books.find((b) => b.id === bookId) || null;
+			bookMetadata = await getBookMetadataById(bookId);
 
 			if (!bookMetadata) {
 				console.error('Book not found');
@@ -156,185 +144,197 @@
 				return;
 			}
 
-			// Load the book but don't render yet
-			currentBook = ePub(bookData);
-
 			// Stop loading to render the container
 			loading = false;
-
-			// Wait for next tick to ensure container is in DOM
 			await tick();
 
-			// Check if container exists before rendering
 			if (!readerContainer) {
 				console.error('Reader container not found');
 				notFound = true;
 				return;
 			}
 
-			rendition = currentBook.renderTo(readerContainer, {
-				width: '100%',
-				height: '100%',
-				spread: 'none'
+			// Create typed foliate-view element
+			const foliateView = await createFoliateView();
+			foliateView.style.width = '100%';
+			foliateView.style.height = '100%';
+			readerContainer.appendChild(foliateView);
+			view = foliateView;
+
+			// Listen for section loads to attach event handlers
+			foliateView.addEventListener('load', (e) => {
+				const { doc } = e.detail;
+				handleSectionLoad(doc);
 			});
 
-			currentBook.loaded.navigation.then((nav) => {
-				toc = nav.toc;
-			});
+			// Listen for relocation events (progress tracking)
+			foliateView.addEventListener('relocate', async (e) => {
+				const detail = e.detail;
+				const progress = Math.round((detail.fraction || 0) * 100);
+				const cfi = detail.cfi || '';
 
-			// Apply custom styles for light/dark mode
-			const isDark = document.documentElement.classList.contains('dark');
-			rendition.themes.default({
-				body: {
-					color: isDark ? '#f1f5f9 !important' : 'var(--background) !important',
-					background: isDark ? 'var(--background) !important' : '#ffffff !important'
-				},
-				'p, div, span, h1, h2, h3, h4, h5, h6': {
-					color: isDark ? '#f1f5f9 !important' : 'var(--background) !important'
-				},
-				a: {
-					color: isDark ? '#60a5fa !important' : '#3b82f6 !important'
-				}
-			});
+				await updateBookProgress(bookId, cfi, progress);
 
-			// Register content hooks before display so they fire for the initial page
-			rendition.hooks.content.register((contents: EpubContents) => {
-				contents.document.addEventListener('contextmenu', (e: Event) => {
-					e.preventDefault();
-				});
-
-				contents.document.addEventListener('pointermove', (e: PointerEvent) => {
-					const iframe = readerContainer.querySelector('iframe');
-					const iframeRect = iframe?.getBoundingClientRect();
-					pointer.update((iframeRect?.left || 0) + e.clientX, (iframeRect?.top || 0) + e.clientY);
-				});
-
-				contents.document.addEventListener('pointerdown', (e: PointerEvent) => {
-					if (contextMenu.isOpen) {
-						return;
-					}
-
-					pagePointer.pointerDownX = e.clientX;
-					pagePointer.pointerDownY = e.clientY;
-					pagePointer.pointerDownTime = Date.now();
-				});
-
-				contents.document.addEventListener('pointerup', (e: PointerEvent) => {
-					if (contextMenu.isOpen) {
-						contextMenu.isOpen = false;
-						return;
-					}
-
-					// Check for text selection and show context menu (debounced)
-					if (!searchOnSelection.value) {
-						showContextMenuIfSelection(contents);
-					}
-
-					// Fast-click toggle for page indicator
-					const dx = e.clientX - pagePointer.pointerDownX;
-					const dy = e.clientY - pagePointer.pointerDownY;
-					const distance = Math.sqrt(dx * dx + dy * dy);
-					const duration = Date.now() - pagePointer.pointerDownTime;
-					const selection = contents.window.getSelection();
-					const hasSelection = selection && selection.toString().trim().length > 0;
-
-					if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
-						showPageIndicator.value = !showPageIndicator.value;
-					}
-
-					// Swipe navigation
-					if (
-						swipeNavigation.value &&
-						!hasSelection &&
-						Math.abs(dx) > 50 &&
-						Math.abs(dx) > Math.abs(dy) * 1.5
-					) {
-						if (dx > 0) prevPage();
-						else nextPage();
-					}
-				});
-
-				contents.document.documentElement.style.touchAction = 'none';
-			});
-
-			// Wait for book spine/metadata to load, then generate locations
-			await currentBook.ready;
-			const generatedLocations = await currentBook.locations.generate(1024);
-			totalPages = generatedLocations.length;
-
-			// Restore reading position
-			if (bookMetadata.currentCfi) {
-				await rendition.display(bookMetadata.currentCfi);
-			} else {
-				await rendition.display();
-			}
-
-			// Restore zoom level
-			if (bookMetadata.zoom && bookMetadata.zoom > 100) {
-				zoom = bookMetadata.zoom;
-				rendition.themes.fontSize(`${zoom}%`);
-			}
-
-			// Track reading progress and page numbers
-			rendition.on('relocated', async (location: EpubLocation) => {
-				const progress = Math.round((location.start.percentage || 0) * 100);
-				await updateBookProgress(bookId, location.start.cfi, progress);
-
-				// Update local metadata
 				if (bookMetadata) {
-					bookMetadata.currentCfi = location.start.cfi;
+					bookMetadata.currentCfi = cfi;
 					bookMetadata.progress = progress;
 					bookMetadata.lastReadAt = Date.now();
 				}
 
-				// Update page numbers (book-wide, not per-chapter)
-				if (totalPages > 0) {
-					currentPage = location.start.location + 1;
+				// Update page numbers
+				if (detail.location) {
+					currentPage = (detail.location.current ?? 0) + 1;
+					totalPages = detail.location.total ?? 0;
 				}
 
 				// Track current chapter for TOC
-				currentHref = location.start.href;
-
-				// Clear page transition after new page renders
-				transitionDir = null;
+				if (detail.tocItem) {
+					currentHref = detail.tocItem.href || '';
+				}
 			});
 
-			// Track text selection and show context menu
-			rendition.on('selected', async (cfiRange: string, contents: EpubContents) => {
-				const selection = contents.window.getSelection();
+			// Convert ArrayBuffer to File for foliate-js
+			const file = new File([bookData], 'book.epub', { type: 'application/epub+zip' });
+			await foliateView.open(file);
 
-				if (selection && selection.toString()) {
-					const selectedText = selection.toString().trim();
-					if (!selectedText) {
-						return;
-					}
+			// Get TOC
+			if (foliateView.book?.toc) {
+				toc = foliateView.book.toc;
+			}
 
-					contextMenu.text = selectedText;
+			// Apply theme styles
+			applyTheme();
 
-					// Update pointer from selection rect (pointermove doesn't fire during selection on mobile)
-					if (selection.rangeCount > 0) {
-						const range = selection.getRangeAt(0);
-						const rect = range.getBoundingClientRect();
-						const iframe = readerContainer.querySelector('iframe');
-						const iframeRect = iframe?.getBoundingClientRect();
-						pointer.update(
-							(iframeRect?.left || 0) + rect.right,
-							(iframeRect?.top || 0) + rect.bottom
-						);
-					}
+			// Restore zoom level
+			if (bookMetadata.zoom && bookMetadata.zoom > 100) {
+				zoom = bookMetadata.zoom;
+				applyZoomStyle();
+			}
 
-					if (searchOnSelection.value) {
-						// Close first so the menu re-anchors to the current pointer position
-						contextMenu.isOpen = false;
-						showContextMenuIfSelection(contents);
-					}
-				}
+			// Restore reading position or start from beginning
+			await foliateView.init({
+				lastLocation: bookMetadata.currentCfi || undefined,
+				showTextStart: !bookMetadata.currentCfi
 			});
 		} catch (error) {
 			console.error('Error loading book:', error);
 			notFound = true;
 			loading = false;
 		}
+	}
+
+	function handleSectionLoad(doc: Document) {
+		// Get the iframe element for accurate coordinate mapping.
+		// The foliate-view renders content inside an iframe nested within shadow DOMs
+		// with grid margins, so we need the iframe's actual position, not the outer element's.
+		const iframe = doc.defaultView?.frameElement as HTMLElement | null;
+
+		doc.addEventListener('contextmenu', (e: Event) => {
+			e.preventDefault();
+		});
+
+		doc.addEventListener('pointermove', (e: PointerEvent) => {
+			if (iframe) {
+				const rect = iframe.getBoundingClientRect();
+				pointer.update(rect.left + e.clientX, rect.top + e.clientY);
+			}
+		});
+
+		doc.addEventListener('pointerdown', (e: PointerEvent) => {
+			if (contextMenu.isOpen) {
+				return;
+			}
+
+			pagePointer.pointerDownX = e.clientX;
+			pagePointer.pointerDownY = e.clientY;
+			pagePointer.pointerDownTime = Date.now();
+		});
+
+		doc.addEventListener('pointerup', (e: PointerEvent) => {
+			if (contextMenu.isOpen) {
+				contextMenu.isOpen = false;
+				return;
+			}
+
+			// Check for text selection and show context menu (debounced)
+			if (!searchOnSelection.value) {
+				showContextMenuIfSelection(doc);
+			}
+
+			// Fast-click toggle for page indicator
+			const dx = e.clientX - pagePointer.pointerDownX;
+			const dy = e.clientY - pagePointer.pointerDownY;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+			const duration = Date.now() - pagePointer.pointerDownTime;
+			const selection = doc.getSelection();
+			const hasSelection = selection && selection.toString().trim().length > 0;
+
+			if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
+				showPageIndicator.value = !showPageIndicator.value;
+			}
+
+			// Swipe navigation
+			if (
+				swipeNavigation.value &&
+				!hasSelection &&
+				Math.abs(dx) > 50 &&
+				Math.abs(dx) > Math.abs(dy) * 1.5
+			) {
+				if (dx > 0) prevPage();
+				else nextPage();
+			}
+		});
+
+		// Handle text selection for search-on-selection
+		doc.addEventListener('selectionchange', () => {
+			if (!searchOnSelection.value) {
+				return;
+			}
+
+			const selection = doc.getSelection();
+			if (selection && selection.toString().trim()) {
+				const selectedText = selection.toString().trim();
+				contextMenu.text = selectedText;
+
+				// Update pointer from selection rect
+				if (selection.rangeCount > 0 && iframe) {
+					const range = selection.getRangeAt(0);
+					const rect = range.getBoundingClientRect();
+					const iframeRect = iframe.getBoundingClientRect();
+					pointer.update(iframeRect.left + rect.right, iframeRect.top + rect.bottom);
+				}
+
+				// Close first so the menu re-anchors to the current pointer position
+				contextMenu.isOpen = false;
+				showContextMenuIfSelection(doc);
+			}
+		});
+
+		doc.documentElement.style.touchAction = 'none';
+	}
+
+	function getThemeCss(withZoom = false): string {
+		const isDark = document.documentElement.classList.contains('dark');
+		const fontSize = withZoom && zoom > 100 ? ` font-size: ${zoom}% !important;` : '';
+		return isDark
+			? `
+				body { color: #f1f5f9 !important; background: var(--background) !important;${fontSize} }
+				p, div, span, h1, h2, h3, h4, h5, h6 { color: #f1f5f9 !important; }
+				a { color: #60a5fa !important; }
+			`
+			: `
+				body { color: var(--background) !important; background: #ffffff !important;${fontSize} }
+				p, div, span, h1, h2, h3, h4, h5, h6 { color: var(--background) !important; }
+				a { color: #3b82f6 !important; }
+			`;
+	}
+
+	function applyTheme() {
+		view?.renderer?.setStyles(getThemeCss(zoom > 100));
+	}
+
+	function applyZoomStyle() {
+		view?.renderer?.setStyles(getThemeCss(true));
 	}
 
 	function closeBook() {
@@ -350,53 +350,29 @@
 		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`, '_blank');
 	}
 
-	async function nextPage() {
-		if (pageTransitions.value) {
-			transitionDir = 'next'; // exit left
-			await delay(TRANSITION_DURATION_MS);
-
-			// Snap to opposite side without transition
-			transitionEnabled = false;
-			transitionDir = 'prev'; // position on right
-			await tick();
-			void readerContainer.offsetHeight; // force reflow
-			transitionEnabled = true;
-		}
-
+	function nextPage() {
+		if (!view) return;
 		if (invertDirection.value) {
-			rendition?.prev();
+			view.prev();
 		} else {
-			rendition?.next();
+			view.next();
 		}
 	}
 
-	async function prevPage() {
-		if (pageTransitions.value) {
-			transitionDir = 'prev'; // exit right
-			await delay(TRANSITION_DURATION_MS);
-
-			// Snap to opposite side without transition
-			transitionEnabled = false;
-			transitionDir = 'next'; // position on left
-			await tick();
-			void readerContainer.offsetHeight; // force reflow
-			transitionEnabled = true;
-		}
-
+	function prevPage() {
+		if (!view) return;
 		if (invertDirection.value) {
-			rendition?.next();
+			view.next();
 		} else {
-			rendition?.prev();
+			view.prev();
 		}
 	}
 
 	// Zoom functions
-	function applyZoom(newZoom: number) {
+	async function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
-		if (rendition) {
-			rendition.themes.fontSize(`${zoom}%`);
-		}
-		updateBookZoom(bookId, zoom);
+		applyZoomStyle();
+		await updateBookZoom(bookId, zoom);
 	}
 
 	function handleZoomIn() {
@@ -442,7 +418,7 @@
 				variant="outline"
 				size="icon-sm"
 				class="sm:w-auto sm:gap-1.5 sm:px-3"
-				disabled={!rendition || loading}
+				disabled={!view || loading}
 			>
 				<ChevronLeftIcon class="size-4" />
 				<span class="hidden sm:inline">Prev</span>
@@ -452,7 +428,7 @@
 				variant="outline"
 				size="icon-sm"
 				class="sm:w-auto sm:gap-1.5 sm:px-3"
-				disabled={!rendition || loading}
+				disabled={!view || loading}
 			>
 				<span class="hidden sm:inline">Next</span>
 				<ChevronRightIcon class="size-4" />
@@ -481,17 +457,8 @@
 			</div>
 		</div>
 	{:else}
-		{@const TRANSITION_CLASS = { next: 'translateX(-50%)', prev: 'translateX(50%)', '': '' }}
-
-		<div
-			class="mb-10 md:mb-5 relative flex-1 touch-none overflow-hidden [&_iframe]:touch-none {transitionEnabled
-				? 'transition-[transform,opacity] ease-in-out'
-				: ''}"
-			style:transition-duration={`${TRANSITION_DURATION_MS}ms`}
-			style:opacity={transitionDir ? '0' : '1'}
-			style:transform={TRANSITION_CLASS[transitionDir || '']}
-		>
-			<div bind:this={readerContainer} class="h-full w-full "></div>
+		<div class="relative mb-10 flex-1 touch-none overflow-hidden md:mb-5">
+			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
 
 		<EBookContextMenu
@@ -522,7 +489,7 @@
 	bind:open={tocDrawerOpen}
 	{toc}
 	{currentHref}
-	onNavigate={(href) => rendition?.display(href)}
+	onNavigate={(href) => view?.goTo(href)}
 />
 
 <EBookOptionsDrawer
