@@ -26,3 +26,6 @@ vite.config.ts.timestamp-*
 dev-dist/
 # SQLite
 *.db
+
+# Tauri
+**/keystore.properties
