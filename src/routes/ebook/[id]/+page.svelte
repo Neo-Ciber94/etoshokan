@@ -109,6 +109,16 @@
 		};
 	});
 
+	// Sync pageTransitions option with renderer's animated attribute
+	$effect(() => {
+		if (!view?.renderer) return;
+		if (pageTransitions.value) {
+			view.renderer.setAttribute('animated', '');
+		} else {
+			view.renderer.removeAttribute('animated');
+		}
+	});
+
 	$effect.pre(() => {
 		beforeNavigate(({ cancel, to }) => {
 			if (isExiting) {
@@ -195,6 +205,12 @@
 			// Convert ArrayBuffer to File for foliate-js
 			const file = new File([bookData], 'book.epub', { type: 'application/epub+zip' });
 			await foliateView.open(file);
+
+			// Force paginated horizontal layout
+			foliateView.renderer.setAttribute('flow', 'paginated');
+			if (pageTransitions.value) {
+				foliateView.renderer.setAttribute('animated', '');
+			}
 
 			// Get TOC
 			if (foliateView.book?.toc) {
@@ -310,6 +326,18 @@
 		});
 
 		doc.documentElement.style.touchAction = 'none';
+
+		// Prevent foliate-js paginator's built-in touch scrolling (which scrolls
+		// vertically for vertical-text books). Our pointer-based swipe detection
+		// above handles horizontal left/right page turns instead.
+		doc.addEventListener(
+			'touchmove',
+			(e) => {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+			},
+			{ capture: true, passive: false }
+		);
 	}
 
 	function getThemeCss(withZoom = false): string {
