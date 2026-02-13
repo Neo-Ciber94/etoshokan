@@ -389,7 +389,7 @@
 </svelte:head>
 
 <section
-	class="fixed inset-0 flex flex-col bg-background"
+	class="fixed inset-0 flex flex-col bg-background mt-[env(safe-area-inset-top)]"
 	role="application"
 	oncontextmenu={(e) => e.preventDefault()}
 >
