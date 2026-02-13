@@ -5,7 +5,7 @@ on:
   push:
 
 permissions:
-  contents: read
+  contents: write # FIXME: Only the release action need this
 
 jobs:
   android:
