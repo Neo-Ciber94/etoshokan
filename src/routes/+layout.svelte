@@ -51,7 +51,7 @@
 <div class="min-h-screen bg-background text-foreground">
 	<header class="reading-mode-hide border-b border-border bg-card">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-			<h1 class="text-2xl font-bold">@e-toshokan</h1>
+			<a href="/" class="text-2xl font-bold hover:text-primary transition-colors">@e-toshokan</a>
 			<select
 				value={theme}
 				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
@@ -68,16 +68,6 @@
 		<div class="mx-auto max-w-6xl px-6">
 			<div class="flex space-x-1">
 				<a
-					href="/"
-					class="relative px-4 py-3 text-sm font-medium transition-colors
-						{$page.url.pathname === '/' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}"
-				>
-					Dictionary
-					{#if $page.url.pathname === '/'}
-						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
-					{/if}
-				</a>
-				<a
 					href="/ebook"
 					class="relative px-4 py-3 text-sm font-medium transition-colors
 						{$page.url.pathname === '/ebook'
@@ -86,6 +76,30 @@
 				>
 					Ebook Reader
 					{#if $page.url.pathname === '/ebook'}
+						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
+					{/if}
+				</a>
+				<a
+					href="/dictionary"
+					class="relative px-4 py-3 text-sm font-medium transition-colors
+						{$page.url.pathname === '/dictionary'
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'}"
+				>
+					Dictionary
+					{#if $page.url.pathname === '/dictionary'}
+						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
+					{/if}
+				</a>
+				<a
+					href="/settings"
+					class="relative px-4 py-3 text-sm font-medium transition-colors
+						{$page.url.pathname === '/settings'
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'}"
+				>
+					Settings
+					{#if $page.url.pathname === '/settings'}
 						<div class="absolute right-0 bottom-0 left-0 h-0.5 bg-primary"></div>
 					{/if}
 				</a>

@@ -9,6 +9,14 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+export function isWeb() {
+	if (typeof window === 'undefined') {
+		return false;
+	}
+
+	return !('__TAURI__' in window);
+}
+
 export function isMobile() {
 	if (typeof window === 'undefined') {
 		return false;
