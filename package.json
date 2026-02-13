@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"build:static-web": "bunx cross-env STATIC-BUILD=1 bun run build",
+		"build:static-web": "bunx cross-env ADAPTER=static bun run build",
 		"build:android": "bun tauri android build --apk",
 		"build:android-debug": "bun tauri android build --apk --debug",
 		"dev:android": "bun tauri android dev",
@@ -41,6 +41,7 @@
 		"bits-ui": "^2.14.4",
 		"clsx": "^2.1.1",
 		"cross-env": "^10.1.0",
+		"dotenv": "^17.3.1",
 		"drizzle-kit": "^0.31.8",
 		"drizzle-orm": "^0.45.1",
 		"eslint": "^9.39.2",

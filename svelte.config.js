@@ -1,5 +1,10 @@
+import dotenv from 'dotenv';
 import cloudflareAdapter from '@sveltejs/adapter-cloudflare';
 import staticAdapter from '@sveltejs/adapter-static';
+
+dotenv.config({
+	quiet: true
+});
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -9,11 +14,11 @@ const config = {
 };
 
 function getAdapter() {
-	if (process.env.STATIC_BUILD) {
+	if (process.env.ADAPTER === 'static') {
 		return staticAdapter({
 			pages: 'build',
 			assets: 'build',
-			fallback: "index.html",
+			fallback: 'index.html',
 			precompress: false,
 			strict: true
 		});
