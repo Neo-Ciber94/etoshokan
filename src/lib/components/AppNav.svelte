@@ -11,7 +11,6 @@
 	let dark = $state(false);
 
 	$effect(() => {
-		// Re-evaluate when themeStore.value changes
 		themeStore.value;
 		dark = isDark();
 	});
@@ -29,8 +28,8 @@
 	}
 </script>
 
-<!-- Desktop: merged header + nav top bar -->
-<header class="nav-desktop reading-mode-hide border-b border-border bg-card">
+<!-- Desktop: top bar -->
+<header class="reading-mode-hide hidden border-b border-border bg-card md:block">
 	<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
 		<a href="/" class="shrink-0 text-2xl font-bold transition-colors hover:text-primary">
 			@e-toshokan
@@ -65,8 +64,8 @@
 	</div>
 </header>
 
-<!-- Mobile: top header with title and theme toggle -->
-<header class="nav-mobile-header reading-mode-hide border-b border-border bg-card">
+<!-- Mobile: top header -->
+<header class="reading-mode-hide border-b border-border bg-card md:hidden">
 	<div class="flex items-center justify-between px-4 py-3">
 		<a href="/" class="text-lg font-bold transition-colors hover:text-primary">
 			@e-toshokan
@@ -85,9 +84,9 @@
 	</div>
 </header>
 
-<!-- Mobile portrait: bottom footer nav -->
-<nav class="nav-mobile-bottom reading-mode-hide fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card">
-	<div class="nav-mobile-bottom-inner flex items-center justify-around">
+<!-- Mobile portrait: bottom nav -->
+<nav class="reading-mode-hide fixed bottom-0 left-0 right-0 z-40 hidden border-t border-border bg-card max-md:portrait:block">
+	<div class="flex items-center justify-around pb-[env(safe-area-inset-bottom)]">
 		{#each navItems as item}
 			{@const active = isActive(item.href, $page.url.pathname)}
 			<a
@@ -102,9 +101,9 @@
 	</div>
 </nav>
 
-<!-- Mobile landscape: left sidebar nav -->
-<nav class="nav-mobile-side reading-mode-hide fixed top-0 bottom-0 left-0 z-40 flex-col items-center justify-center gap-4 border-r border-border bg-card">
-	<div class="nav-mobile-side-inner flex flex-col items-center justify-center gap-4">
+<!-- Mobile landscape: left sidebar -->
+<nav class="reading-mode-hide fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-md:landscape:flex">
+	<div class="flex flex-col items-center justify-center gap-4 pl-[env(safe-area-inset-left)]">
 		{#each navItems as item}
 			{@const active = isActive(item.href, $page.url.pathname)}
 			<a
@@ -118,52 +117,3 @@
 		{/each}
 	</div>
 </nav>
-
-<style>
-	/* Desktop: visible at md+ */
-	.nav-desktop {
-		display: none;
-	}
-	@media (min-width: 768px) {
-		.nav-desktop {
-			display: block;
-		}
-	}
-
-	/* Mobile header: visible below md */
-	.nav-mobile-header {
-		display: none;
-	}
-	@media (max-width: 767px) {
-		.nav-mobile-header {
-			display: block;
-		}
-	}
-
-	/* Mobile bottom: visible below md in portrait */
-	.nav-mobile-bottom {
-		display: none;
-	}
-	@media (max-width: 767px) and (orientation: portrait) {
-		.nav-mobile-bottom {
-			display: block;
-		}
-	}
-	.nav-mobile-bottom-inner {
-		padding-bottom: env(safe-area-inset-bottom);
-	}
-
-	/* Mobile side: visible below md in landscape */
-	.nav-mobile-side {
-		display: none;
-	}
-	@media (max-width: 767px) and (orientation: landscape) {
-		.nav-mobile-side {
-			display: flex;
-			width: 4rem;
-		}
-	}
-	.nav-mobile-side-inner {
-		padding-left: env(safe-area-inset-left);
-	}
-</style>

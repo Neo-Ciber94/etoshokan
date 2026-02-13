@@ -93,11 +93,11 @@
 									<img
 										src={book.cover}
 										alt={book.title}
-										class="h-24 w-16 flex-shrink-0 rounded object-cover"
+										class="h-24 w-16 shrink-0 rounded object-cover"
 									/>
 								{:else}
 									<div
-										class="flex h-24 w-16 flex-shrink-0 items-center justify-center rounded bg-muted"
+										class="flex h-24 w-16 shrink-0 items-center justify-center rounded bg-muted"
 									>
 										<span class="text-2xl">📖</span>
 									</div>
