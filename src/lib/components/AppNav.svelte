@@ -4,19 +4,9 @@
 	import BookOpenIcon from '@lucide/svelte/icons/book-open';
 	import LanguagesIcon from '@lucide/svelte/icons/languages';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import SunIcon from '@lucide/svelte/icons/sun';
-	import MoonIcon from '@lucide/svelte/icons/moon';
-	import {
-		themeStore,
-		setTheme,
-		toggleTheme,
-		isDark,
-		type Theme,
-		useIsDarkMode
-	} from '$lib/stores/theme.svelte';
+	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
-
-	const isDarkMode = useIsDarkMode();
+	import ThemeToggle from './ThemeToggle.svelte';
 
 	const navItems = [
 		{ href: '/', label: 'Home', icon: HouseIcon },
@@ -33,13 +23,16 @@
 
 {#if !readingMode.active}
 	<!-- Desktop: top bar -->
-	<header class="hidden border-b border-border bg-card md:block">
+	<header class="border-b border-border bg-card py-1 lg:py-2">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
-			<a href="/" class="shrink-0 text-2xl font-bold transition-colors hover:text-primary">
+			<a
+				href="/"
+				class="shrink-0 text-base font-bold transition-colors hover:text-primary lg:text-2xl"
+			>
 				@e-toshokan
 			</a>
 
-			<nav class="flex items-center space-x-1">
+			<nav class="hidden items-center space-x-1 md:flex">
 				{#each navItems as item}
 					{@const active = isActive(item.href, $page.url.pathname)}
 					<a
@@ -59,32 +52,14 @@
 			<select
 				value={themeStore.value}
 				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
-				class="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+				class="hidden rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground md:block"
 			>
 				<option value="system">System</option>
 				<option value="light">Light</option>
 				<option value="dark">Dark</option>
 			</select>
-		</div>
-	</header>
 
-	<!-- Mobile: top header -->
-	<header class="border-b border-border bg-card md:hidden">
-		<div class="flex items-center justify-between px-4 py-3">
-			<a href="/" class="text-lg font-bold transition-colors hover:text-primary"> @e-toshokan </a>
-			<button
-				onclick={() => {
-					toggleTheme();
-				}}
-				class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-				aria-label="Toggle theme"
-			>
-				{#if isDarkMode.value}
-					<SunIcon class="size-5" />
-				{:else}
-					<MoonIcon class="size-5" />
-				{/if}
-			</button>
+			<ThemeToggle classname="md:hidden block" />
 		</div>
 	</header>
 
