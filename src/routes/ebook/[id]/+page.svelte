@@ -94,7 +94,6 @@
 	);
 
 	onMount(async () => {
-		dictionary.initialize().catch((err) => console.error('Failed to load dictionary', err));
 		await loadBook();
 	});
 
