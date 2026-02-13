@@ -9,6 +9,7 @@
 		"build:static-web": "bunx cross-env STATIC-BUILD=1 bun run build",
 		"build:android": "bun tauri android build --apk",
 		"build:android-debug": "bun tauri android build --apk --debug",
+		"dev:android": "bun tauri android dev",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
