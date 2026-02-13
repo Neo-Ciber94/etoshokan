@@ -118,10 +118,12 @@ jobs:
 
       # Create release
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: etoshokan
-          name: etoshokan
-          files: etoshokan.apk
+        id: create_release
+        uses: comnoco/create-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: etoshokan-apk
+          draft: false
+          prerelease: false
