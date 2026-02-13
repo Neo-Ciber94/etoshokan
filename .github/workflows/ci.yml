@@ -117,7 +117,7 @@ jobs:
       # Move apk
       - name: Rename APK
         run: |
-          APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/debug"
+          APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
           APK_FILE=$(ls $APK_DIR/*.apk | head -n 1)
 
           if [ ! -f "$APK_FILE" ]; then
