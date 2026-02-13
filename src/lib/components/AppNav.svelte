@@ -25,14 +25,16 @@
 	<!-- Desktop: top bar -->
 	<header class="border-b border-border bg-card py-1 lg:py-2">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
-			<a
-				href="/"
-				class="shrink-0 text-base font-bold transition-colors hover:text-primary lg:text-2xl"
-			>
-				@e-toshokan
-			</a>
+			<div class="pl-0 max-lg:landscape:pl-16">
+				<a
+					href="/"
+					class="shrink-0 text-base font-bold transition-colors hover:text-primary lg:text-2xl"
+				>
+					@e-toshokan
+				</a>
+			</div>
 
-			<nav class="hidden items-center space-x-1 md:flex">
+			<nav class="hidden items-center space-x-1 lg:flex">
 				{#each navItems as item}
 					{@const active = isActive(item.href, $page.url.pathname)}
 					<a
@@ -65,7 +67,7 @@
 
 	<!-- Mobile portrait: bottom nav -->
 	<nav
-		class="fixed right-0 bottom-0 left-0 z-40 hidden border-t border-border bg-card max-md:portrait:block"
+		class="fixed right-0 bottom-0 left-0 z-40 hidden border-t border-border bg-card max-lg:portrait:block"
 	>
 		<div class="flex items-center justify-around pb-[env(safe-area-inset-bottom)]">
 			{#each navItems as item}
@@ -84,7 +86,7 @@
 
 	<!-- Mobile landscape: left sidebar -->
 	<nav
-		class="fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-md:landscape:flex"
+		class="fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-lg:landscape:flex"
 	>
 		<div class="flex flex-col items-center justify-center gap-4 pl-[env(safe-area-inset-left)]">
 			{#each navItems as item}
