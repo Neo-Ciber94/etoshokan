@@ -10,7 +10,7 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -138,6 +138,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Release Etoshokan
+          tag_name: dev
           overwrite_files: true
           files: |
             etoshokan.apk
