@@ -7,7 +7,7 @@
 		"devUrl": "http://localhost:5173",
 		"frontendDist": "../build",
 		"beforeDevCommand": "bun dev",
-		"beforeBuildCommand": "bun build:static-web"
+		"beforeBuildCommand": "bun run build:static-web"
 	},
 	"app": {
 		"windows": [
