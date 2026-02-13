@@ -7,6 +7,7 @@
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import { themeStore, setTheme, toggleTheme, isDark, type Theme } from '$lib/stores/theme.svelte';
+	import { readingMode } from '$lib/stores/reading-mode.svelte';
 
 	let dark = $state(false);
 
@@ -28,8 +29,9 @@
 	}
 </script>
 
+{#if !readingMode.active}
 <!-- Desktop: top bar -->
-<header class="reading-mode-hide hidden border-b border-border bg-card md:block">
+<header class="hidden border-b border-border bg-card md:block">
 	<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
 		<a href="/" class="shrink-0 text-2xl font-bold transition-colors hover:text-primary">
 			@e-toshokan
@@ -65,7 +67,7 @@
 </header>
 
 <!-- Mobile: top header -->
-<header class="reading-mode-hide border-b border-border bg-card md:hidden">
+<header class="border-b border-border bg-card md:hidden">
 	<div class="flex items-center justify-between px-4 py-3">
 		<a href="/" class="text-lg font-bold transition-colors hover:text-primary">
 			@e-toshokan
@@ -85,7 +87,7 @@
 </header>
 
 <!-- Mobile portrait: bottom nav -->
-<nav class="reading-mode-hide fixed bottom-0 left-0 right-0 z-40 hidden border-t border-border bg-card max-md:portrait:block">
+<nav class="fixed bottom-0 left-0 right-0 z-40 hidden border-t border-border bg-card max-md:portrait:block">
 	<div class="flex items-center justify-around pb-[env(safe-area-inset-bottom)]">
 		{#each navItems as item}
 			{@const active = isActive(item.href, $page.url.pathname)}
@@ -102,7 +104,7 @@
 </nav>
 
 <!-- Mobile landscape: left sidebar -->
-<nav class="reading-mode-hide fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-md:landscape:flex">
+<nav class="fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-md:landscape:flex">
 	<div class="flex flex-col items-center justify-center gap-4 pl-[env(safe-area-inset-left)]">
 		{#each navItems as item}
 			{@const active = isActive(item.href, $page.url.pathname)}
@@ -117,3 +119,4 @@
 		{/each}
 	</div>
 </nav>
+{/if}

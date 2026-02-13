@@ -4,6 +4,7 @@
 	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { dictionary } from '$lib/dictionary';
+	import { readingMode } from '$lib/stores/reading-mode.svelte';
 
 	$effect.pre(() => {
 		dictionary.initialize();
@@ -20,7 +21,7 @@
 <div class="min-h-screen bg-background text-foreground">
 	<AppNav />
 
-	<main class="reading-mode-main main-content mx-auto max-w-6xl px-6 py-8">
+	<main class="main-content mx-auto {readingMode.active ? 'max-w-full p-0' : 'max-w-6xl px-6 py-8'}">
 		{@render children()}
 	</main>
 </div>
@@ -32,16 +33,6 @@
 		transition:
 			color 0.15s ease,
 			background-color 0.15s ease;
-	}
-
-	:global(body.reading-mode .reading-mode-hide) {
-		display: none;
-	}
-
-	:global(body.reading-mode .reading-mode-main) {
-		max-width: 100%;
-		padding: 0;
-		margin: 0;
 	}
 
 	/* Mobile portrait: bottom padding for fixed bottom nav */

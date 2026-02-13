@@ -29,6 +29,7 @@
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import { isMobile } from '$lib/utils';
+	import { readingMode } from '$lib/stores/reading-mode.svelte';
 
 	const pointer = usePointer();
 
@@ -97,12 +98,12 @@
 		await loadBook();
 	});
 
-	// Toggle reading mode class on body
+	// Toggle reading mode
 	$effect.pre(() => {
-		document.body.classList.add('reading-mode');
+		readingMode.enter();
 
 		return () => {
-			document.body.classList.remove('reading-mode');
+			readingMode.exit();
 			if (view) {
 				view.close();
 			}
