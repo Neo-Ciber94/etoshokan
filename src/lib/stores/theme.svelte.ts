@@ -3,8 +3,19 @@ export type Theme = 'system' | 'light' | 'dark';
 const THEME_KEY = 'etoshokan:theme';
 
 function loadTheme(): Theme {
-	if (typeof localStorage === 'undefined') return 'system';
-	return (localStorage.getItem(THEME_KEY) as Theme) || 'system';
+	if (typeof localStorage === 'undefined') {
+		return 'system';
+	}
+
+	const value = localStorage.getItem(THEME_KEY) as Theme;
+	switch (value) {
+		case 'system':
+		case 'dark':
+		case 'light':
+			return value;
+		default:
+			return 'system';
+	}
 }
 
 let theme = $state<Theme>(loadTheme());
@@ -37,6 +48,22 @@ export function setTheme(value: Theme) {
 
 export function isDark() {
 	return document.documentElement.classList.contains('dark');
+}
+
+export function useIsDarkMode() {
+	let isDarkMode = $state(false);
+
+	$effect.pre(() => {
+		if (theme) {
+			isDarkMode = isDark();
+		}
+	});
+
+	return {
+		get value() {
+			return isDarkMode;
+		}
+	};
 }
 
 export function toggleTheme() {
