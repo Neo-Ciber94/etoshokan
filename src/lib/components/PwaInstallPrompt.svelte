@@ -38,7 +38,7 @@
 </script>
 
 {#if show}
-	<div class="fixed bottom-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2">
+	<div class="fixed bottom-20 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 md:bottom-4">
 		<div class="flex items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-lg">
 			<div class="flex-1">
 				<p class="text-sm font-medium text-foreground">Install Etoshokan</p>

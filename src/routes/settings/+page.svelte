@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { dictionary } from '$lib/dictionary';
 	import { Button } from '$lib/components/ui/button';
+	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
 
 	const dict = dictionary;
 
@@ -33,6 +34,25 @@
 	<section class="space-y-2">
 		<h2 class="text-xl font-semibold">Settings</h2>
 		<p class="text-sm text-muted-foreground">Manage app settings and data</p>
+	</section>
+
+	<section class="space-y-4">
+		<h3 class="text-lg font-semibold">Appearance</h3>
+		<div class="flex flex-col gap-3 rounded-md border border-border p-4">
+			<div class="space-y-1">
+				<p class="text-sm font-medium">Theme</p>
+				<p class="text-xs text-muted-foreground">Choose your preferred color scheme</p>
+			</div>
+			<select
+				value={themeStore.value}
+				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
+				class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground sm:w-48"
+			>
+				<option value="system">System</option>
+				<option value="light">Light</option>
+				<option value="dark">Dark</option>
+			</select>
+		</div>
 	</section>
 
 	<section class="space-y-4">
