@@ -6,5 +6,6 @@
 		"etoshokan",
 		"Romaji",
 		"wanakana"
-	]
+	],
+	"java.configuration.updateBuildConfiguration": "automatic"
 }

@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write # FIXME: Only the release action need this
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -89,8 +93,21 @@ jobs:
             x86_64-linux-android
 
       # Build Android
-      - name: Build Android (Debug)
-        run: bun run build:android-debug
+      # - name: Build Android (Debug)
+      #   run: bun run build:android-debug
+
+      - name: setup Android signing
+        run: |
+          cd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+
+
+      # Build Android
+      - name: Build Android (Release)
+        run: bun run build:android
 
       # Date
       # - name: Generate date
