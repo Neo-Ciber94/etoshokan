@@ -88,10 +88,6 @@ jobs:
             i686-linux-android
             x86_64-linux-android
 
-      # Build Web
-      - name: Build Web
-        run: bun run build:android-debug
-
       # Build Android
       - name: Build Android (Debug)
         run: bun run build:android-debug
