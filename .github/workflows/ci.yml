@@ -93,9 +93,9 @@ jobs:
         run: bun run build:android-debug
 
       # Date
-      - name: Generate date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      # - name: Generate date
+      #   id: date
+      #   run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       # Move apk
       - name: Rename APK
@@ -108,42 +108,20 @@ jobs:
             exit 1
           fi
 
-          mv "$APK_FILE" "etoshokan-${{ steps.date.outputs.date }}.apk"
+          mv "$APK_FILE" "etoshokan.apk"
 
       # Upload apk
       - uses: actions/upload-artifact@v4
         with:
           name: etoshokan-apk
-          path: "etoshokan-${{ steps.date.outputs.date }}.apk"
+          path: "etoshokan.apk"
 
-  # release:
-  #   runs-on: ubuntu-latest
-  #   needs: [android]
-  #   steps:
-  #     - name: Setup repo
-  #       uses: actions/checkout@v6
-
-  #     - name: Generate date
-  #       id: date
-  #       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-  #     - name: Rename APK
-  #       run: |
-  #         APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/debug"
-  #         APK_FILE=$(ls $APK_DIR/*.apk | head -n 1)
-
-  #         if [ ! -f "$APK_FILE" ]; then
-  #           echo "APK not found in $APK_DIR"
-  #           exit 1
-  #         fi
-
-  #         mv "$APK_FILE" "etoshokan-${{ steps.date.outputs.date }}.apk"
-
-  #     - name: Create Release
-  #       uses: softprops/action-gh-release@v2
-  #       with:
-  #         tag_name: etoshokan-${{ steps.date.outputs.date }}
-  #         name: etoshokan-${{ steps.date.outputs.date }}
-  #         files: etoshokan-${{ steps.date.outputs.date }}.apk
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Create release
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: etoshokan
+          name: etoshokan
+          files: etoshokan.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
