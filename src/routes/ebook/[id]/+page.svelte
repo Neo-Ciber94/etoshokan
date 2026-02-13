@@ -428,7 +428,7 @@
 			class="sm:w-auto sm:gap-1.5 sm:px-3"
 		>
 			<ArrowLeftIcon class="size-4" />
-			<span class="hidden sm:inline">Back</span>
+			<span class="sm:inline">Back</span>
 		</Button>
 		<button
 			class="min-w-0 truncate text-sm text-muted-foreground transition-colors hover:text-foreground"
