@@ -19,7 +19,7 @@ function getAdapter() {
 		});
 	}
 
-	cloudflareAdapter({
+	return cloudflareAdapter({
 		fallback: 'plaintext',
 		routes: {
 			include: ['/*'],
