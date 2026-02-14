@@ -152,7 +152,7 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
-		console.log('Generating map');
+		console.log('Loading dictionary');
 		for (const w of data.words) {
 			const senses = this.makeSenses(w.sense);
 			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
@@ -182,7 +182,7 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
-		console.log('Finished generating map');
+		console.log('Dictionary finished loading');
 		this.loaded = true;
 	}
 
