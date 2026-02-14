@@ -9,7 +9,22 @@ dotenv.config({
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: getAdapter()
+		adapter: getAdapter(),
+		csp: {
+			mode: 'auto',
+			// directives: {
+			// 	'default-src': ['self', 'blob:'],
+			// 	'script-src': ['self', 'unsafe-inline'],
+			// 	'style-src': ['self', 'unsafe-inline', 'blob:'],
+			// 	'img-src': ['self', 'data:', 'blob:'],
+			// 	'font-src': ['self'],
+			// 	'connect-src': ['self'],
+			// 	'worker-src': ['self', 'blob:'],
+			// 	'object-src': ['none'],
+			// 	'base-uri': ['self'],
+			// 	'form-action': ['self']
+			// }
+		}
 	}
 };
 
