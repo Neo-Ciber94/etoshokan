@@ -5,17 +5,21 @@
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import { pwaInfo } from 'virtual:pwa-info';
 
 	$effect.pre(() => {
 		dictionary.initialize();
 	});
 
 	let { children } = $props();
+
+	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<title>Etoshokan</title>
+	{@html webManifestLink}
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">
