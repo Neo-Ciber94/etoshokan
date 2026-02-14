@@ -11,7 +11,7 @@ const config = {
 	kit: {
 		adapter: getAdapter(),
 		csp: {
-			mode: 'auto',
+			mode: 'auto'
 			// directives: {
 			// 	'default-src': ['self', 'blob:'],
 			// 	'script-src': ['self', 'unsafe-inline'],
