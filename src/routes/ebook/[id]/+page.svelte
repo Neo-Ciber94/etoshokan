@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		getBook,
@@ -22,8 +22,8 @@
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import { useStorage } from '$lib/runes/local-storage.svelte';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
-	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
-	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
+	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
@@ -37,7 +37,6 @@
 	let view = $state<FoliateView | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
-	let isExiting = $state(false);
 	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
@@ -118,18 +117,6 @@
 		} else {
 			view.renderer.removeAttribute('animated');
 		}
-	});
-
-	$effect.pre(() => {
-		beforeNavigate(({ cancel, to }) => {
-			if (isExiting) {
-				return;
-			}
-
-			if (!loading && to?.route.id != '/ebook/[id]') {
-				cancel();
-			}
-		});
 	});
 
 	async function loadBook() {
@@ -326,19 +313,6 @@
 			}
 		});
 
-		doc.documentElement.style.touchAction = 'none';
-
-		// Prevent foliate-js paginator's built-in touch scrolling (which scrolls
-		// vertically for vertical-text books). Our pointer-based swipe detection
-		// above handles horizontal left/right page turns instead.
-		doc.addEventListener(
-			'touchmove',
-			(e) => {
-				e.preventDefault();
-				e.stopImmediatePropagation();
-			},
-			{ capture: true, passive: false }
-		);
 	}
 
 	function getThemeCss(withZoom = false): string {
@@ -366,7 +340,6 @@
 	}
 
 	function closeBook() {
-		isExiting = true;
 		goto('/ebook');
 	}
 
@@ -448,7 +421,7 @@
 				class="sm:w-auto sm:gap-1.5 sm:px-3"
 				disabled={!view || loading}
 			>
-				<ChevronLeftIcon class="size-4" />
+				<ChevronUpIcon class="size-4" />
 				<span class="hidden sm:inline">Prev</span>
 			</Button>
 			<Button
@@ -459,7 +432,7 @@
 				disabled={!view || loading}
 			>
 				<span class="hidden sm:inline">Next</span>
-				<ChevronRightIcon class="size-4" />
+				<ChevronDownIcon class="size-4" />
 			</Button>
 		</div>
 	</div>
@@ -485,7 +458,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="relative mb-10 flex-1 touch-none overflow-hidden md:mb-5">
+		<div class="relative mb-10 flex-1 overflow-hidden md:mb-5">
 			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
 
