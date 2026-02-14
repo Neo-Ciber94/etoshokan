@@ -11,9 +11,13 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		SvelteKitPWA({
+			strategies: 'injectManifest',
 			registerType: 'autoUpdate',
 			devOptions: {
 				enabled: true
+			},
+			injectManifest: {
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
 			}
 		})
 	]
