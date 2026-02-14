@@ -6,7 +6,10 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import { authClient } from '$lib/auth-client';
 	import ThemeToggle from './ThemeToggle.svelte';
+
+	const session = authClient.useSession();
 
 	const navItems = [
 		{ href: '/', label: 'Home', icon: HouseIcon },
@@ -51,17 +54,28 @@
 				{/each}
 			</nav>
 
-			<select
-				value={themeStore.value}
-				onchange={(e) => setTheme(e.currentTarget.value as Theme)}
-				class="hidden rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground md:block"
-			>
-				<option value="system">System</option>
-				<option value="light">Light</option>
-				<option value="dark">Dark</option>
-			</select>
+			<div class="flex items-center gap-3">
+				<select
+					value={themeStore.value}
+					onchange={(e) => setTheme(e.currentTarget.value as Theme)}
+					class="hidden rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground md:block"
+				>
+					<option value="system">System</option>
+					<option value="light">Light</option>
+					<option value="dark">Dark</option>
+				</select>
 
-			<ThemeToggle classname="md:hidden block" />
+				<ThemeToggle classname="md:hidden block" />
+
+				{#if $session.data?.user?.image}
+					<img
+						src={$session.data.user.image}
+						alt={$session.data.user.name || 'User'}
+						class="size-8 rounded-full object-cover"
+						referrerpolicy="no-referrer"
+					/>
+				{/if}
+			</div>
 		</div>
 	</header>
 

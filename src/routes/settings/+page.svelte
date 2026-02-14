@@ -2,7 +2,9 @@
 	import { dictionary } from '$lib/dictionary';
 	import { Button } from '$lib/components/ui/button';
 	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
+	import { authClient } from '$lib/auth-client';
 
+	const session = authClient.useSession();
 	const dict = dictionary;
 
 	let loading = $state(false);
@@ -23,6 +25,10 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function logout() {
+		await authClient.signOut();
 	}
 </script>
 
@@ -82,6 +88,30 @@
 					{success}
 				</div>
 			{/if}
+		</div>
+	</section>
+
+	{#if $session.data}
+		<section class="space-y-4">
+			<h3 class="text-lg font-semibold">Account</h3>
+			<div class="flex flex-col gap-3 rounded-md border border-border p-4">
+				<div class="space-y-1">
+					<p class="text-sm font-medium">Log out</p>
+					<p class="text-xs text-muted-foreground">
+						Sign out of your account on this device.
+					</p>
+				</div>
+				<div>
+					<Button variant="destructive" onclick={logout}>Log out</Button>
+				</div>
+			</div>
+		</section>
+	{/if}
+
+	<section class="space-y-4">
+		<h3 class="text-lg font-semibold">About</h3>
+		<div class="flex flex-col gap-3 rounded-md border border-border p-4">
+			<p class="text-sm text-muted-foreground">Etoshokan v0.0.1</p>
 		</div>
 	</section>
 </div>
