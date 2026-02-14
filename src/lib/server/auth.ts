@@ -5,20 +5,19 @@ import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 
-// export const auth = betterAuth({
-// 	baseURL: env.ORIGIN,
-// 	secret: env.BETTER_AUTH_SECRET,
-// 	database: drizzleAdapter(db, { provider: 'sqlite' }),
-// 	emailAndPassword: { enabled: true },
-// 	plugins: [sveltekitCookies(getRequestEvent)] // make sure this is the last plugin in the array
-// });
-
-export function getAuth() {
-	return betterAuth({
-		baseURL: env.ORIGIN,
-		secret: env.BETTER_AUTH_SECRET,
-		database: drizzleAdapter(db, { provider: 'sqlite' }),
-		emailAndPassword: { enabled: true },
-		plugins: [sveltekitCookies(getRequestEvent)] // make sure this is the last plugin in the array
-	});
-}
+export const auth = betterAuth({
+	baseURL: env.ORIGIN,
+	secret: env.BETTER_AUTH_SECRET,
+	database: drizzleAdapter(db, { provider: 'sqlite' }),
+	emailAndPassword: { enabled: true },
+	plugins: [sveltekitCookies(getRequestEvent)],
+	socialProviders: {
+		google: {
+			accessType: 'offline',
+			prompt: 'select_account+consent',
+			clientId: process.env.GOOGLE_CLIENT_ID as string,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+			scope: ['https://www.googleapis.com/auth/drive.file']
+		}
+	}
+});
