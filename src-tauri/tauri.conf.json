@@ -5,9 +5,8 @@
 	"identifier": "com.neociber.etoshokan",
 	"build": {
 		"devUrl": "http://localhost:5173",
-		"frontendDist": "../build",
+		"frontendDist": "https://etoshokan.pages.dev",
 		"beforeDevCommand": "bun dev",
-		"beforeBuildCommand": "bun run build:static-web"
 	},
 	"app": {
 		"windows": [
