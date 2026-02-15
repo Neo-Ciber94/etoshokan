@@ -185,14 +185,6 @@
 											{/snippet}
 										</DropdownMenu.Trigger>
 										<DropdownMenu.Content align="end">
-											<DropdownMenu.Label>Open with</DropdownMenu.Label>
-											<DropdownMenu.Item onclick={() => openBook(book.id)}>
-												epub.js
-											</DropdownMenu.Item>
-											<DropdownMenu.Item onclick={() => openBook(book.id)}>
-												foliate.js
-											</DropdownMenu.Item>
-											<DropdownMenu.Separator />
 											<DropdownMenu.Item
 												class="text-destructive"
 												onclick={() => handleDeleteBook(book.id)}
