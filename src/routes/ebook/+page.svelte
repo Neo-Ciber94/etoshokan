@@ -8,9 +8,9 @@
 	import type { BookMetadata } from '$lib/ebook/types';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
-	import { useAllBooksMetadata } from '$lib/ebook/books.svelte';
+	import { useBooksMetadata } from '$lib/ebook/books.svelte';
 
-	let books = useAllBooksMetadata();
+	let books = useBooksMetadata();
 	let uploadingBook = $state(false);
 
 	async function handleFileUpload(event: Event) {

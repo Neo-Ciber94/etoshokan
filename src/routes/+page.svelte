@@ -2,12 +2,12 @@
 	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { useAllBooksMetadata } from '$lib/ebook/books.svelte';
+	import { useBooksMetadata } from '$lib/ebook/books.svelte';
 	import { isWeb } from '$lib/utils';
 	import { authClient } from '$lib/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
 
-	const books = useAllBooksMetadata();
+	const books = useBooksMetadata();
 	const session = authClient.useSession();
 	let web = $state(true);
 
