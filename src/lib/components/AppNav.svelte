@@ -8,6 +8,7 @@
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
 	import { authClient } from '$lib/auth-client';
 	import ThemeToggle from './ThemeToggle.svelte';
+	import { impactFeedback } from '@tauri-apps/plugin-haptics';
 
 	const session = authClient.useSession();
 
@@ -19,7 +20,10 @@
 	];
 
 	function isActive(href: string, pathname: string): boolean {
-		if (href === '/') return pathname === '/';
+		if (href === '/') {
+			return pathname === '/';
+		}
+
 		return pathname === href || pathname.startsWith(href + '/');
 	}
 </script>
@@ -44,6 +48,7 @@
 						href={item.href}
 						class="relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
 						{active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}"
+						onclick={() => impactFeedback('soft')}
 					>
 						<item.icon class="size-4" />
 						{item.label}
@@ -81,15 +86,16 @@
 
 	<!-- Mobile portrait: bottom nav -->
 	<nav
-		class="fixed right-0 bottom-0 left-0 z-40 hidden border-t border-border bg-card max-lg:portrait:block"
+		class="fixed right-0 bottom-0 left-0 z-40 hidden border-t border-border bg-card pb-[env(safe-area-inset-bottom)] max-lg:portrait:block"
 	>
-		<div class="flex items-center justify-around pb-[env(safe-area-inset-bottom)]">
+		<div class="flex items-center justify-around">
 			{#each navItems as item}
 				{@const active = isActive(item.href, $page.url.pathname)}
 				<a
 					href={item.href}
 					class="flex flex-col items-center gap-1 px-3 py-2 transition-colors
 					{active ? 'text-primary' : 'text-muted-foreground'}"
+					onclick={() => impactFeedback('soft')}
 				>
 					<item.icon class="size-5" />
 					<span class="text-[10px] font-medium">{item.label}</span>
@@ -102,13 +108,16 @@
 	<nav
 		class="fixed top-0 bottom-0 left-0 z-40 hidden w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-lg:landscape:flex"
 	>
-		<div class="flex flex-col items-center justify-center gap-4 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+		<div
+			class="flex flex-col items-center justify-center gap-4 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
+		>
 			{#each navItems as item}
 				{@const active = isActive(item.href, $page.url.pathname)}
 				<a
 					href={item.href}
 					class="flex flex-col items-center gap-0.5 rounded-lg p-2 transition-colors
 					{active ? 'bg-accent text-primary' : 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => impactFeedback('soft')}
 				>
 					<item.icon class="size-5" />
 					<span class="text-[10px] font-medium">{item.label}</span>
