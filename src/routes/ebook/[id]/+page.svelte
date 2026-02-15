@@ -26,6 +26,7 @@
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
+	import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -355,11 +356,14 @@
 		const jishoUrl = `https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`;
 
 		if (isWeb()) {
+			console.log("Opening tab on browser")
 			window.open(jishoUrl, '_blank');
 		} else {
 			try {
+				console.log("Opening tab on chrome")
 				await open_chrome({
-					url: jishoUrl
+					url: jishoUrl,
+					toolbarColor: 'black'
 				});
 			} catch (err) {
 				console.error('Failed to open tab: ', err);
