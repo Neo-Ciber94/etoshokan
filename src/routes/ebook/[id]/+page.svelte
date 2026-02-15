@@ -22,18 +22,19 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
-	import { isMobile } from '$lib/utils';
+	import { cn, isMobile } from '$lib/utils';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
-	
+
 	const pointer = usePointer();
 	let bookId = $derived(page.params.id || '');
 	let view = $state<FoliateView | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
+	let isReady = $state(false);
 	let bookMetadata = $state<BookMetadata | null>(null);
 
 	// Context menu state
@@ -59,7 +60,7 @@
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
-	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: false });
+	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: true });
 
 	// We only search on selection on mobile
 	let searchOnSelection = $state(false);
@@ -163,6 +164,7 @@
 			// Listen for section loads to attach event handlers
 			foliateView.addEventListener('load', (e) => {
 				const { doc } = e.detail;
+				isReady = true;
 				handleSectionLoad(doc);
 			});
 
@@ -462,7 +464,12 @@
 			</div>
 		</div>
 	{:else}
-		<div class="relative mb-10 flex-1 overflow-hidden md:mb-5">
+		<div
+			class={cn(
+				'relative mb-10 flex-1 overflow-hidden opacity-0 duration-500 md:mb-5',
+				isReady && 'opacity-100'
+			)}
+		>
 			<div bind:this={readerContainer} class="h-full w-full"></div>
 		</div>
 

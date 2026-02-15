@@ -8,3 +8,7 @@ bun.lockb
 # Miscellaneous
 /static/
 /drizzle/
+/src-tauri/
+/build/
+/.wrangler/
+/.svelte-kit/
