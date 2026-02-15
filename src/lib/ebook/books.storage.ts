@@ -1,6 +1,7 @@
 import { get, set, del } from 'idb-keyval';
 import type { BookMetadata, StoredBook } from './types';
 import { Mutex } from '$lib/utils/mutex';
+import ePub from 'epubjs';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
@@ -77,5 +78,52 @@ export async function updateBookProgress(id: string, cfi: string, progress: numb
 
 			await set(METADATA_KEY, metadata);
 		}
+	});
+}
+
+export async function uploadBook(file: File) {
+	const arrayBuffer = await file.arrayBuffer();
+	const book = ePub(arrayBuffer); // Currently we only support eBooks
+
+	// Load metadata
+	await book.ready;
+	const metadata = await book.loaded.metadata;
+
+	// Get cover as a blob and convert to data URL
+	let coverDataUrl: string | undefined;
+	try {
+		const coverUrl = await book.coverUrl();
+		if (coverUrl) {
+			// Fetch the blob URL and convert to data URL
+			const response = await fetch(coverUrl);
+			const blob = await response.blob();
+			coverDataUrl = await blobToDataURL(blob);
+		}
+	} catch (error) {
+		// TODO: Show actual error, or use placeholder
+		console.error('Error loading cover:', error);
+	}
+
+	const bookId = crypto.randomUUID(); // FIXME: The server should give us this
+	const bookMetadata: BookMetadata = {
+		id: bookId,
+		title: metadata.title || 'Unknown Title',
+		author: metadata.creator || 'Unknown Author',
+		cover: coverDataUrl,
+		addedAt: Date.now()
+	};
+
+	await saveBook({
+		metadata: bookMetadata,
+		file: arrayBuffer
+	});
+}
+
+async function blobToDataURL(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => resolve(reader.result as string);
+		reader.onerror = reject;
+		reader.readAsDataURL(blob);
 	});
 }

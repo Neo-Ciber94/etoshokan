@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import ePub from 'epubjs';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { saveBook, deleteBook } from '$lib/ebook/books.storage';
-	import type { BookMetadata } from '$lib/ebook/types';
+	import { deleteBook, uploadBook } from '$lib/ebook/books.storage';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
@@ -16,46 +14,16 @@
 	async function handleFileUpload(event: Event) {
 		const input = event.target as HTMLInputElement;
 		const file = input.files?.[0];
-		if (!file) return;
+
+		if (!file) {
+			console.warn('No book to upload');
+			return;
+		}
 
 		uploadingBook = true;
+
 		try {
-			const arrayBuffer = await file.arrayBuffer();
-			const book = ePub(arrayBuffer);
-
-			// Load metadata
-			await book.ready;
-			const metadata = await book.loaded.metadata;
-
-			// Get cover as a blob and convert to data URL
-			let coverDataUrl: string | undefined;
-			try {
-				const coverUrl = await book.coverUrl();
-				if (coverUrl) {
-					// Fetch the blob URL and convert to data URL
-					const response = await fetch(coverUrl);
-					const blob = await response.blob();
-					coverDataUrl = await blobToDataURL(blob);
-				}
-			} catch (error) {
-				// TODO: Show actual error, or use placeholder
-				console.error('Error loading cover:', error);
-			}
-
-			const bookId = crypto.randomUUID();
-			const bookMetadata: BookMetadata = {
-				id: bookId,
-				title: metadata.title || 'Unknown Title',
-				author: metadata.creator || 'Unknown Author',
-				cover: coverDataUrl,
-				addedAt: Date.now()
-			};
-
-			await saveBook({
-				metadata: bookMetadata,
-				file: arrayBuffer
-			});
-
+			await uploadBook(file);
 			books.invalidate();
 		} catch (error) {
 			console.error('Error uploading book:', error);
@@ -63,15 +31,6 @@
 			uploadingBook = false;
 			input.value = '';
 		}
-	}
-
-	async function blobToDataURL(blob: Blob): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onloadend = () => resolve(reader.result as string);
-			reader.onerror = reject;
-			reader.readAsDataURL(blob);
-		});
 	}
 
 	async function handleDeleteBook(id: string) {
