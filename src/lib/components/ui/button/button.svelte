@@ -1,11 +1,7 @@
 <script lang="ts" module>
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
-	import type {
-		HTMLAnchorAttributes,
-		HTMLButtonAttributes,
-		MouseEventHandler
-	} from 'svelte/elements';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import { type VariantProps, tv } from 'tailwind-variants';
 
 	export const buttonVariants = tv({
