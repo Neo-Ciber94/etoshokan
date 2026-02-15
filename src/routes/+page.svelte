@@ -5,6 +5,7 @@
 	import { useAllBooksMetadata } from '$lib/ebook/books.svelte';
 	import { isWeb } from '$lib/utils';
 	import { authClient } from '$lib/auth-client';
+	import Loading from '$lib/components/Loading.svelte';
 
 	const books = useAllBooksMetadata();
 	const session = authClient.useSession();
@@ -26,6 +27,7 @@
 	}
 
 	function loginWithGoogle() {
+		console.log("click")
 		authClient.signIn.social({ provider: 'google' });
 	}
 </script>
@@ -43,7 +45,7 @@
 	</section>
 
 	{#if $session.isPending}
-		<div class="text-sm text-muted-foreground">Loading...</div>
+		<Loading />
 	{:else if !$session.data}
 		<section>
 			<Button onclick={loginWithGoogle} variant="outline" class="w-full gap-3 sm:w-auto">
@@ -105,7 +107,7 @@
 			<h3 class="text-lg font-semibold">Continue Reading</h3>
 
 			{#if books.loading}
-				<div class="text-sm text-muted-foreground">Loading...</div>
+				<Loading />
 			{:else if recentBooks.length === 0}
 				<Card.Root class="border border-border">
 					<Card.Content class="p-8 text-center">

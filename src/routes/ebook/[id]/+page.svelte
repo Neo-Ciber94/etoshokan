@@ -30,6 +30,7 @@
 	import { dictionary } from '$lib/dictionary';
 	import { isMobile } from '$lib/utils';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 
 	const pointer = usePointer();
 
@@ -439,10 +440,7 @@
 
 	{#if loading}
 		<div class="flex h-full items-center justify-center">
-			<div class="text-center">
-				<div class="mb-4 animate-pulse text-6xl">📖</div>
-				<p class="text-sm text-muted-foreground">Loading book...</p>
-			</div>
+			<Loading class="size-10" />
 		</div>
 	{:else if notFound}
 		<div class="flex h-full items-center justify-center">
