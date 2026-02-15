@@ -97,9 +97,7 @@
 			<div class="flex flex-col gap-3 rounded-md border border-border p-4">
 				<div class="space-y-1">
 					<p class="text-sm font-medium">Log out</p>
-					<p class="text-xs text-muted-foreground">
-						Sign out of your account on this device.
-					</p>
+					<p class="text-xs text-muted-foreground">Sign out of your account on this device.</p>
 				</div>
 				<div>
 					<Button variant="destructive" onclick={logout}>Log out</Button>
@@ -111,7 +109,7 @@
 	<section class="space-y-4">
 		<h3 class="text-lg font-semibold">About</h3>
 		<div class="flex flex-col gap-3 rounded-md border border-border p-4">
-			<p class="text-sm text-muted-foreground">Etoshokan v0.0.1</p>
+			<p class="text-sm text-muted-foreground">Etoshokan {__VERSION__ || 'v0.0.0'}</p>
 		</div>
 	</section>
 </div>

@@ -10,7 +10,8 @@ export default defineConfig(() => {
 		},
 		define: {
 			__DATE__: `'${new Date().toISOString()}'`,
-			__RELOAD_SW__: false
+			__RELOAD_SW__: false,
+			__VERSION__: `'${getVersion()}'`
 		},
 		plugins: [
 			tailwindcss(),
@@ -30,3 +31,12 @@ export default defineConfig(() => {
 		]
 	};
 });
+
+function getVersion() {
+	const now = new Date();
+	const day = now.getDate();
+	const month = now.getMonth() + 1;
+	const year = now.getFullYear();
+	const ms = now.getMilliseconds();
+	return `v${year}.${month}.${day}.${ms}`;
+}
