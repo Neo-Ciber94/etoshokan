@@ -64,6 +64,7 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@tauri-apps/plugin-haptics": "~2",
 		"@zip.js/zip.js": "^2.8.17",
 		"epubjs": "^0.3.93",
 		"foliate-js": "^1.0.1",
