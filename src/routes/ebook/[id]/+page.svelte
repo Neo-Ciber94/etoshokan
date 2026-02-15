@@ -8,7 +8,7 @@
 		getBookMetadataById,
 		updateBookProgress,
 		updateBookZoom
-	} from '$lib/ebook/storage';
+	} from '$lib/ebook/books.storage';
 	import type { BookMetadata, TocItem } from '$lib/ebook/types';
 	import { createFoliateView, type FoliateView } from '$lib/types/view';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';

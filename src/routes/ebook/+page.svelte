@@ -4,7 +4,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { saveBook, deleteBook } from '$lib/ebook/storage';
+	import { saveBook, deleteBook } from '$lib/ebook/books.storage';
 	import type { BookMetadata } from '$lib/ebook/types';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
