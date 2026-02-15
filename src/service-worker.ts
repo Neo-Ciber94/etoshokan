@@ -4,7 +4,7 @@
 
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst, NetworkOnly } from 'workbox-strategies';
+import { NetworkFirst } from 'workbox-strategies';
 
 declare let self: ServiceWorkerGlobalScope;
 
