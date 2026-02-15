@@ -1,6 +1,12 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+declare global {
+	interface Window {
+		__TAURI_INTERNALS__: Record<string, unknown>;
+	}
+}
+
 export function delay(ms: number) {
 	return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
@@ -14,7 +20,7 @@ export function isWeb() {
 		return false;
 	}
 
-	return !('__TAURI__' in window);
+	return typeof window.__TAURI_INTERNALS__ === 'undefined';
 }
 
 export function isMobile() {
