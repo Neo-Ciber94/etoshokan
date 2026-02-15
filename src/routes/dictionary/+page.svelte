@@ -67,7 +67,7 @@
 
 		tick().then(() => {
 			if (query.length === 0) {
-				replaceState('.', {});
+				replaceState('', {});
 			} else {
 				replaceState(`?search=${query.trim()}`, {});
 			}
