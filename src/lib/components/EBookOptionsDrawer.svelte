@@ -11,7 +11,6 @@
 		onZoomIn: () => void;
 		onZoomOut: () => void;
 		showPageIndicator: { value: boolean };
-		searchOnSelection: { value: boolean };
 		selectionTime: { value: number };
 		disableContextMenu: { value: boolean };
 		swipeNavigation: { value: boolean };
@@ -25,7 +24,6 @@
 		onZoomIn,
 		onZoomOut,
 		showPageIndicator,
-		searchOnSelection,
 		selectionTime,
 		disableContextMenu,
 		swipeNavigation,
@@ -62,11 +60,6 @@
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Show page number</span>
 				<Switch bind:checked={showPageIndicator.value} />
-			</label>
-			<!-- Search on selection toggle -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Search on selection</span>
-				<Switch bind:checked={searchOnSelection.value} />
 			</label>
 			<!-- Selection time control -->
 			<div class="flex items-center justify-between">

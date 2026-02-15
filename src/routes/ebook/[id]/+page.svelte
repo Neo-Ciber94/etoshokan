@@ -10,12 +10,7 @@
 		updateBookZoom
 	} from '$lib/ebook/storage';
 	import type { BookMetadata, TocItem } from '$lib/ebook/types';
-	import {
-		createFoliateView,
-		type FoliateView,
-		type FoliateRelocateDetail,
-		type FoliateLoadDetail
-	} from '$lib/types/view';
+	import { createFoliateView, type FoliateView } from '$lib/types/view';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
 	import EBookTableOfContents from '$lib/components/EBookTableOfContents.svelte';
@@ -27,18 +22,18 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
-	import { dictionary } from '$lib/dictionary';
 	import { isMobile } from '$lib/utils';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 
+	// svelte-ignore non_reactive_update
+	let readerContainer: HTMLDivElement;
+	
 	const pointer = usePointer();
-
 	let bookId = $derived(page.params.id || '');
 	let view = $state<FoliateView | null>(null);
 	let loading = $state(false);
 	let notFound = $state(false);
-	let readerContainer: HTMLDivElement;
 	let bookMetadata = $state<BookMetadata | null>(null);
 
 	// Context menu state
@@ -60,12 +55,18 @@
 
 	// Options persisted in localStorage
 	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
-	const searchOnSelection = useStorage('reader:searchOnSelection', { defaultValue: isMobile() });
 	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
 	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: false });
+
+	// We only search on selection on mobile
+	let searchOnSelection = $state(false);
+
+	$effect.pre(() => {
+		searchOnSelection = isMobile();
+	});
 
 	// Page state
 	let currentPage = $state(0);
@@ -261,7 +262,7 @@
 			}
 
 			// Check for text selection and show context menu (debounced)
-			if (!searchOnSelection.value) {
+			if (!searchOnSelection) {
 				showContextMenuIfSelection(doc);
 			}
 
@@ -291,7 +292,7 @@
 
 		// Handle text selection for search-on-selection
 		doc.addEventListener('selectionchange', () => {
-			if (!searchOnSelection.value) {
+			if (!searchOnSelection) {
 				return;
 			}
 
@@ -313,7 +314,6 @@
 				showContextMenuIfSelection(doc);
 			}
 		});
-
 	}
 
 	function getThemeCss(withZoom = false): string {
@@ -353,7 +353,10 @@
 	}
 
 	function nextPage() {
-		if (!view) return;
+		if (!view) {
+			return;
+		}
+
 		if (invertDirection.value) {
 			view.prev();
 		} else {
@@ -362,7 +365,10 @@
 	}
 
 	function prevPage() {
-		if (!view) return;
+		if (!view) {
+			return;
+		}
+
 		if (invertDirection.value) {
 			view.next();
 		} else {
@@ -391,7 +397,7 @@
 </svelte:head>
 
 <section
-	class="fixed inset-0 flex flex-col bg-background mt-[env(safe-area-inset-top)]"
+	class="fixed inset-0 mt-[env(safe-area-inset-top)] flex flex-col bg-background"
 	role="application"
 	oncontextmenu={(e) => e.preventDefault()}
 >
@@ -497,7 +503,6 @@
 	onZoomIn={handleZoomIn}
 	onZoomOut={handleZoomOut}
 	{showPageIndicator}
-	{searchOnSelection}
 	{selectionTime}
 	{disableContextMenu}
 	{swipeNavigation}
