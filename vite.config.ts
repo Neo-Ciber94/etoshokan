@@ -10,7 +10,7 @@ export default defineConfig(() => {
 		},
 		define: {
 			__DATE__: `'${new Date().toISOString()}'`,
-			__RELOAD_SW__: false,
+			__RELOAD_SW__: false
 		},
 		plugins: [
 			tailwindcss(),

@@ -4,7 +4,7 @@
 
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst } from 'workbox-strategies';
+import { NetworkFirst, NetworkOnly } from 'workbox-strategies';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -21,14 +21,17 @@ const navigationHandler = new NetworkFirst({
 });
 
 registerRoute(
-	new NavigationRoute(async (params) => {
-		try {
-			return await navigationHandler.handle(params);
-		} catch {
-			const cache = await caches.open('navigations');
-			const offlineResponse = await cache.match('offline');
-			if (offlineResponse) return offlineResponse;
-			return Response.error();
-		}
-	})
+	new NavigationRoute(
+		async (params) => {
+			try {
+				return await navigationHandler.handle(params);
+			} catch {
+				const cache = await caches.open('navigations');
+				const offlineResponse = await cache.match('offline');
+				if (offlineResponse) return offlineResponse;
+				return Response.error();
+			}
+		},
+		{ denylist: [/^\/api\//] }
+	)
 );
