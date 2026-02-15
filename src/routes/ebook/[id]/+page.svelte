@@ -23,7 +23,7 @@
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { cn, isMobile, isWeb } from '$lib/utils';
-	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
 	import { WebviewWindow } from '@tauri-apps/api/webviewWindow'

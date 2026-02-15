@@ -3,7 +3,7 @@
 	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { dictionary } from '$lib/dictionary';
-	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
 
 	$effect.pre(() => {

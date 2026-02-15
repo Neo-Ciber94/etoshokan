@@ -4,8 +4,8 @@
 	import BookOpenIcon from '@lucide/svelte/icons/book-open';
 	import LanguagesIcon from '@lucide/svelte/icons/languages';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
-	import { readingMode } from '$lib/stores/reading-mode.svelte';
+	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
+	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import { authClient } from '$lib/auth-client';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
