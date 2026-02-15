@@ -10,6 +10,9 @@ dotenv.config({
 const config = {
 	kit: {
 		adapter: getAdapter(),
+		prerender: {
+			handleUnseenRoutes: 'ignore'
+		},
 		csp: {
 			mode: 'auto'
 			// directives: {
