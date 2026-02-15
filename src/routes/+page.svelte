@@ -68,7 +68,7 @@
 				Login with Google
 			</Button>
 		</section>
-	{:else}
+
 		{#if web}
 			<section>
 				<a
@@ -100,7 +100,7 @@
 				</a>
 			</section>
 		{/if}
-
+	{:else}
 		<section class="space-y-4">
 			<h3 class="text-lg font-semibold">Continue Reading</h3>
 

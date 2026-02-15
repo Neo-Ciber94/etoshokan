@@ -6,7 +6,7 @@
 	const COOKIE_PWA_REMINDER_MS = 1000 * 60 * 24; // 1 day
 
 	let deferredPrompt = $state<BeforeInstallPromptEvent | null>(null);
-	let show = $state(true);
+	let show = $state(false);
 
 	interface BeforeInstallPromptEvent extends Event {
 		prompt(): Promise<void>;
