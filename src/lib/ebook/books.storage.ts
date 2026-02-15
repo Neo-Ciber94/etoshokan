@@ -2,6 +2,7 @@ import { get, set, del } from 'idb-keyval';
 import type { BookMetadata, StoredBook } from './types';
 import { Mutex } from '$lib/utils/mutex';
 import ePub from 'epubjs';
+import { blobToDataURL } from '$lib/utils/blobToDataURL';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
@@ -116,14 +117,5 @@ export async function uploadBook(file: File) {
 	await saveBook({
 		metadata: bookMetadata,
 		file: arrayBuffer
-	});
-}
-
-async function blobToDataURL(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onloadend = () => resolve(reader.result as string);
-		reader.onerror = reject;
-		reader.readAsDataURL(blob);
 	});
 }
