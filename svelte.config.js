@@ -10,6 +10,9 @@ dotenv.config({
 const config = {
 	kit: {
 		adapter: getAdapter(),
+		experimental: {
+			remoteFunctions: true
+		},
 		prerender: {
 			handleUnseenRoutes: 'ignore'
 		},
@@ -27,6 +30,11 @@ const config = {
 			// 	'base-uri': ['self'],
 			// 	'form-action': ['self']
 			// }
+		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
 		}
 	}
 };

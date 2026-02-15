@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toggleTheme, useIsDarkMode } from '$lib/stores/theme.svelte';
+	import { toggleTheme, useIsDarkMode } from '$lib/runes/theme.svelte';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import { cn } from '$lib/utils';

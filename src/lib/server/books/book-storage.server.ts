@@ -1,8 +1,8 @@
 import {
 	type BookMetadata,
 	type StoredBook,
-	BookMetadataSchema,
-	UploadBookFormDataSchema
+	type UploadBookFormData,
+	BookMetadataSchema
 } from '$lib/ebook/types';
 import { getGoogleAuthToken } from '$lib/server/auth/utils';
 import { z } from 'zod/v4';
@@ -51,6 +51,7 @@ export async function getDriveBookData(id: string): Promise<ArrayBuffer | undefi
 
 export async function saveBookToDrive(book: StoredBook): Promise<void> {
 	const token = await getAccessToken();
+	console.log('Google drive token', { token });
 	const ebooksFolder = await getEbooksFolderId(token);
 
 	// Upload/update the book file
@@ -155,25 +156,17 @@ export async function updateDriveBookZoom(id: string, zoom: number): Promise<voi
 	}
 }
 
-export async function uploadBookToDrive(formData: FormData): Promise<BookMetadata> {
-	const raw = {
-		title: formData.get('title'),
-		author: formData.get('author'),
-		cover: formData.get('cover') || undefined,
-		ebookData: formData.get('ebookData')
-	};
-
-	const parsed = UploadBookFormDataSchema.parse(raw);
-
-	const arrayBuffer = await parsed.ebookData.arrayBuffer();
+export async function uploadBookToDrive(data: UploadBookFormData): Promise<BookMetadata> {
+	const arrayBuffer = data.ebookData;
 	const bookId = crypto.randomUUID();
 	const bookMetadata: BookMetadata = {
 		id: bookId,
-		title: parsed.title,
-		author: parsed.author,
-		cover: parsed.cover,
+		title: data.title,
+		author: data.author,
+		cover: data.cover,
 		addedAt: Date.now()
 	};
+	console.log('Uploading book to drive');
 
 	await saveBookToDrive({
 		metadata: bookMetadata,
@@ -187,6 +180,7 @@ export async function uploadBookToDrive(formData: FormData): Promise<BookMetadat
 
 async function getAccessToken(): Promise<string> {
 	const authToken = await getGoogleAuthToken();
+
 	if (!authToken?.accessToken) {
 		throw new Error('No Google access token available');
 	}

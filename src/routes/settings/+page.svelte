@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { dictionary } from '$lib/dictionary';
 	import { Button } from '$lib/components/ui/button';
-	import { themeStore, setTheme, type Theme } from '$lib/stores/theme.svelte';
+	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { authClient } from '$lib/auth-client';
 
 	const session = authClient.useSession();

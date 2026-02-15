@@ -25,7 +25,7 @@ export const UploadBookFormDataSchema = z.object({
 	title: z.string().min(1),
 	author: z.string().min(1),
 	cover: z.string().optional(),
-	ebookData: z.instanceof(File)
+	ebookData: z.instanceof(ArrayBuffer)
 });
 
 export type UploadBookFormData = z.infer<typeof UploadBookFormDataSchema>;

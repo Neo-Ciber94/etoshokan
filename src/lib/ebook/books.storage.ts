@@ -3,6 +3,7 @@ import type { BookMetadata, StoredBook } from './types';
 import { Mutex } from '$lib/utils/mutex';
 import ePub from 'epubjs';
 import { blobToDataURL } from '$lib/utils/blobToDataURL';
+import { uploadBookToServer } from '../../routes/remote/ebook.remote';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
@@ -105,17 +106,37 @@ export async function uploadBook(file: File) {
 		console.error('Error loading cover:', error);
 	}
 
-	const bookId = crypto.randomUUID(); // FIXME: The server should give us this
-	const bookMetadata: BookMetadata = {
-		id: bookId,
+	// const bookId = crypto.randomUUID(); // FIXME: The server should give us this
+	// const bookMetadata: BookMetadata = {
+	// 	id: bookId,
+	// 	title: metadata.title || 'Unknown Title',
+	// 	author: metadata.creator || 'Unknown Author',
+	// 	cover: coverDataUrl,
+	// 	addedAt: Date.now()
+	// };
+
+	// const uploadResult = await uploadBookToServer({
+	// 	title: metadata.title || 'Unknown Title',
+	// 	author: metadata.creator || 'Unknown Author',
+	// 	cover: coverDataUrl,
+	// 	ebookData: file
+	// });
+
+	const uploadResult = await uploadBookToServer({
 		title: metadata.title || 'Unknown Title',
 		author: metadata.creator || 'Unknown Author',
 		cover: coverDataUrl,
-		addedAt: Date.now()
-	};
-
-	await saveBook({
-		metadata: bookMetadata,
-		file: arrayBuffer
+		ebookData: await file.arrayBuffer()
 	});
+
+	if (uploadResult.success) {
+		const bookMetadata = uploadResult.result;
+
+		await saveBook({
+			metadata: bookMetadata,
+			file: arrayBuffer
+		});
+	} else {
+		alert(`Failed to upload book: ${uploadResult.error}`);
+	}
 }
