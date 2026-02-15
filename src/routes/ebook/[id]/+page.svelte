@@ -22,9 +22,10 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
-	import { cn, isMobile } from '$lib/utils';
+	import { cn, isMobile, isWeb } from '$lib/utils';
 	import { readingMode } from '$lib/stores/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
+	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -350,8 +351,21 @@
 		showTranslation = true;
 	}
 
-	function handleSearch() {
-		window.open(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`, '_blank');
+	async function handleSearch() {
+		const jishoUrl = `https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`;
+
+		if (isWeb()) {
+			window.open(jishoUrl, '_blank');
+		} else {
+			try {
+				await open_chrome({
+					url: jishoUrl
+				});
+			} catch (err) {
+				console.error('Failed to open tab: ', err);
+				window.open(jishoUrl, '_blank');
+			}
+		}
 	}
 
 	function nextPage() {

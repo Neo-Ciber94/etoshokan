@@ -2,6 +2,7 @@
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_haptics::init())
+        .plugin(tauri_plugin_in_app_browser::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(

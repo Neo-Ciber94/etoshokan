@@ -69,6 +69,7 @@
 		"epubjs": "^0.3.93",
 		"foliate-js": "^1.0.1",
 		"idb-keyval": "^6.2.2",
+		"tauri-plugin-in-app-browser-api": "^1.0.0",
 		"wanakana": "^5.3.1"
 	}
 }
