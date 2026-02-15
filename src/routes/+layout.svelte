@@ -1,6 +1,5 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.ico';
 	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { dictionary } from '$lib/dictionary';
@@ -17,7 +16,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={'/favicon.ico'} />
 	<title>Etoshokan</title>
 	{@html webManifestLink}
 </svelte:head>
