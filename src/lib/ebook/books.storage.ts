@@ -26,7 +26,7 @@ export async function saveBook(book: StoredBook): Promise<void> {
 	await set(METADATA_KEY, metadata);
 }
 
-export async function getBook(id: string): Promise<ArrayBuffer | undefined> {
+export async function getBookData(id: string): Promise<ArrayBuffer | undefined> {
 	return await get(`${BOOK_PREFIX}${id}`);
 }
 

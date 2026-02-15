@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import {
-		getBook,
+		getBookData,
 		getBookMetadataById,
 		updateBookProgress,
 		updateBookZoom
@@ -138,7 +138,7 @@
 				return;
 			}
 
-			const bookData = await getBook(bookId);
+			const bookData = await getBookData(bookId);
 			if (!bookData) {
 				console.error('Book data not found');
 				notFound = true;
