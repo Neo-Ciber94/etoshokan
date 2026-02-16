@@ -51,7 +51,6 @@ export async function getDriveBookData(id: string): Promise<ArrayBuffer | undefi
 
 export async function saveBookToDrive(book: StoredBook): Promise<void> {
 	const token = await getAccessToken();
-	console.log('Google drive token', { token });
 	const ebooksFolder = await getEbooksFolderId(token);
 
 	// Upload/update the book file
@@ -64,6 +63,9 @@ export async function saveBookToDrive(book: StoredBook): Promise<void> {
 			body: book.file
 		});
 	} else {
+		// https://developers.google.com/workspace/drive/api/guides/manage-uploads#http_1
+		// We need to manually construct the form data, google chrome expects a `multipart/related`
+
 		const metadata = JSON.stringify({
 			name: `${book.metadata.id}.epub`,
 			parents: [ebooksFolder]
@@ -166,7 +168,6 @@ export async function uploadBookToDrive(data: UploadBookFormData): Promise<BookM
 		cover: data.cover,
 		addedAt: Date.now()
 	};
-	console.log('Uploading book to drive');
 
 	await saveBookToDrive({
 		metadata: bookMetadata,
