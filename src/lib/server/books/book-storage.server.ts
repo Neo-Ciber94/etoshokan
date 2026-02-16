@@ -71,15 +71,16 @@ export async function saveBookToDrive(book: StoredBook): Promise<void> {
 			parents: [ebooksFolder]
 		});
 
+		const textEncoder = new TextEncoder();
 		const boundary = 'etoshokan_upload';
 		const metaPart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`;
 		const closingBoundary = `\r\n--${boundary}--`;
 
-		const metaBytes = new TextEncoder().encode(metaPart);
-		const filePart = new TextEncoder().encode(
+		const metaBytes = textEncoder.encode(metaPart);
+		const filePart = textEncoder.encode(
 			`--${boundary}\r\nContent-Type: application/epub+zip\r\nContent-Transfer-Encoding: binary\r\n\r\n`
 		);
-		const closingBytes = new TextEncoder().encode(closingBoundary);
+		const closingBytes = textEncoder.encode(closingBoundary);
 
 		const body = new Uint8Array(
 			metaBytes.length + filePart.length + book.file.byteLength + closingBytes.length
