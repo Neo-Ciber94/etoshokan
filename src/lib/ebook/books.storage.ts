@@ -137,6 +137,6 @@ export async function uploadBook(file: File) {
 			file: arrayBuffer
 		});
 	} else {
-		alert(`Failed to upload book: ${uploadResult.error}`);
+		throw new Error(uploadResult.error);
 	}
 }

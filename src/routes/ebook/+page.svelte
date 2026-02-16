@@ -7,8 +7,10 @@
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
+	import { openModal } from '$lib/components/modal';
+	import Loading from '$lib/components/Loading.svelte';
 
-	let books = useBooksMetadata();
+	const books = useBooksMetadata();
 	let uploadingBook = $state(false);
 
 	async function handleFileUpload(event: Event) {
@@ -22,11 +24,26 @@
 
 		uploadingBook = true;
 
+		const modalHandle = openModal({
+			title: 'Uploading book',
+			type: 'pending'
+		});
+
 		try {
 			await uploadBook(file);
 			books.invalidate();
-		} catch (error) {
-			console.error('Error uploading book:', error);
+			modalHandle.update({
+				title: 'Book Uploaded',
+				type: 'info'
+			});
+		} catch (err) {
+			modalHandle.close();
+			console.error(err);
+			openModal({
+				title: 'Something went wrong',
+				description: 'Failed to upload book',
+				type: 'error'
+			});
 		} finally {
 			uploadingBook = false;
 			input.value = '';
@@ -38,8 +55,17 @@
 			return;
 		}
 
-		await deleteBook(id);
-		books.invalidate();
+		try {
+			await deleteBook(id);
+			books.invalidate();
+		} catch (err) {
+			console.error(err);
+			openModal({
+				title: 'Something went wrong',
+				description: 'Failed to delete book',
+				type: 'error'
+			});
+		}
 	}
 
 	function openBook(id: string) {
@@ -71,7 +97,10 @@
 					onclick={() => document.getElementById('book-upload')?.click()}
 					disabled={uploadingBook}
 				>
-					{uploadingBook ? 'Uploading...' : 'Upload Book'}
+					{#if uploadingBook}
+						<Loading class="size-5" />
+					{/if}
+					<span>Upload Book</span>
 				</Button>
 			</div>
 		</div>

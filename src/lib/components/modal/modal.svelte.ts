@@ -8,7 +8,7 @@ export interface ModalAction {
 export interface ModalOptions {
 	title: string;
 	description?: string;
-	type?: ModalType;
+	type: ModalType;
 	canClose?: boolean;
 	actions?: ModalAction[];
 }
