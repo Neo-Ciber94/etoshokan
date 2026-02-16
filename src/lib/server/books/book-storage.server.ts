@@ -4,6 +4,7 @@ import {
 	type UploadBookFormData,
 	BookMetadataSchema
 } from '$lib/ebook/types';
+import { logger } from '$lib/logging/logger';
 import { getGoogleAuthToken } from '$lib/server/auth/utils';
 import { z } from 'zod/v4';
 
@@ -42,6 +43,7 @@ export async function getDriveBookData(id: string): Promise<ArrayBuffer | undefi
 	const fileId = await findFileByName(token, `${id}.epub`, ebooksFolder);
 
 	if (!fileId) {
+		logger.warn(`Book ${id} was not found`);
 		return undefined;
 	}
 
@@ -117,6 +119,7 @@ export async function deleteBookFromDrive(id: string): Promise<void> {
 	const fileId = await findFileByName(token, `${id}.epub`, ebooksFolder);
 
 	if (fileId) {
+		logger.info('Deleting book', { id });
 		await driveRequest(`${DRIVE_API}/files/${fileId}`, token, { method: 'DELETE' });
 	}
 
@@ -142,6 +145,7 @@ export async function updateDriveBookProgress(
 		book.lastReadAt = Date.now();
 
 		metadata.sort((a, b) => (b.lastReadAt || b.addedAt) - (a.lastReadAt || a.addedAt));
+		logger.info('Updating book progress', { id, progress });
 		await writeDriveMetadataFile(token, metadata);
 	}
 }
@@ -155,6 +159,7 @@ export async function updateDriveBookZoom(id: string, zoom: number): Promise<voi
 
 	if (book) {
 		book.zoom = zoom;
+		logger.info('Updating book zoom', { id, zoom });
 		await writeDriveMetadataFile(token, metadata);
 	}
 }
@@ -170,6 +175,7 @@ export async function uploadBookToDrive(data: UploadBookFormData): Promise<BookM
 		addedAt: Date.now()
 	};
 
+	logger.info('Uploading book to drive: ', { bookId, title: bookMetadata.title });
 	await saveBookToDrive({
 		metadata: bookMetadata,
 		file: arrayBuffer
