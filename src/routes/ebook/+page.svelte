@@ -24,26 +24,24 @@
 
 		uploadingBook = true;
 
-		const modalHandle = openModal({
-			title: 'Uploading book',
-			type: 'pending'
-		});
-
 		try {
-			await uploadBook(file);
-			books.invalidate();
-			modalHandle.update({
-				title: 'Book Uploaded',
-				type: 'info'
+			const uploadBookPromise = uploadBook(file);
+			await openModal.pending(uploadBookPromise, {
+				title: 'Uploading book',
+				onSuccess() {
+					return {
+						title: 'Book uploaded'
+					};
+				},
+				onError(err) {
+					return {
+						title: 'Failed to upload book',
+						description: err instanceof Error ? err.message : 'Something went wrong'
+					};
+				}
 			});
 		} catch (err) {
-			modalHandle.close();
 			console.error(err);
-			openModal({
-				title: 'Something went wrong',
-				description: 'Failed to upload book',
-				type: 'error'
-			});
 		} finally {
 			uploadingBook = false;
 			input.value = '';

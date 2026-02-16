@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getModals, closeTopModal, type ModalType } from './modal.svelte';
+	import { getModals, closeTopModal, type ModalType, closeModal } from './modal.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -7,15 +7,19 @@
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import AlertTriangleIcon from '@lucide/svelte/icons/triangle-alert';
 	import CircleXIcon from '@lucide/svelte/icons/circle-x';
+	import CircleCheckIcon from '@lucide/svelte/icons/circle-check';
 
 	const modals = $derived(getModals());
 	let open = $derived(modals.length > 0);
+
+	$inspect(modals, open).with(console.log)
 
 	const typeConfig: Record<ModalType, { bg: string; iconColor: string }> = {
 		info: { bg: 'bg-blue-500/10', iconColor: 'text-blue-500' },
 		error: { bg: 'bg-red-500/10', iconColor: 'text-red-500' },
 		warning: { bg: 'bg-amber-500/10', iconColor: 'text-amber-500' },
-		pending: { bg: 'bg-muted/50', iconColor: 'text-muted-foreground' }
+		loading: { bg: 'bg-muted/50', iconColor: 'text-muted-foreground' },
+		success: { bg: 'bg-green-500/10', iconColor: 'text-green-500' }
 	};
 
 	function handleOpenChange(value: boolean) {
@@ -39,12 +43,7 @@
 				{#if modal.canClose}
 					<button
 						class="absolute end-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden"
-						onclick={() => {
-							const idx = getModals().findIndex((m) => m.id === modal.id);
-							if (idx !== -1) {
-								getModals().splice(idx, 1);
-							}
-						}}
+						onclick={() => closeModal(modal.id)}
 					>
 						<XIcon class="size-4" />
 						<span class="sr-only">Close</span>
@@ -53,12 +52,14 @@
 
 				<Dialog.Header class="flex-row items-start gap-3">
 					<div class="flex size-8 shrink-0 items-center justify-center rounded-full {config.bg}">
-						{#if modal.type === 'pending'}
+						{#if modal.type === 'loading'}
 							<Loading class="size-4" />
 						{:else if modal.type === 'error'}
 							<CircleXIcon class="size-4 {config.iconColor}" />
 						{:else if modal.type === 'warning'}
 							<AlertTriangleIcon class="size-4 {config.iconColor}" />
+						{:else if modal.type === 'success'}
+							<CircleCheckIcon class="size-4 {config.iconColor}" />
 						{:else}
 							<InfoIcon class="size-4 {config.iconColor}" />
 						{/if}
@@ -71,7 +72,7 @@
 					</div>
 				</Dialog.Header>
 
-				{#if modal.type !== 'pending' && modal.actions.length > 0}
+				{#if modal.type !== 'loading' && modal.actions.length > 0}
 					<Dialog.Footer class="mt-4">
 						{#each modal.actions as action}
 							<Button variant="outline" size="sm" onclick={action.onclick}>
