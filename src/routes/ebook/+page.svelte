@@ -34,7 +34,9 @@
 	}
 
 	async function handleDeleteBook(id: string) {
-		if (!confirm('Are you sure you want to delete this book?')) return;
+		if (!confirm('Are you sure you want to delete this book?')) {
+			return;
+		}
 
 		await deleteBook(id);
 		books.invalidate();
