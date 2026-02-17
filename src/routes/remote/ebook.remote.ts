@@ -11,9 +11,11 @@ export const uploadBookToServer = command(UploadBookFormDataSchema, async (input
 		} as const;
 	} catch (err) {
 		console.error(err);
+		const message = err instanceof Error ? err.message : 'Unknown error';
+
 		return {
 			success: false,
-			error: 'Failed to upload book'
+			error: message
 		} as const;
 	}
 });

@@ -190,7 +190,8 @@ async function getAccessToken(): Promise<string> {
 	const authToken = await getGoogleAuthToken();
 
 	if (!authToken?.accessToken) {
-		throw new Error('No Google access token available');
+		logger.error('No Google access token available');
+		throw new Error('Unable to get google drive access');
 	}
 	return authToken.accessToken;
 }
