@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
@@ -13,6 +14,7 @@ export default defineConfig(() => {
 			__RELOAD_SW__: false,
 			__VERSION__: `'${getVersion()}'`
 		},
+		test: {},
 		plugins: [
 			tailwindcss(),
 			sveltekit(),
