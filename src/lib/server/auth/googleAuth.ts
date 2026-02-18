@@ -1,9 +1,12 @@
 import { encryptAes, decryptAes } from '$lib/server/utils';
 import { env } from '$env/dynamic/private';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { AuthContext, MiddlewareContext, MiddlewareOptions } from 'better-auth';
 
 const GOOGLE_ACCESS_TOKEN_COOKIE = 'google_access_token';
 const GOOGLE_REFRESH_TOKEN_COOKIE = 'google_refresh_token';
+const ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 60;
+const MAX_COOKIE_AGE_SECONDS = 60 * 60 * 24 * 355; // 1 year
 
 type GoogleTokenResponse = {
 	access_token: string;
@@ -13,7 +16,7 @@ type GoogleTokenResponse = {
 	id_token?: string;
 };
 
-export async function getGoogleAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
+export async function refreshGoogleAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
 	const params = new URLSearchParams({
 		client_id: process.env.GOOGLE_CLIENT_ID!,
 		client_secret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -52,35 +55,38 @@ export async function revokeGoogleToken(refreshOrAccessToken: string) {
 	}
 }
 
-type SetCookieTokenCookiesArgs = {
-	event: RequestEvent;
+type SetGoogleTokenCookieArgs = {
+	authContext: MiddlewareContext<MiddlewareOptions, AuthContext>;
 	accessToken: string;
 	accessTokenExpiresIn: number;
-	refreshToken: string;
 	secret: string;
+	refreshToken?: string;
 };
 
-export function setGoogleTokenCookies(args: SetCookieTokenCookiesArgs) {
-	const { accessToken, accessTokenExpiresIn, event, refreshToken, secret } = args;
+export function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
+	const { accessToken, accessTokenExpiresIn, authContext, refreshToken, secret } = args;
 
-	event.cookies.set(GOOGLE_ACCESS_TOKEN_COOKIE, encryptAes(accessToken, secret), {
+	console.log('set google tokens');
+	authContext.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, encryptAes(accessToken, secret), {
 		path: '/',
 		httpOnly: true,
-		secure: true,
-		sameSite: 'lax',
-		maxAge: accessTokenExpiresIn
+		//secure: true,
+		sameSite: 'Lax',
+		maxAge: accessTokenExpiresIn - ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS
 	});
 
-	event.cookies.set(GOOGLE_REFRESH_TOKEN_COOKIE, encryptAes(refreshToken, secret), {
-		path: '/',
-		httpOnly: true,
-		secure: true,
-		sameSite: 'lax',
-		maxAge: 60 * 60 * 24 * 365
-	});
+	if (refreshToken) {
+		authContext.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, encryptAes(refreshToken, secret), {
+			path: '/',
+			httpOnly: true,
+			//secure: true,
+			sameSite: 'Lax',
+			maxAge: MAX_COOKIE_AGE_SECONDS
+		});
+	}
 }
 
-export function getGoogleAccessTokenFromRequest(event: RequestEvent): string | null {
+export function getGoogleAccessToken(event: RequestEvent): string | null {
 	const encoded = event.cookies.get(GOOGLE_ACCESS_TOKEN_COOKIE);
 	if (!encoded) {
 		return null;
@@ -88,10 +94,23 @@ export function getGoogleAccessTokenFromRequest(event: RequestEvent): string | n
 	return decryptAes(encoded, env.BETTER_AUTH_SECRET!);
 }
 
-export function getGoogleRefreshTokenFromRequest(event: RequestEvent): string | null {
+export function getGoogleRefreshToken(event: RequestEvent): string | null {
 	const encoded = event.cookies.get(GOOGLE_REFRESH_TOKEN_COOKIE);
 	if (!encoded) {
 		return null;
 	}
 	return decryptAes(encoded, env.BETTER_AUTH_SECRET!);
+}
+
+export function deleteGoogleTokenCookies(event: RequestEvent) {
+	event.cookies.delete(GOOGLE_ACCESS_TOKEN_COOKIE, { path: '/' });
+	event.cookies.delete(GOOGLE_REFRESH_TOKEN_COOKIE, { path: '/' });
+}
+
+export function validateGoogleTokens(event: RequestEvent) {
+	const accessToken = getGoogleAccessToken(event);
+	const refreshToken = getGoogleRefreshToken(event);
+
+	// FIXME: We should only look for the access token
+	return accessToken != null && refreshToken != null;
 }
