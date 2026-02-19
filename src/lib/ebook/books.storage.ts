@@ -7,7 +7,8 @@ import {
 	deleteBook,
 	updateZoom,
 	updateProgress,
-	uploadBookToServer
+	uploadBookToServer,
+	getBooksMetadataWithoutCover
 } from '$lib/remote/ebook.remote';
 import { isLoggedIn } from '$lib/auth-client';
 import { setBookUploadState, setBookSyncState } from './sync.storage';
@@ -82,6 +83,20 @@ export async function getLocalBookMetadataById(bookId: string) {
 	const books = await getLocalBooksMetadata();
 	const bookMetadata = books.find((b) => b.id === bookId) || null;
 	return bookMetadata;
+}
+
+// Returns metadata of remote books that don't exist in local storage
+export async function getRemoteBooksNotInLocal() {
+	const result = await getBooksMetadataWithoutCover();
+	if (!result.success) {
+		console.error('Failed to fetch remote metadata:', result.error);
+		return [];
+	}
+
+	const localMetadata = await getLocalBooksMetadata();
+	const localIds = new Set(localMetadata.map((b) => b.id));
+
+	return result.metadata.filter((b) => !localIds.has(b.id));
 }
 
 const BOOK_MUTEX = new Mutex();

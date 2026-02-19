@@ -1,12 +1,7 @@
 import { get, set } from 'idb-keyval';
-import { getBooksMetadata, getBooksMetadataWithoutCover, getBookData } from '$lib/remote/ebook.remote';
+import { getBooksMetadata, getBookData } from '$lib/remote/ebook.remote';
 import type { UploadState, SyncState, BookSyncEntry } from './sync.types';
-import {
-	getLocalBooksMetadata,
-	getLocalBookMetadataById,
-	saveLocalBook,
-	mergeLocalBooksMetadata
-} from './books.storage';
+import { getLocalBookMetadataById, saveLocalBook, mergeLocalBooksMetadata } from './books.storage';
 
 const SYNC_TABLE_KEY = 'books:sync';
 
@@ -49,27 +44,13 @@ export async function setBookSyncState(bookId: string, syncState: SyncState): Pr
 	});
 }
 
-export async function removeBookSyncEntry(bookId: string): Promise<void> {
-	const entries = await getAllSyncEntries();
-	await set(
-		SYNC_TABLE_KEY,
-		entries.filter((e) => e.bookId !== bookId)
-	);
-}
-
-// Returns metadata of remote books that don't exist in local storage
-export async function getRemoteBooksNotInLocal() {
-	const result = await getBooksMetadataWithoutCover();
-	if (!result.success) {
-		console.error('Failed to fetch remote metadata:', result.error);
-		return [];
-	}
-
-	const localMetadata = await getLocalBooksMetadata();
-	const localIds = new Set(localMetadata.map((b) => b.id));
-
-	return result.metadata.filter((b) => !localIds.has(b.id));
-}
+// export async function removeBookSyncEntry(bookId: string): Promise<void> {
+// 	const entries = await getAllSyncEntries();
+// 	await set(
+// 		SYNC_TABLE_KEY,
+// 		entries.filter((e) => e.bookId !== bookId)
+// 	);
+// }
 
 // Fetches remote metadata and saves it locally for books not already present (no book file data)
 export async function syncRemoteMetadata(): Promise<void> {
