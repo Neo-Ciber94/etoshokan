@@ -51,7 +51,7 @@ This is a ebook reader that support translations from english to japanese with o
 - Components are in `src/lib/components/ui/`
 - Use tree-shakeable imports
 - Customize components as needed
-- Use `cn` when creating classes to be able to extend the styles
+- For classes always use `cn` to extend styles.
 
 ### TypeScript
 
