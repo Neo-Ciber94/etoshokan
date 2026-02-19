@@ -1,4 +1,4 @@
-export type UploadState = 'pending' | 'uploaded'
+export type UploadState = 'pending' | 'uploaded' | 'missing'
 export type SyncState = 'pending' | 'synced'
 
 export interface BookSyncEntry {
