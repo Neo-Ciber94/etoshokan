@@ -18,12 +18,12 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
-	import { cn, isWeb } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
-	import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 	import { isMobile } from '$lib/utils/isMobile';
+	import { isWeb } from '$lib/utils/isWeb';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -353,11 +353,11 @@
 		const jishoUrl = `https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`;
 
 		if (isWeb()) {
-			console.log("Opening tab on browser")
+			console.log('Opening tab on browser');
 			window.open(jishoUrl, '_blank');
 		} else {
 			try {
-				console.log("Opening tab on chrome")
+				console.log('Opening tab on chrome');
 				await open_chrome({
 					url: jishoUrl,
 					toolbarColor: 'black'
