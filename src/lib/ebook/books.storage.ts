@@ -3,7 +3,13 @@ import type { BookMetadata, StoredBook } from './types';
 import { Mutex } from '$lib/utils/mutex';
 import ePub from 'epubjs';
 import { blobToDataURL } from '$lib/utils/blobToDataURL';
-import { uploadBookToServer } from '../../routes/remote/ebook.remote';
+import { deleteBook, updateZoom, updateProgress, uploadBookToServer } from '../../routes/remote/ebook.remote';
+import { authClient } from '$lib/auth-client';
+
+async function isLoggedIn(): Promise<boolean> {
+  const session = await authClient.getSession();
+  return session.data != null;
+}
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
@@ -38,6 +44,17 @@ export async function deleteLocalBook(id: string): Promise<void> {
 	const metadata = await getLocalBooksMetadata();
 	const filtered = metadata.filter((m) => m.id !== id);
 	await set(METADATA_KEY, filtered);
+
+	if (await isLoggedIn()) {
+		try {
+			const result = await deleteBook({ id });
+			if (!result.success) {
+				console.error('Failed to delete book from server:', result.error);
+			}
+		} catch (err) {
+			console.error('Failed to delete book from server:', err);
+		}
+	}
 }
 
 export async function getLocalBooksMetadata(): Promise<BookMetadata[]> {
@@ -63,6 +80,17 @@ export async function updateLocalBookZoom(id: string, zoom: number): Promise<voi
 			await set(METADATA_KEY, metadata);
 		}
 	});
+
+	if (await isLoggedIn()) {
+		try {
+			const result = await updateZoom({ id, zoom });
+			if (!result.success) {
+				console.error('Failed to update zoom on server:', result.error);
+			}
+		} catch (err) {
+			console.error('Failed to update zoom on server:', err);
+		}
+	}
 }
 
 export async function updateLocalBookProgress(
@@ -85,6 +113,17 @@ export async function updateLocalBookProgress(
 			await set(METADATA_KEY, metadata);
 		}
 	});
+
+	if (await isLoggedIn()) {
+		try {
+			const result = await updateProgress({ id, cfi, progress });
+			if (!result.success) {
+				console.error('Failed to update progress on server:', result.error);
+			}
+		} catch (err) {
+			console.error('Failed to update progress on server:', err);
+		}
+	}
 }
 
 type UploadLocalBook = Omit<BookMetadata, 'id' | 'addedAt'>;
