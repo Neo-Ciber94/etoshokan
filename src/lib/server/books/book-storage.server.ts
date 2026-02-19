@@ -5,7 +5,6 @@ import {
 	BookMetadataSchema
 } from '$lib/ebook/types';
 import { logger } from '$lib/logging/logger';
-import { getGoogleAuthToken } from '$lib/server/auth/utils';
 import { z } from 'zod/v4';
 
 const DriveBookProgressSchema = z.object({
@@ -27,18 +26,22 @@ const METADATA_FILE_NAME = 'ebook-data.json';
 
 // --- Public API ---
 
-export async function getDriveBooksMetadata(): Promise<BookMetadata[]> {
-	const token = await getAccessToken();
+export async function getDriveBooksMetadata(token: string): Promise<BookMetadata[]> {
 	return readDriveMetadataFile(token);
 }
 
-export async function getDriveBookMetadataById(bookId: string): Promise<BookMetadata | null> {
-	const metadata = await getDriveBooksMetadata();
+export async function getDriveBookMetadataById(
+	bookId: string,
+	token: string
+): Promise<BookMetadata | null> {
+	const metadata = await getDriveBooksMetadata(token);
 	return metadata.find((b) => b.id === bookId) ?? null;
 }
 
-export async function getDriveBookData(id: string): Promise<ArrayBuffer | undefined> {
-	const token = await getAccessToken();
+export async function getDriveBookData(
+	id: string,
+	token: string
+): Promise<ArrayBuffer | undefined> {
 	const ebooksFolder = await getEbooksFolderId(token);
 	const fileId = await findFileByName(token, `${id}.epub`, ebooksFolder);
 
@@ -51,8 +54,7 @@ export async function getDriveBookData(id: string): Promise<ArrayBuffer | undefi
 	return await res.arrayBuffer();
 }
 
-export async function saveBookToDrive(book: StoredBook): Promise<void> {
-	const token = await getAccessToken();
+export async function saveBookToDrive(book: StoredBook, token: string): Promise<void> {
 	const ebooksFolder = await getEbooksFolderId(token);
 
 	// Upload/update the book file
@@ -113,8 +115,7 @@ export async function saveBookToDrive(book: StoredBook): Promise<void> {
 	await writeDriveMetadataFile(token, allMetadata);
 }
 
-export async function deleteBookFromDrive(id: string): Promise<void> {
-	const token = await getAccessToken();
+export async function deleteBookFromDrive(id: string, token: string): Promise<void> {
 	const ebooksFolder = await getEbooksFolderId(token);
 	const fileId = await findFileByName(token, `${id}.epub`, ebooksFolder);
 
@@ -128,14 +129,20 @@ export async function deleteBookFromDrive(id: string): Promise<void> {
 	await writeDriveMetadataFile(token, filtered);
 }
 
-export async function updateDriveBookProgress(
-	id: string,
-	cfi: string,
-	progress: number
-): Promise<void> {
-	DriveBookProgressSchema.parse({ id, cfi, progress });
+type UpdateDriveBookProgressArgs = {
+	id: string;
+	cfi: string;
+	progress: number;
+	token: string;
+};
 
-	const token = await getAccessToken();
+export async function updateDriveBookProgress({
+	id,
+	cfi,
+	progress,
+	token
+}: UpdateDriveBookProgressArgs): Promise<void> {
+	DriveBookProgressSchema.parse({ id, cfi, progress });
 	const metadata = await readDriveMetadataFile(token);
 	const book = metadata.find((m) => m.id === id);
 
@@ -150,10 +157,18 @@ export async function updateDriveBookProgress(
 	}
 }
 
-export async function updateDriveBookZoom(id: string, zoom: number): Promise<void> {
-	DriveBookZoomSchema.parse({ id, zoom });
+type UpdateDriveBookZoomArgs = {
+	id: string;
+	zoom: number;
+	token: string;
+};
 
-	const token = await getAccessToken();
+export async function updateDriveBookZoom({
+	id,
+	token,
+	zoom
+}: UpdateDriveBookZoomArgs): Promise<void> {
+	DriveBookZoomSchema.parse({ id, zoom });
 	const metadata = await readDriveMetadataFile(token);
 	const book = metadata.find((m) => m.id === id);
 
@@ -164,7 +179,10 @@ export async function updateDriveBookZoom(id: string, zoom: number): Promise<voi
 	}
 }
 
-export async function uploadBookToDrive(data: UploadBookFormData): Promise<BookMetadata> {
+export async function uploadBookToDrive(
+	data: UploadBookFormData,
+	token: string
+): Promise<BookMetadata> {
 	const arrayBuffer = data.ebookData;
 	const bookId = crypto.randomUUID();
 	const bookMetadata: BookMetadata = {
@@ -176,25 +194,18 @@ export async function uploadBookToDrive(data: UploadBookFormData): Promise<BookM
 	};
 
 	logger.info('Uploading book to drive: ', { bookId, title: bookMetadata.title });
-	await saveBookToDrive({
-		metadata: bookMetadata,
-		file: arrayBuffer
-	});
+	await saveBookToDrive(
+		{
+			metadata: bookMetadata,
+			file: arrayBuffer
+		},
+		token
+	);
 
 	return bookMetadata;
 }
 
 // -- Helpers --
-
-async function getAccessToken(): Promise<string> {
-	const authToken = await getGoogleAuthToken();
-
-	if (!authToken?.accessToken) {
-		logger.error('No Google access token available');
-		throw new Error('Unable to get google drive access');
-	}
-	return authToken.accessToken;
-}
 
 async function driveRequest(
 	url: string,
