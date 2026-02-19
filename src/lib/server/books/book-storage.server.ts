@@ -3,7 +3,7 @@ import {
 	type StoredBook,
 	type UploadBookFormData,
 	BookMetadataSchema
-} from '$lib/ebook/types';
+} from '$lib/ebook/ebook.types';
 import { logger } from '$lib/logging/logger';
 import { z } from 'zod/v4';
 

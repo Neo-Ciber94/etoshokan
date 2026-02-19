@@ -1,5 +1,5 @@
 import { getLocalBooksMetadata } from './books.storage';
-import type { BookMetadata } from './types';
+import type { BookMetadata } from './ebook.types';
 
 let loading = $state(true);
 let books = $state<BookMetadata[]>([]);

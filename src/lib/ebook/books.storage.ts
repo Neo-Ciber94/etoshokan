@@ -1,24 +1,23 @@
 import { get, set, del } from 'idb-keyval';
-import type { BookMetadata, StoredBook } from './types';
+import type { BookMetadata, StoredBook } from './ebook.types';
 import { Mutex } from '$lib/utils/mutex';
 import ePub from 'epubjs';
 import { blobToDataURL } from '$lib/utils/blobToDataURL';
-import { deleteBook, updateZoom, updateProgress, uploadBookToServer } from '../../routes/remote/ebook.remote';
+import { deleteBook, updateZoom, updateProgress, uploadBookToServer } from '$lib/remote/ebook.remote';
 import { authClient } from '$lib/auth-client';
-
-async function isLoggedIn(): Promise<boolean> {
-  const session = await authClient.getSession();
-  return session.data != null;
-}
+import { setBookUploadState, setBookSyncState } from './sync.storage';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
 
+async function isLoggedIn(): Promise<boolean> {
+	const session = await authClient.getSession();
+	return session.data != null;
+}
+
 export async function saveLocalBook(book: StoredBook): Promise<void> {
-	// Save the book file
 	await set(`${BOOK_PREFIX}${book.metadata.id}`, book.file);
 
-	// Update metadata list
 	const metadata = await getLocalBooksMetadata();
 	const existingIndex = metadata.findIndex((m) => m.id === book.metadata.id);
 
@@ -28,7 +27,6 @@ export async function saveLocalBook(book: StoredBook): Promise<void> {
 		metadata.push(book.metadata);
 	}
 
-	// Sort by last read date (most recent first)
 	metadata.sort((a, b) => (b.lastReadAt || b.addedAt) - (a.lastReadAt || a.addedAt));
 
 	await set(METADATA_KEY, metadata);
@@ -50,10 +48,14 @@ export async function deleteLocalBook(id: string): Promise<void> {
 			const result = await deleteBook({ id });
 			if (!result.success) {
 				console.error('Failed to delete book from server:', result.error);
+				await setBookSyncState(id, 'pending');
 			}
 		} catch (err) {
 			console.error('Failed to delete book from server:', err);
+			await setBookSyncState(id, 'pending');
 		}
+	} else {
+		await setBookSyncState(id, 'pending');
 	}
 }
 
@@ -62,16 +64,30 @@ export async function getLocalBooksMetadata(): Promise<BookMetadata[]> {
 	return metadata || [];
 }
 
+export async function mergeLocalBooksMetadata(books: BookMetadata[]): Promise<void> {
+	const existing = await getLocalBooksMetadata();
+	const existingIds = new Set(existing.map((b) => b.id));
+	const newBooks = books.filter((b) => !existingIds.has(b.id));
+
+	if (newBooks.length === 0) {
+		return;
+	}
+
+	const merged = [...existing, ...newBooks];
+	merged.sort((a, b) => (b.lastReadAt ?? b.addedAt) - (a.lastReadAt ?? a.addedAt));
+	await set(METADATA_KEY, merged);
+}
+
 export async function getLocalBookMetadataById(bookId: string) {
 	const books = await getLocalBooksMetadata();
 	const bookMetadata = books.find((b) => b.id === bookId) || null;
 	return bookMetadata;
 }
 
-const bookMutex = new Mutex();
+const BOOK_MUTEX = new Mutex();
 
 export async function updateLocalBookZoom(id: string, zoom: number): Promise<void> {
-	await bookMutex.run(async () => {
+	await BOOK_MUTEX.run(async () => {
 		const metadata = await getLocalBooksMetadata();
 		const book = metadata.find((m) => m.id === id);
 
@@ -86,10 +102,14 @@ export async function updateLocalBookZoom(id: string, zoom: number): Promise<voi
 			const result = await updateZoom({ id, zoom });
 			if (!result.success) {
 				console.error('Failed to update zoom on server:', result.error);
+				await setBookSyncState(id, 'pending');
 			}
 		} catch (err) {
 			console.error('Failed to update zoom on server:', err);
+			await setBookSyncState(id, 'pending');
 		}
+	} else {
+		await setBookSyncState(id, 'pending');
 	}
 }
 
@@ -98,7 +118,7 @@ export async function updateLocalBookProgress(
 	cfi: string,
 	progress: number
 ): Promise<void> {
-	await bookMutex.run(async () => {
+	await BOOK_MUTEX.run(async () => {
 		const metadata = await getLocalBooksMetadata();
 		const book = metadata.find((m) => m.id === id);
 
@@ -119,10 +139,14 @@ export async function updateLocalBookProgress(
 			const result = await updateProgress({ id, cfi, progress });
 			if (!result.success) {
 				console.error('Failed to update progress on server:', result.error);
+				await setBookSyncState(id, 'pending');
 			}
 		} catch (err) {
 			console.error('Failed to update progress on server:', err);
+			await setBookSyncState(id, 'pending');
 		}
+	} else {
+		await setBookSyncState(id, 'pending');
 	}
 }
 
@@ -139,6 +163,8 @@ async function uploadLocalBook(metadata: UploadLocalBook, bookData: ArrayBuffer)
 			addedAt: Date.now()
 		}
 	});
+
+	await setBookUploadState(bookId, 'pending');
 }
 
 export async function uploadBook(file: File) {
@@ -190,6 +216,8 @@ export async function uploadBook(file: File) {
 				metadata: bookMetadata,
 				file: arrayBuffer
 			});
+
+			await setBookUploadState(bookMetadata.id, 'uploaded');
 		} else {
 			await tryUploadBookLocally();
 			throw new Error(uploadResult.error);

@@ -1,4 +1,4 @@
-import type { TocItem } from '$lib/ebook/types';
+import type { TocItem } from '$lib/ebook/ebook.types';
 
 // ── Event detail types ────────────────────────────────────────────────
 

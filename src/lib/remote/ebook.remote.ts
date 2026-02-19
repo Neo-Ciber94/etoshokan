@@ -1,5 +1,5 @@
 import { command, query } from '$app/server'
-import { UploadBookFormDataSchema } from '$lib/ebook/types'
+import { UploadBookFormDataSchema } from '$lib/ebook/ebook.types'
 import { logger } from '$lib/logging/logger'
 import { getGoogleAuthToken } from '$lib/server/auth/utils'
 import {

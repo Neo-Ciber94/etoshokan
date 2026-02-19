@@ -16,6 +16,9 @@ const config = {
 		prerender: {
 			handleUnseenRoutes: 'ignore'
 		},
+		alias: {
+			"$remote": "src/lib/remote"
+		},
 		csp: {
 			mode: 'auto'
 			// directives: {

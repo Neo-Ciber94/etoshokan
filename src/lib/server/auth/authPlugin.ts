@@ -1,24 +1,26 @@
 import { getRequestEvent } from '$app/server';
 import { logger, type BetterAuthPlugin } from 'better-auth';
-import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
+import { createAuthMiddleware, getSessionFromCtx, signOut } from 'better-auth/api';
 import { setGoogleTokenCookies, validateGoogleTokens } from './googleAuth';
-import { env } from '$env/dynamic/private';
-import { auth } from '.';
 
 export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
 		id: 'google-auth',
 		hooks: {
-			before: [
-				{
-					matcher: () => true,
-					handler: handleCheckGoogleTokens()
-				}
-			],
+			// before: [
+			// 	{
+			// 		matcher: () => true,
+			// 		handler: handleCheckGoogleTokens()
+			// 	}
+			// ],
 			after: [
 				{
 					matcher: (ctx) => ctx.path.startsWith('/callback/:id'),
 					handler: handleGoogleCallback()
+				},
+				{
+					matcher: () => true,
+					handler: handleCheckGoogleTokens()
 				}
 			]
 		}
@@ -47,7 +49,6 @@ function handleGoogleCallback() {
 
 			setGoogleTokenCookies({
 				authContext: ctx,
-				secret: env.BETTER_AUTH_SECRET,
 				accessToken: account.accessToken,
 				accessTokenExpiresIn: expiresAtToSeconds(account.accessTokenExpiresAt),
 				refreshToken: account.refreshToken
@@ -72,14 +73,16 @@ function handleCheckGoogleTokens() {
 		}
 
 		const event = getRequestEvent();
+		const isTokenValid = await validateGoogleTokens(event, ctx);
 
-		if (validateGoogleTokens(event)) {
+		if (isTokenValid) {
 			return;
 		}
 
 		logger.warn('Invalid google tokens, login out user');
 		const headers = event.request.headers;
-		await auth.api.signOut({ headers });
+		await signOut({ headers });
+		//await auth.api.signOut({ headers });
 	});
 }
 
