@@ -3,17 +3,17 @@ import type { BookMetadata, StoredBook } from './ebook.types';
 import { Mutex } from '$lib/utils/mutex';
 import ePub from 'epubjs';
 import { blobToDataURL } from '$lib/utils/blobToDataURL';
-import { deleteBook, updateZoom, updateProgress, uploadBookToServer } from '$lib/remote/ebook.remote';
-import { authClient } from '$lib/auth-client';
+import {
+	deleteBook,
+	updateZoom,
+	updateProgress,
+	uploadBookToServer
+} from '$lib/remote/ebook.remote';
+import { isLoggedIn } from '$lib/auth-client';
 import { setBookUploadState, setBookSyncState } from './sync.storage';
 
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
-
-async function isLoggedIn(): Promise<boolean> {
-	const session = await authClient.getSession();
-	return session.data != null;
-}
 
 export async function saveLocalBook(book: StoredBook): Promise<void> {
 	await set(`${BOOK_PREFIX}${book.metadata.id}`, book.file);
