@@ -1,5 +1,6 @@
 import { command } from '$app/server';
 import { UploadBookFormDataSchema } from '$lib/ebook/types';
+import { logger } from '$lib/logging/logger';
 import { getGoogleAuthToken } from '$lib/server/auth/utils';
 import { uploadBookToDrive } from '$lib/server/books/book-storage.server';
 import { ZodError, z } from 'zod';
@@ -16,13 +17,14 @@ export const uploadBookToServer = command(UploadBookFormDataSchema, async (input
 		}
 
 		const result = await uploadBookToDrive(input, googleTokens.accessToken);
+
 		return {
 			result,
 			success: true
 		} as const;
 	} catch (err) {
-		console.error(err);
-		const message = getErrorMessage(err)
+		logger.error(err);
+		const message = getErrorMessage(err);
 
 		return {
 			success: false,

@@ -3,7 +3,7 @@ import { PUBLIC_LOG_DISABLED, PUBLIC_LOG_LEVEL } from '$env/static/public';
 import { getLogLevel, type Logger, LogLevel } from '.';
 
 abstract class BaseLogger implements Logger {
-	abstract log(level: LogLevel, message: string, ...args: unknown[]): void;
+	abstract log(level: LogLevel, message: unknown, ...args: unknown[]): void;
 
 	constructor(readonly minLevel: LogLevel) {}
 
@@ -11,19 +11,19 @@ abstract class BaseLogger implements Logger {
 		return getLogLevel(level) >= getLogLevel(this.minLevel);
 	}
 
-	debug(message: string, ...args: unknown[]): void {
+	debug(message: unknown, ...args: unknown[]): void {
 		this.log(LogLevel.DEBUG, message, ...args);
 	}
 
-	info(message: string, ...args: unknown[]): void {
+	info(message: unknown, ...args: unknown[]): void {
 		this.log(LogLevel.INFO, message, ...args);
 	}
 
-	warn(message: string, ...args: unknown[]): void {
+	warn(message: unknown, ...args: unknown[]): void {
 		this.log(LogLevel.WARN, message, ...args);
 	}
 
-	error(message: string, ...args: unknown[]): void {
+	error(message: unknown, ...args: unknown[]): void {
 		this.log(LogLevel.ERROR, message, ...args);
 	}
 }

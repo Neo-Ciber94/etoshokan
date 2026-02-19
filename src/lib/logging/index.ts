@@ -8,11 +8,11 @@ export const enum LogLevel {
 export interface Logger {
 	readonly minLevel: LogLevel;
 
-	log(level: LogLevel, message: string, ...args: unknown[]): void;
-	debug(message: string, ...args: unknown[]): void;
-	info(message: string, ...args: unknown[]): void;
-	warn(message: string, ...args: unknown[]): void;
-	error(message: string, ...args: unknown[]): void;
+	log(level: LogLevel, message: unknown, ...args: unknown[]): void;
+	debug(message: unknown, ...args: unknown[]): void;
+	info(message: unknown, ...args: unknown[]): void;
+	warn(message: unknown, ...args: unknown[]): void;
+	error(message: unknown, ...args: unknown[]): void;
 }
 
 export function getLogLevel(logLevel: LogLevel): number {
