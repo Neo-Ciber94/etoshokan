@@ -5,6 +5,7 @@ import { getAllSyncEntries, getBookSyncEntry } from './sync.query';
 import { getLocalBooksMetadata, getLocalBookMetadataById } from './books.query';
 import { saveLocalBook, mergeLocalBooksMetadata } from './books.mutation';
 import { SYNC_TABLE_KEY } from './storage.utils';
+import type { BookMetadata } from './ebook.types';
 
 async function upsertSyncEntry(entry: BookSyncEntry): Promise<void> {
 	const entries = await getAllSyncEntries();
@@ -43,6 +44,13 @@ export async function removeBookSyncEntry(bookId: string): Promise<void> {
 	);
 }
 
+// FIXME: Use the actual book contents hash
+type BookHash = string & { _hash: never };
+
+function getBookHash(book: BookMetadata): BookHash {
+	return book.title as BookHash;
+}
+
 // Syncs remote book state into local sync table.
 // Existing entries are preserved; new remote books get 'uploaded' or 'missing' state.
 export async function initSyncData(): Promise<BookSyncEntry[]> {
@@ -53,29 +61,22 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 		return [];
 	}
 
-	const [existingEntries, localMetadata] = await Promise.all([
-		getAllSyncEntries(),
-		getLocalBooksMetadata()
-	]);
-
-	const existingIds = new Set(existingEntries.map((e) => e.bookId));
+	const localMetadata = await getLocalBooksMetadata();
 	const localIds = new Set(localMetadata.map((b) => b.id));
-	const syncEntriesMap = new Map<string, BookSyncEntry>();
+	const syncEntriesMap = new Map<BookHash, BookSyncEntry>();
 
 	// Check remote that don't exist on local
 	for (const book of result.metadata) {
-		if (existingIds.has(book.id)) {
-			continue;
-		}
+		const bookBash = getBookHash(book);
 
 		if (localIds.has(book.id)) {
-			syncEntriesMap.set(book.id, {
+			syncEntriesMap.set(bookBash, {
 				bookId: book.id,
 				uploadState: 'uploaded',
 				syncState: 'synced'
 			});
 		} else {
-			syncEntriesMap.set(book.id, {
+			syncEntriesMap.set(bookBash, {
 				bookId: book.id,
 				uploadState: 'missing',
 				syncState: 'synced'
@@ -86,34 +87,21 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 	// Check local that do not exists on remote
 	const remoteIds = new Set(result.metadata.map((b) => b.id));
 	for (const book of localMetadata) {
-		if (existingIds.has(book.id)) {
-			continue;
-		}
-
 		// Ignore already exists
 		if (remoteIds.has(book.id)) {
 			continue;
-		} else {
-			syncEntriesMap.set(book.id, {
-				bookId: book.id,
-				uploadState: 'missing',
-				syncState: 'synced'
-			});
 		}
-	}
 
-	const anyNewEntries = syncEntriesMap.size > 0;
-
-	for (const existing of existingEntries) {
-		syncEntriesMap.set(existing.bookId, existing);
+		const bookHash = getBookHash(book);
+		syncEntriesMap.set(bookHash, {
+			bookId: book.id,
+			uploadState: 'missing',
+			syncState: 'synced'
+		});
 	}
 
 	const syncEntries = [...syncEntriesMap.values()];
-
-	if (anyNewEntries) {
-		await set(SYNC_TABLE_KEY, syncEntries);
-	}
-
+	await set(SYNC_TABLE_KEY, syncEntries);
 	return syncEntries;
 }
 
