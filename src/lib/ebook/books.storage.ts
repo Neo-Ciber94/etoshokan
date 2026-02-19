@@ -8,12 +8,12 @@ import { uploadBookToServer } from '../../routes/remote/ebook.remote';
 const BOOK_PREFIX = 'book:';
 const METADATA_KEY = 'books:metadata';
 
-export async function saveBook(book: StoredBook): Promise<void> {
+export async function saveLocalBook(book: StoredBook): Promise<void> {
 	// Save the book file
 	await set(`${BOOK_PREFIX}${book.metadata.id}`, book.file);
 
 	// Update metadata list
-	const metadata = await getBooksMetadata();
+	const metadata = await getLocalBooksMetadata();
 	const existingIndex = metadata.findIndex((m) => m.id === book.metadata.id);
 
 	if (existingIndex >= 0) {
@@ -28,34 +28,34 @@ export async function saveBook(book: StoredBook): Promise<void> {
 	await set(METADATA_KEY, metadata);
 }
 
-export async function getBookData(id: string): Promise<ArrayBuffer | undefined> {
+export async function getLocalBookData(id: string): Promise<ArrayBuffer | undefined> {
 	return await get(`${BOOK_PREFIX}${id}`);
 }
 
-export async function deleteBook(id: string): Promise<void> {
+export async function deleteLocalBook(id: string): Promise<void> {
 	await del(`${BOOK_PREFIX}${id}`);
 
-	const metadata = await getBooksMetadata();
+	const metadata = await getLocalBooksMetadata();
 	const filtered = metadata.filter((m) => m.id !== id);
 	await set(METADATA_KEY, filtered);
 }
 
-export async function getBooksMetadata(): Promise<BookMetadata[]> {
+export async function getLocalBooksMetadata(): Promise<BookMetadata[]> {
 	const metadata = await get<BookMetadata[]>(METADATA_KEY);
 	return metadata || [];
 }
 
-export async function getBookMetadataById(bookId: string) {
-	const books = await getBooksMetadata();
+export async function getLocalBookMetadataById(bookId: string) {
+	const books = await getLocalBooksMetadata();
 	const bookMetadata = books.find((b) => b.id === bookId) || null;
 	return bookMetadata;
 }
 
 const bookMutex = new Mutex();
 
-export async function updateBookZoom(id: string, zoom: number): Promise<void> {
+export async function updateLocalBookZoom(id: string, zoom: number): Promise<void> {
 	await bookMutex.run(async () => {
-		const metadata = await getBooksMetadata();
+		const metadata = await getLocalBooksMetadata();
 		const book = metadata.find((m) => m.id === id);
 
 		if (book) {
@@ -65,9 +65,13 @@ export async function updateBookZoom(id: string, zoom: number): Promise<void> {
 	});
 }
 
-export async function updateBookProgress(id: string, cfi: string, progress: number): Promise<void> {
+export async function updateLocalBookProgress(
+	id: string,
+	cfi: string,
+	progress: number
+): Promise<void> {
 	await bookMutex.run(async () => {
-		const metadata = await getBooksMetadata();
+		const metadata = await getLocalBooksMetadata();
 		const book = metadata.find((m) => m.id === id);
 
 		if (book) {
@@ -83,6 +87,21 @@ export async function updateBookProgress(id: string, cfi: string, progress: numb
 	});
 }
 
+type UploadLocalBook = Omit<BookMetadata, 'id' | 'addedAt'>;
+
+async function uploadLocalBook(metadata: UploadLocalBook, bookData: ArrayBuffer) {
+	const bookId = crypto.randomUUID();
+
+	await saveLocalBook({
+		file: bookData,
+		metadata: {
+			...metadata,
+			id: bookId,
+			addedAt: Date.now()
+		}
+	});
+}
+
 export async function uploadBook(file: File) {
 	const arrayBuffer = await file.arrayBuffer();
 	const book = ePub(arrayBuffer); // Currently we only support eBooks
@@ -93,6 +112,7 @@ export async function uploadBook(file: File) {
 
 	// Get cover as a blob and convert to data URL
 	let coverDataUrl: string | undefined;
+
 	try {
 		const coverUrl = await book.coverUrl();
 		if (coverUrl) {
@@ -102,41 +122,41 @@ export async function uploadBook(file: File) {
 			coverDataUrl = await blobToDataURL(blob);
 		}
 	} catch (error) {
-		// TODO: Show actual error, or use placeholder
-		console.error('Error loading cover:', error);
+		// No need to crash if we fail to get the cover
+		console.error('Failed to load book cover', error);
 	}
 
-	// const bookId = crypto.randomUUID(); // FIXME: The server should give us this
-	// const bookMetadata: BookMetadata = {
-	// 	id: bookId,
-	// 	title: metadata.title || 'Unknown Title',
-	// 	author: metadata.creator || 'Unknown Author',
-	// 	cover: coverDataUrl,
-	// 	addedAt: Date.now()
-	// };
-
-	// const uploadResult = await uploadBookToServer({
-	// 	title: metadata.title || 'Unknown Title',
-	// 	author: metadata.creator || 'Unknown Author',
-	// 	cover: coverDataUrl,
-	// 	ebookData: file
-	// });
-
-	const uploadResult = await uploadBookToServer({
+	const partialBookMetadata = {
 		title: metadata.title || 'Unknown Title',
 		author: metadata.creator || 'Unknown Author',
-		cover: coverDataUrl,
-		ebookData: await file.arrayBuffer()
-	});
+		cover: coverDataUrl
+	};
 
-	if (uploadResult.success) {
-		const bookMetadata = uploadResult.result;
+	const bookData = await file.arrayBuffer();
 
-		await saveBook({
-			metadata: bookMetadata,
-			file: arrayBuffer
+	// If we fail we try to save it locally
+	const tryUploadBookLocally = () => uploadLocalBook(partialBookMetadata, bookData);
+
+	try {
+		// FIXME: Bail if is not online
+		const uploadResult = await uploadBookToServer({
+			...partialBookMetadata,
+			ebookData: bookData
 		});
-	} else {
-		throw new Error(uploadResult.error);
+
+		if (uploadResult.success) {
+			const bookMetadata = uploadResult.result;
+
+			await saveLocalBook({
+				metadata: bookMetadata,
+				file: arrayBuffer
+			});
+		} else {
+			await tryUploadBookLocally();
+			throw new Error(uploadResult.error);
+		}
+	} catch (err) {
+		await tryUploadBookLocally();
+		throw err;
 	}
 }

@@ -4,10 +4,10 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import {
-		getBookData,
-		getBookMetadataById,
-		updateBookProgress,
-		updateBookZoom
+		getLocalBookData,
+		getLocalBookMetadataById,
+		updateLocalBookProgress,
+		updateLocalBookZoom
 	} from '$lib/ebook/books.storage';
 	import type { BookMetadata, TocItem } from '$lib/ebook/types';
 	import { createFoliateView, type FoliateView } from '$lib/types/view';
@@ -129,7 +129,7 @@
 		notFound = false;
 
 		try {
-			bookMetadata = await getBookMetadataById(bookId);
+			bookMetadata = await getLocalBookMetadataById(bookId);
 
 			if (!bookMetadata) {
 				console.error('Book not found');
@@ -138,7 +138,7 @@
 				return;
 			}
 
-			const bookData = await getBookData(bookId);
+			const bookData = await getLocalBookData(bookId);
 			if (!bookData) {
 				console.error('Book data not found');
 				notFound = true;
@@ -176,7 +176,7 @@
 				const progress = Math.round((detail.fraction || 0) * 100);
 				const cfi = detail.cfi || '';
 
-				await updateBookProgress(bookId, cfi, progress);
+				await updateLocalBookProgress(bookId, cfi, progress);
 
 				if (bookMetadata) {
 					bookMetadata.currentCfi = cfi;
@@ -400,7 +400,7 @@
 	async function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
 		applyZoomStyle();
-		await updateBookZoom(bookId, zoom);
+		await updateLocalBookZoom(bookId, zoom);
 	}
 
 	function handleZoomIn() {

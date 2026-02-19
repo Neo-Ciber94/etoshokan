@@ -1,4 +1,4 @@
-import { getBooksMetadata } from './books.storage';
+import { getLocalBooksMetadata } from './books.storage';
 import type { BookMetadata } from './types';
 
 let loading = $state(true);
@@ -12,7 +12,7 @@ async function invalidate() {
 	loading = true;
 
 	try {
-		books = await getBooksMetadata();
+		books = await getLocalBooksMetadata();
 	} catch (err) {
 		console.error(err);
 	} finally {

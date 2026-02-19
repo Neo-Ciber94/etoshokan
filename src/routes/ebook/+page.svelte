@@ -3,7 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { deleteBook, uploadBook } from '$lib/ebook/books.storage';
+	import { deleteLocalBook, uploadBook } from '$lib/ebook/books.storage';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
@@ -54,7 +54,7 @@
 		}
 
 		try {
-			await deleteBook(id);
+			await deleteLocalBook(id);
 			books.invalidate();
 		} catch (err) {
 			console.error(err);
