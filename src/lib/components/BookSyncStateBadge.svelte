@@ -6,6 +6,8 @@
 	import CloudOffIcon from '@lucide/svelte/icons/cloud-off';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
+	import { uploadMissingBook } from '$lib/ebook/sync.mutation';
+	import { openModal } from './modal';
 
 	let { bookId, class: className = '' }: { bookId: string; class?: string } = $props();
 
@@ -21,7 +23,23 @@
 			return;
 		}
 
-		
+		if (confirm(`Book '${book?.title}' is missing on the cloud, Want to upload?`)) {
+			const uploadMissingPromise = uploadMissingBook(bookId);
+			openModal.pending(uploadMissingPromise, {
+				title: 'Uploading book',
+				onSuccess() {
+					return {
+						title: 'Book was uploaded'
+					};
+				},
+				onError(error) {
+					return {
+						title: 'Failed to upload missing book',
+						description: error instanceof Error ? error.message : 'Something went wrong'
+					};
+				}
+			});
+		}
 	}
 </script>
 
@@ -35,7 +53,7 @@
 	</button>
 {:else if entry?.uploadState === 'pending'}
 	<button
-		onclick={() => console.log($state.snapshot(entry))}
+		onclick={() => alert('This book is pending to upload')}
 		class={cn(
 			badgeVariants(),
 			'cursor-pointer border-transparent bg-amber-500 text-white',
@@ -47,7 +65,7 @@
 	</button>
 {:else if entry?.syncState === 'pending'}
 	<button
-		onclick={() => console.log($state.snapshot(entry))}
+		onclick={() => alert('This book is pending to sync progress')}
 		class={cn(
 			badgeVariants(),
 			'cursor-pointer border-transparent bg-amber-500 text-white',

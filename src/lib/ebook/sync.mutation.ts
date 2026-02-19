@@ -3,12 +3,7 @@ import type { UploadState, SyncState, BookSyncEntry } from './sync.types';
 import { getBooksMetadata, getBookData } from '$lib/remote/ebook.remote';
 import { getAllSyncEntries, getBookSyncEntry } from './sync.query';
 import { getLocalBooksMetadata, getLocalBookMetadataById, getLocalBookData } from './books.query';
-import {
-	saveLocalBook,
-	mergeLocalBooksMetadata,
-	uploadBook,
-	deleteLocalBook
-} from './books.mutation';
+import { saveLocalBook, mergeLocalBooksMetadata, uploadBook, migrateBook } from './books.mutation';
 import { SYNC_TABLE_KEY } from './storage.utils';
 import type { BookMetadata } from './ebook.types';
 
@@ -141,7 +136,8 @@ export async function uploadMissingBook(bookId: string) {
 		throw new Error('Failed to upload missing book, metadata not found');
 	}
 
-	await uploadBook(bookMetadata, bookData);
+	const result = await uploadBook(bookMetadata, bookData);
+	await migrateBook(bookId, result.id);
 	await removeBookSyncEntry(bookId);
 }
 

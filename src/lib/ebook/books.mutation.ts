@@ -11,7 +11,7 @@ import {
 } from '$lib/remote/ebook.remote';
 import { isLoggedIn } from '$lib/auth-client';
 import { setBookUploadState, setBookSyncState } from './sync.mutation';
-import { getLocalBooksMetadata } from './books.query';
+import { getLocalBooksMetadata, getLocalBookData } from './books.query';
 import { BOOK_PREFIX, METADATA_KEY } from './storage.utils';
 import type { UploadState } from './sync.types';
 
@@ -76,7 +76,22 @@ export async function mergeLocalBooksMetadata(books: BookMetadata[]): Promise<vo
 const bookMutex = new Mutex();
 
 export async function migrateBook(fromBookId: string, toBookId: string) {
-	
+	const bookData = await getLocalBookData(fromBookId);
+
+	if (bookData !== undefined) {
+		await set(`${BOOK_PREFIX}${toBookId}`, bookData);
+		await del(`${BOOK_PREFIX}${fromBookId}`);
+	}
+
+	await bookMutex.run(async () => {
+		const allMetadata = await getLocalBooksMetadata();
+		const index = allMetadata.findIndex((m) => m.id === fromBookId);
+
+		if (index >= 0) {
+			allMetadata[index] = { ...allMetadata[index], id: toBookId };
+			await set(METADATA_KEY, allMetadata);
+		}
+	});
 }
 
 export async function updateLocalBookZoom(id: string, zoom: number): Promise<void> {
@@ -217,6 +232,7 @@ export async function uploadBook(metadata: UploadLocalBook, bookData: ArrayBuffe
 			});
 
 			await setBookUploadState(bookMetadata.id, 'uploaded');
+			return uploadResult.result;
 		} else {
 			await tryUploadBookLocally();
 			throw new Error(uploadResult.error);
