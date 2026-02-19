@@ -75,6 +75,10 @@ export async function mergeLocalBooksMetadata(books: BookMetadata[]): Promise<vo
 
 const bookMutex = new Mutex();
 
+export async function migrateBook(fromBookId: string, toBookId: string) {
+	
+}
+
 export async function updateLocalBookZoom(id: string, zoom: number): Promise<void> {
 	await bookMutex.run(async () => {
 		const metadata = await getLocalBooksMetadata();
@@ -163,9 +167,9 @@ async function uploadLocalBook(
 	await setBookUploadState(bookId, uploadState);
 }
 
-export async function uploadBook(file: File) {
-	const arrayBuffer = await file.arrayBuffer();
-	const book = ePub(arrayBuffer); // Currently we only support eBooks
+export async function uploadBookFromFile(file: File) {
+	const bookData = await file.arrayBuffer();
+	const book = ePub(bookData); // Currently we only support eBooks
 
 	await book.ready;
 	const metadata = await book.loaded.metadata;
@@ -190,15 +194,17 @@ export async function uploadBook(file: File) {
 		cover: coverDataUrl
 	};
 
-	const bookData = await file.arrayBuffer();
+	await uploadBook(partialBookMetadata, bookData);
+}
 
+export async function uploadBook(metadata: UploadLocalBook, bookData: ArrayBuffer) {
 	// If we fail we try to save it locally
-	const tryUploadBookLocally = () => uploadLocalBook(partialBookMetadata, bookData, 'pending');
+	const tryUploadBookLocally = () => uploadLocalBook(metadata, bookData, 'pending');
 
 	try {
 		// FIXME: Bail if is not online
 		const uploadResult = await uploadBookToServer({
-			...partialBookMetadata,
+			...metadata,
 			ebookData: bookData
 		});
 
@@ -207,7 +213,7 @@ export async function uploadBook(file: File) {
 
 			await saveLocalBook({
 				metadata: bookMetadata,
-				file: arrayBuffer
+				file: bookData
 			});
 
 			await setBookUploadState(bookMetadata.id, 'uploaded');
@@ -219,6 +225,17 @@ export async function uploadBook(file: File) {
 		await tryUploadBookLocally();
 		throw err;
 	}
+}
+
+export async function clearLocalBooks() {
+	const localBooks = await getLocalBooksMetadata();
+
+	for (const bookMetadata of localBooks) {
+		const id = bookMetadata.id;
+		await del(`${BOOK_PREFIX}${id}`);
+	}
+
+	await del(METADATA_KEY);
 }
 
 // FIXME: We use the title as the unique identifier

@@ -3,7 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { deleteLocalBook, uploadBook } from '$lib/ebook/books.mutation';
+	import { deleteLocalBook, uploadBookFromFile } from '$lib/ebook/books.mutation';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
@@ -26,7 +26,7 @@
 		uploadingBook = true;
 
 		try {
-			const uploadBookPromise = uploadBook(file);
+			const uploadBookPromise = uploadBookFromFile(file);
 			await openModal.pending(uploadBookPromise, {
 				title: 'Uploading book',
 				onSuccess() {
@@ -41,6 +41,7 @@
 					};
 				}
 			});
+			books.invalidate();
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -132,10 +133,12 @@
 		{:else}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each books.value as book (book.id)}
-					<Card.Root class="relative border border-border transition-colors hover:border-primary/50">
+					<Card.Root
+						class="relative border border-border transition-colors hover:border-primary/50"
+					>
 						<BookSyncStateBadge bookId={book.id} class="absolute top-4 right-4" />
 
-						<Card.Content class="p-4 mt-3">
+						<Card.Content class="mt-3 p-4">
 							<div class="flex flex-col space-y-3">
 								{#if book.cover}
 									<img src={book.cover} alt={book.title} class="h-48 w-full rounded object-cover" />

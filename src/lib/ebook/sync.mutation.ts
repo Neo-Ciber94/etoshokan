@@ -1,9 +1,14 @@
-import { set } from 'idb-keyval';
+import { del, set } from 'idb-keyval';
 import type { UploadState, SyncState, BookSyncEntry } from './sync.types';
 import { getBooksMetadata, getBookData } from '$lib/remote/ebook.remote';
 import { getAllSyncEntries, getBookSyncEntry } from './sync.query';
-import { getLocalBooksMetadata, getLocalBookMetadataById } from './books.query';
-import { saveLocalBook, mergeLocalBooksMetadata } from './books.mutation';
+import { getLocalBooksMetadata, getLocalBookMetadataById, getLocalBookData } from './books.query';
+import {
+	saveLocalBook,
+	mergeLocalBooksMetadata,
+	uploadBook,
+	deleteLocalBook
+} from './books.mutation';
 import { SYNC_TABLE_KEY } from './storage.utils';
 import type { BookMetadata } from './ebook.types';
 
@@ -114,6 +119,35 @@ export async function syncRemoteMetadata(): Promise<void> {
 	}
 
 	await mergeLocalBooksMetadata(result.metadata);
+}
+
+// Upload a missing book
+export async function uploadMissingBook(bookId: string) {
+	const syncEntry = await getBookSyncEntry(bookId);
+
+	if (syncEntry == null) {
+		console.error(`Sync entry not found: ${bookId}`);
+		return;
+	}
+
+	const bookData = await getLocalBookData(bookId);
+	const bookMetadata = await getLocalBookMetadataById(bookId);
+
+	if (bookData == null) {
+		throw new Error('Missing book data was not found');
+	}
+
+	if (bookMetadata == null) {
+		throw new Error('Failed to upload missing book, metadata not found');
+	}
+
+	await uploadBook(bookMetadata, bookData);
+	await removeBookSyncEntry(bookId);
+}
+
+// Clear the sync local cache
+export async function clearSyncEntries() {
+	await del(SYNC_TABLE_KEY);
 }
 
 // Downloads book file data from server and saves it to IndexDB
