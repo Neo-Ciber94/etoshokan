@@ -1,12 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-declare global {
-	interface Window {
-		__TAURI_INTERNALS__: Record<string, unknown>;
-	}
-}
-
 export function delay(ms: number) {
 	return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
@@ -21,14 +15,6 @@ export function isWeb() {
 	}
 
 	return typeof window.__TAURI_INTERNALS__ === 'undefined';
-}
-
-export function isMobile() {
-	if (typeof window === 'undefined') {
-		return false;
-	}
-
-	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
