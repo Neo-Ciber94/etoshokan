@@ -6,6 +6,7 @@
 	import { isWeb } from '$lib/utils';
 	import { authClient } from '$lib/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
+	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 
 	const books = useBooksMetadata();
 	const session = authClient.useSession();
@@ -27,7 +28,7 @@
 	}
 
 	function loginWithGoogle() {
-		console.log("click")
+		console.log('click');
 		authClient.signIn.social({ provider: 'google' });
 	}
 </script>
@@ -121,7 +122,11 @@
 			{:else}
 				<div class="grid gap-4 sm:grid-cols-2">
 					{#each recentBooks as book (book.id)}
-						<Card.Root class="border border-border transition-colors hover:border-primary/50">
+						<Card.Root
+							class="relative border border-border transition-colors hover:border-primary/50"
+						>
+							<BookSyncStateBadge bookId={book.id} class="absolute top-4 right-4" />
+
 							<Card.Content class="p-4">
 								<div class="flex gap-4">
 									{#if book.cover}

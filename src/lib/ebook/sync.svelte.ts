@@ -20,15 +20,9 @@ async function invalidate() {
 	}
 }
 
-function getEntry(bookId: string) {
-	return syncEntries.find((x) => x.bookId === bookId);
-}
-
 export function useSyncBookEntries() {
 	return {
 		invalidate,
-		getEntry,
-
 		get loading() {
 			return loading;
 		},

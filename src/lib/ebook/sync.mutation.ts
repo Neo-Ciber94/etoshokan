@@ -60,24 +60,57 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 
 	const existingIds = new Set(existingEntries.map((e) => e.bookId));
 	const localIds = new Set(localMetadata.map((b) => b.id));
+	const syncEntriesMap = new Map<string, BookSyncEntry>();
 
-	const addedEntries: BookSyncEntry[] = [];
-
+	// Check remote that don't exist on local
 	for (const book of result.metadata) {
 		if (existingIds.has(book.id)) {
 			continue;
 		}
 
 		if (localIds.has(book.id)) {
-			addedEntries.push({ bookId: book.id, uploadState: 'uploaded', syncState: 'synced' });
+			syncEntriesMap.set(book.id, {
+				bookId: book.id,
+				uploadState: 'uploaded',
+				syncState: 'synced'
+			});
 		} else {
-			addedEntries.push({ bookId: book.id, uploadState: 'missing', syncState: 'synced' });
+			syncEntriesMap.set(book.id, {
+				bookId: book.id,
+				uploadState: 'missing',
+				syncState: 'synced'
+			});
 		}
 	}
 
-	const syncEntries = [...existingEntries, ...addedEntries];
+	// Check local that do not exists on remote
+	const remoteIds = new Set(result.metadata.map((b) => b.id));
+	for (const book of localMetadata) {
+		if (existingIds.has(book.id)) {
+			continue;
+		}
 
-	if (addedEntries.length > 0) {
+		// Ignore already exists
+		if (remoteIds.has(book.id)) {
+			continue;
+		} else {
+			syncEntriesMap.set(book.id, {
+				bookId: book.id,
+				uploadState: 'missing',
+				syncState: 'synced'
+			});
+		}
+	}
+
+	const anyNewEntries = syncEntriesMap.size > 0;
+
+	for (const existing of existingEntries) {
+		syncEntriesMap.set(existing.bookId, existing);
+	}
+
+	const syncEntries = [...syncEntriesMap.values()];
+
+	if (anyNewEntries) {
 		await set(SYNC_TABLE_KEY, syncEntries);
 	}
 

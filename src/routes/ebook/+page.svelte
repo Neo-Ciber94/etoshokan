@@ -9,6 +9,7 @@
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
 	import { openModal } from '$lib/components/modal';
 	import Loading from '$lib/components/Loading.svelte';
+	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 
 	const books = useBooksMetadata();
 	let uploadingBook = $state(false);
@@ -131,8 +132,10 @@
 		{:else}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each books.value as book (book.id)}
-					<Card.Root class="border border-border transition-colors hover:border-primary/50">
-						<Card.Content class="p-4">
+					<Card.Root class="relative border border-border transition-colors hover:border-primary/50">
+						<BookSyncStateBadge bookId={book.id} class="absolute top-4 right-4" />
+
+						<Card.Content class="p-4 mt-3">
 							<div class="flex flex-col space-y-3">
 								{#if book.cover}
 									<img src={book.cover} alt={book.title} class="h-48 w-full rounded object-cover" />
