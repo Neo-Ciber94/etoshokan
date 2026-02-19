@@ -3,6 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { authClient } from '$lib/auth-client';
+	import { clearSyncEntries } from '$lib/ebook/sync.mutation';
+	import { clearLocalBooks } from '$lib/ebook/books.mutation';
 
 	const session = authClient.useSession();
 	const dict = dictionary;
@@ -15,8 +17,9 @@
 		loading = true;
 		error = '';
 		success = '';
+
 		try {
-			await dict.clear();
+			await Promise.all([clearSyncEntries(), clearLocalBooks(), dict.clear()]);
 			await dict.initialize();
 			success = 'Cache cleared and dictionary reloaded successfully.';
 		} catch (err) {
