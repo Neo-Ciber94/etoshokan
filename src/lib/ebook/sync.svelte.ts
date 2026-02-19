@@ -1,4 +1,4 @@
-import { getAllSyncEntries } from './sync.query';
+import { initSyncData } from './sync.mutation';
 import type { BookSyncEntry } from './sync.types';
 
 let loading = $state(true);
@@ -12,7 +12,7 @@ async function invalidate() {
 	loading = true;
 
 	try {
-		syncEntries = await getAllSyncEntries();
+		syncEntries = await initSyncData();
 	} catch (err) {
 		console.error(err);
 	} finally {

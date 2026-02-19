@@ -45,12 +45,12 @@ export async function removeBookSyncEntry(bookId: string): Promise<void> {
 
 // Syncs remote book state into local sync table.
 // Existing entries are preserved; new remote books get 'uploaded' or 'missing' state.
-export async function initSyncData(): Promise<void> {
+export async function initSyncData(): Promise<BookSyncEntry[]> {
 	const result = await getBooksMetadata();
 
 	if (!result.success) {
 		console.error('Failed to fetch remote metadata for sync init:', result.error);
-		return;
+		return [];
 	}
 
 	const [existingEntries, localMetadata] = await Promise.all([
@@ -75,9 +75,13 @@ export async function initSyncData(): Promise<void> {
 		}
 	}
 
+	const syncEntries = [...existingEntries, ...addedEntries];
+
 	if (addedEntries.length > 0) {
-		await set(SYNC_TABLE_KEY, [...existingEntries, ...addedEntries]);
+		await set(SYNC_TABLE_KEY, syncEntries);
 	}
+
+	return syncEntries;
 }
 
 // Fetches remote metadata and saves it locally for books not already present (no book file data)
