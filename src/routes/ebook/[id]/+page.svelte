@@ -3,13 +3,9 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		getLocalBookData,
-		getLocalBookMetadataById,
-		updateLocalBookProgress,
-		updateLocalBookZoom
-	} from '$lib/ebook/books.storage';
-	import type { BookMetadata, TocItem } from '$lib/ebook/types';
+	import { getLocalBookData, getLocalBookMetadataById } from '$lib/ebook/books.query';
+	import { updateLocalBookProgress, updateLocalBookZoom } from '$lib/ebook/books.mutation';
+	import type { BookMetadata, TocItem } from '$lib/ebook/ebook.types';
 	import { createFoliateView, type FoliateView } from '$lib/types/view';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
