@@ -1,46 +1,171 @@
-import { command } from '$app/server';
-import { UploadBookFormDataSchema } from '$lib/ebook/types';
-import { logger } from '$lib/logging/logger';
-import { getGoogleAuthToken } from '$lib/server/auth/utils';
-import { uploadBookToDrive } from '$lib/server/books/book-storage.server';
-import { ZodError, z } from 'zod';
+import { command, query } from '$app/server'
+import { UploadBookFormDataSchema } from '$lib/ebook/types'
+import { logger } from '$lib/logging/logger'
+import { getGoogleAuthToken } from '$lib/server/auth/utils'
+import {
+  deleteBookFromDrive,
+  getDriveBookData,
+  getDriveBooksMetadata,
+  updateDriveBookProgress,
+  updateDriveBookZoom,
+  uploadBookToDrive
+} from '$lib/server/books/book-storage.server'
+import { ZodError, z } from 'zod'
+
+async function getToken() {
+  const googleTokens = await getGoogleAuthToken()
+  if (googleTokens == null) {
+    return { token: null, error: 'Failed to get google access token' } as const
+  }
+  return { token: googleTokens.accessToken, error: null } as const
+}
 
 export const uploadBookToServer = command(UploadBookFormDataSchema, async (input) => {
-	try {
-		const googleTokens = await getGoogleAuthToken();
+  try {
+    const { token, error } = await getToken()
+    if (token == null) {
+      return { success: false, error } as const
+    }
 
-		if (googleTokens == null) {
-			return {
-				success: false,
-				error: 'Failed to get google access token'
-			} as const;
-		}
+    const result = await uploadBookToDrive(input, token)
 
-		const result = await uploadBookToDrive(input, googleTokens.accessToken);
+    return {
+      result,
+      success: true
+    } as const
+  } catch (err) {
+    logger.error(err)
+    const message = getErrorMessage(err)
 
-		return {
-			result,
-			success: true
-		} as const;
-	} catch (err) {
-		logger.error(err);
-		const message = getErrorMessage(err);
+    return {
+      success: false,
+      error: message
+    } as const
+  }
+})
 
-		return {
-			success: false,
-			error: message
-		} as const;
-	}
-});
+export const deleteBook = command(z.object({ id: z.string() }), async ({ id }) => {
+  try {
+    const { token, error } = await getToken()
+    if (token == null) {
+      return { success: false, error } as const
+    }
+
+    await deleteBookFromDrive(id, token)
+
+    return { success: true } as const
+  } catch (err) {
+    logger.error(err)
+    return { success: false, error: getErrorMessage(err) } as const
+  }
+})
+
+export const getBooksMetadata = query(async () => {
+  try {
+    const { token, error } = await getToken()
+    if (token == null) {
+      return { success: false, error } as const
+    }
+
+    const metadata = await getDriveBooksMetadata(token)
+
+    return { success: true, metadata } as const
+  } catch (err) {
+    logger.error(err)
+    return { success: false, error: getErrorMessage(err) } as const
+  }
+})
+
+export const getBooksMetadataWithoutCover = query(async () => {
+  try {
+    const { token, error } = await getToken()
+    if (token == null) {
+      return { success: false, error } as const
+    }
+
+    const metadata = await getDriveBooksMetadata(token)
+    const metadataWithoutCover = metadata.map((book) => {
+      return {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        addedAt: book.addedAt,
+        lastReadAt: book.lastReadAt,
+        currentCfi: book.currentCfi,
+        progress: book.progress,
+        zoom: book.zoom
+      }
+    })
+
+    return { success: true, metadata: metadataWithoutCover } as const
+  } catch (err) {
+    logger.error(err)
+    return { success: false, error: getErrorMessage(err) } as const
+  }
+})
+
+export const getBookData = query(z.object({ id: z.string() }), async ({ id }) => {
+  try {
+    const { token, error } = await getToken()
+    if (token == null) {
+      return { success: false, error } as const
+    }
+
+    const data = await getDriveBookData(id, token)
+
+    return { success: true, data } as const
+  } catch (err) {
+    logger.error(err)
+    return { success: false, error: getErrorMessage(err) } as const
+  }
+})
+
+export const updateZoom = command(
+  z.object({ id: z.string(), zoom: z.number() }),
+  async ({ id, zoom }) => {
+    try {
+      const { token, error } = await getToken()
+      if (token == null) {
+        return { success: false, error } as const
+      }
+
+      await updateDriveBookZoom({ id, zoom, token })
+
+      return { success: true } as const
+    } catch (err) {
+      logger.error(err)
+      return { success: false, error: getErrorMessage(err) } as const
+    }
+  }
+)
+
+export const updateProgress = command(
+  z.object({ id: z.string(), cfi: z.string(), progress: z.number() }),
+  async ({ id, cfi, progress }) => {
+    try {
+      const { token, error } = await getToken()
+      if (token == null) {
+        return { success: false, error } as const
+      }
+
+      await updateDriveBookProgress({ id, cfi, progress, token })
+
+      return { success: true } as const
+    } catch (err) {
+      logger.error(err)
+      return { success: false, error: getErrorMessage(err) } as const
+    }
+  }
+)
 
 function getErrorMessage(error: unknown): string {
-	if (error instanceof Error) {
-		return error.message;
-	}
+  if (error instanceof Error) {
+    return error.message
+  }
 
-	if (error instanceof ZodError) {
-		return z.prettifyError(error);
-	}
+  if (error instanceof ZodError) {
+    return z.prettifyError(error)
+  }
 
-	return 'Unknown error';
+  return 'Unknown error'
 }
