@@ -39,6 +39,8 @@
 					};
 				}
 			});
+
+			await books.invalidate();
 		}
 	}
 </script>
