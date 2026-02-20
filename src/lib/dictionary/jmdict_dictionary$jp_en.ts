@@ -6,7 +6,8 @@ import {
 	type PartOfSpeech,
 	type Gloss,
 	type LookupResult,
-	type Example
+	type Example,
+	type LookupOptions
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
@@ -83,6 +84,43 @@ interface JMDict_Gloss {
 	text: string;
 }
 
+const STOP_WORDS = [
+	'a',
+	'an',
+	'am',
+	'is',
+	'be',
+	'do',
+	'if',
+	'in',
+	'on',
+	'at',
+	'to',
+	'of',
+	'by',
+	'and',
+	'or',
+	'but',
+	'for',
+	'not',
+	'he',
+	'she',
+	'it',
+	'we',
+	'you',
+	'I',
+	'his',
+	'her',
+	'its',
+	'my',
+	'me',
+	'our',
+	'us',
+	'as',
+	'up',
+	'out'
+];
+
 const JM_DICT_KEY = 'etoshokan:jm_dict_json';
 
 export class JMDict_Dictionary extends Dictionary {
@@ -98,71 +136,6 @@ export class JMDict_Dictionary extends Dictionary {
 	constructor() {
 		super();
 	}
-
-	normalize = (s: string) => s.trim().normalize('NFKC');
-
-	mapPos = (posArr?: string[]): PartOfSpeech | undefined => {
-		if (!posArr || posArr.length === 0) {
-			return undefined;
-		}
-
-		const p = posArr[0].toLowerCase();
-
-		if (p.startsWith('n')) return 'noun';
-		if (p.startsWith('v')) return 'verb';
-		if (p.startsWith('adj')) return 'adjective';
-		if (p.startsWith('adv')) return 'adverb';
-		if (p.startsWith('pron')) return 'pronoun';
-		if (p === 'prt' || p.includes('particle')) return 'particle';
-		if (p === 'conj' || p.includes('conjunction')) return 'conjunction';
-		if (p === 'int' || p.includes('interjection')) return 'interjection';
-		if (p === 'aux') return 'auxiliary';
-		if (p === 'pref') return 'prefix';
-		if (p === 'suf') return 'suffix';
-		if (p.includes('expression')) return 'expression';
-
-		return undefined;
-	};
-
-	makeSenses = (senses: JMDict_Sense[]): Sense[] =>
-		senses.map((s) => {
-			const glosses: Gloss[] = s.gloss.map((g) => ({
-				lang: g.lang as Language,
-				text: g.text,
-				gender: g.gender,
-				type: g.type
-			}));
-
-			const notes: string[] = [];
-			const examples: Example[] = [];
-
-			if (s.info?.length) {
-				notes.push(...s.info);
-			}
-			if (s.misc?.length) {
-				notes.push(...s.misc);
-			}
-
-			if (s.examples) {
-				for (const example of s.examples) {
-					examples.push({
-						sentences: example.sentences
-					});
-				}
-			}
-
-			return {
-				partOfSpeech: this.mapPos(s.partOfSpeech),
-				notes: notes.length ? notes : undefined,
-				glosses,
-				examples,
-				meta: {
-					pos: s.partOfSpeech,
-					appliesToKanji: s.appliesToKanji,
-					appliesToKana: s.appliesToKana
-				}
-			};
-		});
 
 	async loadDictionary() {
 		if (this.loaded) {
@@ -183,7 +156,7 @@ export class JMDict_Dictionary extends Dictionary {
 
 		console.log('Loading dictionary');
 		for (const w of data.words) {
-			const senses = this.makeSenses(w.sense);
+			const senses = mapSenses(w.sense);
 			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
 			const isCommon = w.kana.some((x) => x.common) || w.kanji.some((w) => w.common);
 
@@ -196,7 +169,7 @@ export class JMDict_Dictionary extends Dictionary {
 			};
 
 			const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
-				const k = this.normalize(key);
+				const k = normalize(key);
 				const arr = map.get(k) || [];
 				arr.push(entry);
 				map.set(k, arr);
@@ -217,6 +190,11 @@ export class JMDict_Dictionary extends Dictionary {
 		this.loaded = true;
 	}
 
+	async clear() {
+		await ibkv.del(JM_DICT_KEY);
+		return Promise.resolve();
+	}
+
 	async initialize(): Promise<void> {
 		if (this.loadingPromise == null) {
 			this.loadingPromise = this.loadDictionary();
@@ -225,124 +203,68 @@ export class JMDict_Dictionary extends Dictionary {
 		await this.loadingPromise;
 	}
 
-	searchKana(term: string) {
-		const fromKanji = this.kanjiMap.get(term) ?? [];
-		const fromKana = this.kanaMap.get(term) ?? [];
-		return [...fromKanji, ...fromKana];
-	}
+	searchEnglish(term: string): WordEntry[] {
+		const entries = new Map<WordEntry, number>();
+		const normalized = term.toLowerCase();
 
-	searchEnglish(term: string, maxCount: number): WordEntry[] {
-		const results: WordEntry[] = [];
-
-		// const push = (word: WordEntry) => {
-		// 	if (results.length >= maxCount) {
-		// 		return false;
-		// 	}
-
-		// 	results.push(word);
-		// 	return true;
-		// };
-
-		const scoreWord = (word: WordEntry, normalized: string): number => {
+		const getWordScore = (word: WordEntry) => {
 			let score = 0;
-
-			if (word.common) {
-				score += 30;
-			}
-
-			if (word.reading) {
-				score += 10;
-
-				if (word.reading.length < 3) {
-					score += 40;
-				}
-			}
+			let matchCount: number = 0;
 
 			for (const sense of word.senses) {
 				for (const gloss of sense.glosses) {
-					const text = gloss.text.toLowerCase();
+					const text = gloss.text.trim().toLowerCase();
 
 					if (text === normalized) {
 						score += 100;
-					} else if (text.startsWith(normalized)) {
+						matchCount += 1;
+					} else if (text.includes(` ${normalized}`) || text.includes(` ${normalized}`)) {
 						score += 80;
-					} else if (text.includes(` ${normalized}`) || text.includes(`${normalized} `)) {
-						score += 60;
+						matchCount += 1;
 					} else if (text.includes(normalized)) {
-						score += 30;
+						score += 50;
+						matchCount += 1;
+					} else {
+						// Word not found
+						score -= 50;
 					}
-
-					// Shorter the better
-					if (text.length <= 20) {
-						score += 10;
-					}
-				}
-
-				// Penalize for many glosses
-				if (sense.glosses.length > 2) {
-					score /= sense.glosses.length;
 				}
 			}
 
-			// Penalize for too many senses
-			score /= word.senses.length;
-
-			// crude but effective: first sense bias
-			//score += word.senses.length > 0 ? 10 : 0;
+			// Penalize for too many matches
+			// if (matchCount > 1) {
+			// 	score -= matchCount * 50;
+			// }
 
 			return score;
 		};
 
-		const scores = new Map<WordEntry, number>();
-
-		const scan = (searchTerm: string, map: Map<string, WordEntry[]>) => {
-			const normalizedTerm = searchTerm.toLowerCase();
-
+		const scan = (map: Map<string, WordEntry[]>) => {
 			for (const words of map.values()) {
 				for (const word of words) {
-					// const glosses = word.senses.flatMap((w) => w.glosses);
-					// const matches = glosses.some((x) => x.text.toLowerCase().includes(normalizedTerm));
-					// if (!matches) {
-					// 	continue;
-					// }
-					// if (!push(word)) {
-					// 	return;
-					// }
+					const score = getWordScore(word);
 
-					if (scores.has(word)) {
-						continue;
-					}
-
-					const score = scoreWord(word, normalizedTerm);
 					if (score > 0) {
-						scores.set(word, score);
+						entries.set(word, score);
 					}
 				}
 			}
 		};
 
-		const kanjiMap = this.kanjiMap;
-		const kanaMap = this.kanaMap;
-
-		// Try word match
-		scan(term, kanaMap);
-		scan(term, kanjiMap);
-
-		// return results;
-		return [...scores.entries()]
-			.sort((a, b) => b[1] - a[1])
-			.slice(0, maxCount)
-			.map(([word]) => word);
+		scan(this.kanjiMap);
+		scan(this.kanaMap);
+		console.log([...entries].sort((a, b) => b[1] - a[1]));
+		return [...entries].sort((a, b) => b[1] - a[1]).map(([word]) => word);
 	}
 
-	searchContainsKana(term: string, maxCount: number): WordEntry[] {
+	searchContainsKana(term: string): WordEntry[] {
 		const results: WordEntry[] = [];
 		const seen = new Set<string>();
 
 		const scan = (map: Map<string, WordEntry[]>) => {
-			if (results.length >= maxCount) {
-				return;
-			}
+			// if (results.length >= maxCount) {
+			// 	return;
+			// }
 
 			// We search substrings of the search term
 			for (let i = 1; i < term.length; i++) {
@@ -363,9 +285,9 @@ export class JMDict_Dictionary extends Dictionary {
 							seen.add(id);
 							results.push(e);
 
-							if (results.length >= maxCount) {
-								return;
-							}
+							// if (results.length >= maxCount) {
+							// 	return;
+							// }
 						}
 					}
 				}
@@ -377,40 +299,29 @@ export class JMDict_Dictionary extends Dictionary {
 		return results;
 	}
 
-	fallbackSearch(term: string, maxCount: number): WordEntry[] {
-		const results: WordEntry[] = [];
-
-		if (wanakana.isJapanese(term)) {
-			const otherResults = this.searchContainsKana(term, maxCount);
-			results.push(...otherResults);
-		} else {
-			// Search english matches
-			const englishResults = this.searchEnglish(term, 100); // 10
-			results.push(...englishResults);
-
-			// Try convert to kana and search
-			// const kanaTerm = wanakana.toKana(term);
-			// const kanaResults = this.searchKana(kanaTerm);
-			// results.push(...kanaResults);
-		}
-
+	searchJapanese(term: string) {
+		const fromKanji = this.kanjiMap.get(term) ?? [];
+		const fromKana = this.kanaMap.get(term) ?? [];
+		const results: WordEntry[] = [...fromKanji, ...fromKana];
 		return results;
 	}
 
-	async lookup(term: string, options?: { targetLanguage: Language }): Promise<LookupResult> {
-		const lang = options?.targetLanguage || 'en';
-
-		if (lang !== 'en') {
-			throw new Error(
-				`Unsupported language, dictionary only support '${this.supportedLanguage}' to 'en' translations`
-			);
+	search(term: string, isJapanese: boolean) {
+		if (isJapanese) {
+			return this.searchJapanese(term);
+		} else {
+			return this.searchEnglish(term);
 		}
+	}
+
+	async lookup(term: string, options?: LookupOptions): Promise<LookupResult> {
+		const { maxResults = 100 } = options || {};
 
 		if (!this.loaded) {
 			await this.initialize();
 		}
 
-		term = this.normalize(term.trim());
+		term = normalize(term.trim());
 
 		if (term.length == 0) {
 			return {
@@ -420,40 +331,115 @@ export class JMDict_Dictionary extends Dictionary {
 		}
 
 		let found = true;
-		const results = this.searchKana(term);
-		const fallback: WordEntry[] = [];
+		const isJapanese = wanakana.isJapanese(term);
+		const results = this.search(term, isJapanese);
 
 		if (results.length === 0) {
-			fallback.push(...this.fallbackSearch(term, 10));
 			found = false;
-		}
 
-		console.log({
-			found,
-			term,
-			results,
-			fallback,
-			isJapanese: wanakana.isJapanese(term)
-		});
-
-		const seen = new Set<string>();
-		const entries: WordEntry[] = [];
-
-		for (const e of [...results, ...fallback]) {
-			const id = `${e.term}||${e.reading ?? ''}`;
-			if (!seen.has(id)) {
-				seen.add(id);
-				entries.push(e);
+			if (isJapanese) {
+				const values = this.searchContainsKana(term);
+				results.push(...values);
+			} else {
+				const hira = wanakana.toHiragana(term);
+				const kata = wanakana.toKatakana(term);
+				console.log('search english to kana', { hira, kata });
+				const englishToHiraganaResults = this.search(hira, true);
+				const englishToKatakanaResults = this.search(kata, true);
+				results.push(...englishToHiraganaResults);
+				results.push(...englishToKatakanaResults);
 			}
 		}
 
+		console.log({ term, found, isJapanese, results });
+
+		const limitedResults = results.slice(0, maxResults);
+		const entries = deduplicate(limitedResults);
 		return { found, entries };
 	}
+}
 
-	async clear() {
-		await ibkv.del(JM_DICT_KEY);
-		return Promise.resolve();
+function deduplicate(items: WordEntry[]) {
+	const seen = new Set<string>();
+	const entries: WordEntry[] = [];
+
+	for (const e of items) {
+		const id = `${e.term}||${e.reading ?? ''}`;
+		if (!seen.has(id)) {
+			seen.add(id);
+			entries.push(e);
+		}
 	}
+
+	return entries;
+}
+
+function mapSenses(senses: JMDict_Sense[]): Sense[] {
+	return senses.map((s) => {
+		const glosses: Gloss[] = s.gloss.map((g) => ({
+			lang: g.lang as Language,
+			text: g.text,
+			gender: g.gender,
+			type: g.type
+		}));
+
+		const notes: string[] = [];
+		const examples: Example[] = [];
+
+		if (s.info?.length) {
+			notes.push(...s.info);
+		}
+		if (s.misc?.length) {
+			notes.push(...s.misc);
+		}
+
+		if (s.examples) {
+			for (const example of s.examples) {
+				examples.push({
+					sentences: example.sentences
+				});
+			}
+		}
+
+		return {
+			partOfSpeech: mapPartOfSpeech(s.partOfSpeech),
+			notes: notes.length ? notes : undefined,
+			glosses,
+			examples,
+			meta: {
+				pos: s.partOfSpeech,
+				appliesToKanji: s.appliesToKanji,
+				appliesToKana: s.appliesToKana
+			}
+		};
+	});
+}
+
+function mapPartOfSpeech(posArr?: string[]): PartOfSpeech | undefined {
+	if (!posArr || posArr.length === 0) {
+		return undefined;
+	}
+
+	const p = posArr[0].toLowerCase();
+
+	if (p.startsWith('n')) return 'noun';
+	if (p.startsWith('v')) return 'verb';
+	if (p.startsWith('adj')) return 'adjective';
+	if (p.startsWith('adv')) return 'adverb';
+	if (p.startsWith('pron')) return 'pronoun';
+	if (p === 'prt' || p.includes('particle')) return 'particle';
+	if (p === 'conj' || p.includes('conjunction')) return 'conjunction';
+	if (p === 'int' || p.includes('interjection')) return 'interjection';
+	if (p === 'aux') return 'auxiliary';
+	if (p === 'pref') return 'prefix';
+	if (p === 'suf') return 'suffix';
+	if (p.includes('expression')) return 'expression';
+
+	return undefined;
+}
+
+function normalize(s: string) {
+	return s.trim().normalize('NFKC');
 }
 
 const JMDICT_JSON_URL = '/jmdict-eng-3.6.2+20260202123847.json.zip';
@@ -487,30 +473,30 @@ function splitAt(s: string, index: number): string[] {
 	return [s.slice(0, index), s.slice(index + 1)];
 }
 
-type Sortable = string | number | Date | boolean;
+// type Sortable = string | number | Date | boolean;
 
-function sortBy<T>(items: T[], keySelector: (value: T) => Sortable): T[] {
-	return [...items].sort((a, b) => {
-		const ka = keySelector(a);
-		const kb = keySelector(b);
+// function sortBy<T>(items: T[], keySelector: (value: T) => Sortable): T[] {
+// 	return [...items].sort((a, b) => {
+// 		const ka = keySelector(a);
+// 		const kb = keySelector(b);
 
-		if (ka instanceof Date && kb instanceof Date) {
-			return ka.getTime() - kb.getTime();
-		}
+// 		if (ka instanceof Date && kb instanceof Date) {
+// 			return ka.getTime() - kb.getTime();
+// 		}
 
-		if (typeof ka === 'boolean' && typeof kb === 'boolean') {
-			return Number(ka) - Number(kb);
-		}
+// 		if (typeof ka === 'boolean' && typeof kb === 'boolean') {
+// 			return Number(ka) - Number(kb);
+// 		}
 
-		if (typeof ka === 'number' && typeof kb === 'number') {
-			return ka - kb;
-		}
+// 		if (typeof ka === 'number' && typeof kb === 'number') {
+// 			return ka - kb;
+// 		}
 
-		if (typeof ka === 'string' && typeof kb === 'string') {
-			return ka.localeCompare(kb);
-		}
+// 		if (typeof ka === 'string' && typeof kb === 'string') {
+// 			return ka.localeCompare(kb);
+// 		}
 
-		// fallback for mixed types (shouldn't really happen)
-		return String(ka).localeCompare(String(kb));
-	});
-}
+// 		// fallback for mixed types (shouldn't really happen)
+// 		return String(ka).localeCompare(String(kb));
+// 	});
+// }
