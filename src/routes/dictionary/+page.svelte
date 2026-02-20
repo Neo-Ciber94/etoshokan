@@ -7,7 +7,7 @@
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
 	import { page } from '$app/state';
 	import { debounce } from '$lib/runes/debounce.svelte';
-	import { goto, replaceState } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
 	import { tick } from 'svelte';
 
 	const dict = dictionary;
@@ -25,7 +25,7 @@
 		}
 		try {
 			loading = true;
-			const res = await dict.lookup(query.trim(), { targetLanguage: 'en' });
+			const res = await dict.lookup(query.trim());
 			console.log(res);
 			results = res.entries;
 		} catch (err) {
@@ -142,21 +142,22 @@
 		{#if results && results.length > 0}
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
-					<Card.Root class="border border-border">
-						<Card.Content class="px-4 md:px-6 py-1">
-							<div class="grid gap-2 md:gap-6 md:grid-cols-[auto_1fr]">
+					<Card.Root class="border border-border py-2 md:py-6">
+						<Card.Content class="px-4 py-1 md:px-6">
+							<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
 								<!-- Left side: Word and Reading -->
-								<div class="flex flex-col items-start border-r border-border pr-6">
+								<div
+									class="flex flex-row items-center gap-2 border-r border-border pr-6 md:flex-col md:items-start md:gap-0"
+								>
 									{#if entry.reading}
-										<div class="mb-2 text-sm text-muted-foreground">
+										<div
+											class="order-2 mb-0 text-base text-muted-foreground md:order-first md:mb-2"
+										>
 											{entry.reading}
 										</div>
 									{/if}
 									<div class="text-2xl font-bold text-foreground md:text-5xl">
 										{entry.term}
-									</div>
-									<div class="mt-2 text-xs text-muted-foreground">
-										{entry.language}
 									</div>
 								</div>
 
@@ -182,7 +183,7 @@
 											{#if sense.glosses}
 												<div class="space-y-1">
 													{#each sense.glosses as gloss, glossIdx}
-														<div class="text-sm md:text-base text-foreground">
+														<div class="text-sm text-foreground md:text-base">
 															{#if sense.glosses.length > 1}
 																<span class="text-muted-foreground">{glossIdx + 1}.</span>
 															{/if}
