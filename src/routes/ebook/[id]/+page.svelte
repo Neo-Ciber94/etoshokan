@@ -3,7 +3,11 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	import { getLocalBookData, getLocalBookMetadataById } from '$lib/ebook/books.query';
+	import {
+		getLocalBookData,
+		getLocalBookMetadataById,
+		hasLocalBookData
+	} from '$lib/ebook/books.query';
 	import { updateLocalBookProgress, updateLocalBookZoom } from '$lib/ebook/books.mutation';
 	import type { BookMetadata, TocItem } from '$lib/ebook/ebook.types';
 	import { createFoliateView, type FoliateView } from '$lib/types/view';
@@ -24,6 +28,8 @@
 	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
 	import { isMobile } from '$lib/utils/isMobile';
 	import { isWeb } from '$lib/utils/isWeb';
+	import { downloadBookData } from '$lib/ebook/sync.mutation';
+	import { openModal } from '$lib/components/modal';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -121,11 +127,36 @@
 		}
 	});
 
+	async function downloadMissingBookData() {
+		const downloadBookDataPromise = downloadBookData(bookId);
+
+		await openModal.pending(downloadBookDataPromise, {
+			title: 'Downloading book',
+			onSuccess() {
+				return {
+					title: 'Book data was downloaded'
+				};
+			},
+			onError(error) {
+				return {
+					title: 'Failed to download',
+					description: error instanceof Error ? error.message : 'Something went wrong'
+				};
+			}
+		});
+	}
+
 	async function loadBook() {
 		loading = true;
 		notFound = false;
 
 		try {
+			const hasBookData = await hasLocalBookData(bookId);
+
+			if (!hasBookData) {
+				await downloadMissingBookData();
+			}
+
 			bookMetadata = await getLocalBookMetadataById(bookId);
 
 			if (!bookMetadata) {

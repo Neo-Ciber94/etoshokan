@@ -5,15 +5,26 @@
 	import CloudUploadIcon from '@lucide/svelte/icons/cloud-upload';
 	import CloudOffIcon from '@lucide/svelte/icons/cloud-off';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
+	import DownloadIcon from '@lucide/svelte/icons/download';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
-	import { uploadMissingBook } from '$lib/ebook/sync.mutation';
+	import { downloadBookData, uploadMissingBook } from '$lib/ebook/sync.mutation';
 	import { openModal } from './modal';
+	import { hasLocalBookData } from '$lib/ebook/books.query';
 
 	let { bookId, class: className = '' }: { bookId: string; class?: string } = $props();
 
 	const sync = useSyncBookEntries();
 	const books = useBooksMetadata();
 	const entry = $derived(sync.value.find((x) => x.bookId === bookId));
+	let hasBookData = $state(true);
+
+	$effect.pre(() => {
+		async function run() {
+			hasBookData = await hasLocalBookData(bookId);
+		}
+
+		run();
+	});
 
 	async function handleMissingBook() {
 		const book = books.value.find((b) => b.id === bookId);
@@ -41,6 +52,29 @@
 			});
 
 			await books.invalidate();
+		}
+	}
+
+	async function downloadMissingBookData() {
+		if (confirm('This book data have not been downloaded, Download now?')) {
+			const downloadBookDataPromise = downloadBookData(bookId);
+
+			openModal.pending(downloadBookDataPromise, {
+				title: 'Downloading book',
+				onSuccess() {
+					hasBookData = true;
+					
+					return {
+						title: 'Book data was downloaded'
+					};
+				},
+				onError(error) {
+					return {
+						title: 'Failed to download',
+						description: error instanceof Error ? error.message : 'Something went wrong'
+					};
+				}
+			});
 		}
 	}
 </script>
@@ -76,5 +110,17 @@
 	>
 		<RefreshCwIcon />
 		unsynced
+	</button>
+{:else if hasBookData == false}
+	<button
+		onclick={downloadMissingBookData}
+		class={cn(
+			badgeVariants(),
+			'cursor-pointer border-transparent bg-blue-500 text-white',
+			className
+		)}
+	>
+		<DownloadIcon />
+		no data
 	</button>
 {/if}

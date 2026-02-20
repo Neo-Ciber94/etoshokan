@@ -1,4 +1,4 @@
-import { get } from 'idb-keyval';
+import { get, keys } from 'idb-keyval';
 import type { BookMetadata } from './ebook.types';
 import { getBooksMetadataWithoutCover } from '$lib/remote/ebook.remote';
 import { BOOK_PREFIX, METADATA_KEY } from './storage.utils';
@@ -8,8 +8,14 @@ export async function getLocalBooksMetadata(): Promise<BookMetadata[]> {
 	return metadata || [];
 }
 
-export async function getLocalBookData(id: string): Promise<ArrayBuffer | undefined> {
-	return await get(`${BOOK_PREFIX}${id}`);
+export async function getLocalBookData(bookId: string): Promise<ArrayBuffer | undefined> {
+	return await get(`${BOOK_PREFIX}${bookId}`);
+}
+
+export async function hasLocalBookData(bookId: string) {
+	const key = `${BOOK_PREFIX}${bookId}`;
+	const storageKeys = await keys();
+	return storageKeys.some((k) => k === key);
 }
 
 export async function getLocalBookMetadataById(bookId: string): Promise<BookMetadata | null> {
