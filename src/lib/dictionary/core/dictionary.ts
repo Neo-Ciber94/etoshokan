@@ -2,6 +2,9 @@ export interface WordEntry {
 	/** Original query term (normalized) */
 	term: string;
 
+	/** Common word */
+	common: boolean;
+
 	/** Optional reading / pronunciation (kana, IPA, etc.) */
 	reading?: string;
 
@@ -26,7 +29,7 @@ export interface Sense {
 }
 
 export interface Gloss {
-	lang: Language;
+	lang: string;
 	gender?: string | null;
 	type?: string | null;
 	text: string;
