@@ -10,6 +10,7 @@
 	import { openModal } from '$lib/components/modal';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
+	import { cn } from '$lib/utils';
 
 	const books = useBooksMetadata();
 	let uploadingBook = $state(false);
@@ -152,19 +153,17 @@
 									<p class="line-clamp-1 text-xs text-muted-foreground">
 										{book.author}
 									</p>
-									{#if book.progress}
-										<div class="pt-2">
-											<div class="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-												<div
-													class="h-full bg-primary transition-all"
-													style="width: {book.progress}%"
-												></div>
-											</div>
-											<p class="mt-1 text-xs text-muted-foreground">
-												{book.progress}% complete
-											</p>
+									<div class={cn('pt-2', !book.progress && 'invisible')}>
+										<div class="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+											<div
+												class="h-full bg-primary transition-all"
+												style="width: {book.progress}%"
+											></div>
 										</div>
-									{/if}
+										<p class="mt-1 text-xs text-muted-foreground">
+											{book.progress}% complete
+										</p>
+									</div>
 								</div>
 								<div class="flex gap-2">
 									<Button onclick={() => openBook(book.id)} class="flex-1" size="sm">

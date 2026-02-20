@@ -63,7 +63,7 @@
 				title: 'Downloading book',
 				onSuccess() {
 					hasBookData = true;
-					
+
 					return {
 						title: 'Book data was downloaded'
 					};
@@ -121,6 +121,6 @@
 		)}
 	>
 		<DownloadIcon />
-		no data
+		download
 	</button>
 {/if}
