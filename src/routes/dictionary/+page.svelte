@@ -143,8 +143,8 @@
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
 					<Card.Root class="border border-border">
-						<Card.Content class="p-6">
-							<div class="grid gap-6 md:grid-cols-[auto_1fr]">
+						<Card.Content class="px-4 md:px-6 py-1">
+							<div class="grid gap-2 md:gap-6 md:grid-cols-[auto_1fr]">
 								<!-- Left side: Word and Reading -->
 								<div class="flex flex-col items-start border-r border-border pr-6">
 									{#if entry.reading}
@@ -152,7 +152,7 @@
 											{entry.reading}
 										</div>
 									{/if}
-									<div class="text-5xl font-bold text-foreground">
+									<div class="text-2xl font-bold text-foreground md:text-5xl">
 										{entry.term}
 									</div>
 									<div class="mt-2 text-xs text-muted-foreground">
@@ -161,9 +161,9 @@
 								</div>
 
 								<!-- Right side: Meanings -->
-								<div class="space-y-4">
+								<div class="space-y-2 md:space-y-4">
 									{#each entry.senses as sense, senseIdx (senseIdx)}
-										<div class="space-y-2">
+										<div class="space-y-1 md:space-y-2">
 											<!-- Sense number and part of speech -->
 											<div class="flex items-center gap-2">
 												<span class="text-lg font-semibold text-foreground">
@@ -182,7 +182,7 @@
 											{#if sense.glosses}
 												<div class="space-y-1">
 													{#each sense.glosses as gloss, glossIdx}
-														<div class="text-base text-foreground">
+														<div class="text-sm md:text-base text-foreground">
 															{#if sense.glosses.length > 1}
 																<span class="text-muted-foreground">{glossIdx + 1}.</span>
 															{/if}
