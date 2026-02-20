@@ -5,7 +5,8 @@ import {
 	type Sense,
 	type PartOfSpeech,
 	type Gloss,
-	type LookupResult
+	type LookupResult,
+	type Example
 } from './core/dictionary';
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import * as ibkv from 'idb-keyval';
@@ -53,7 +54,18 @@ interface JMDict_Sense {
 	info: string[];
 	languageSource: JMDict_LanguageSource[];
 	gloss: JMDict_Gloss[];
+	examples?: JMDict_Example[];
 }
+
+type JMDict_Example = {
+	text: string;
+	sentences: JMDict_ExampleSentence[];
+};
+
+type JMDict_ExampleSentence = {
+	lang: string;
+	text: string;
+};
 
 type JMDict_RelatedTerm = [string];
 
@@ -90,7 +102,10 @@ export class JMDict_Dictionary extends Dictionary {
 	normalize = (s: string) => s.trim().normalize('NFKC');
 
 	mapPos = (posArr?: string[]): PartOfSpeech | undefined => {
-		if (!posArr || posArr.length === 0) return undefined;
+		if (!posArr || posArr.length === 0) {
+			return undefined;
+		}
+
 		const p = posArr[0].toLowerCase();
 
 		if (p.startsWith('n')) return 'noun';
@@ -111,7 +126,6 @@ export class JMDict_Dictionary extends Dictionary {
 
 	makeSenses = (senses: JMDict_Sense[]): Sense[] =>
 		senses.map((s) => {
-			// const glosses = s.gloss.filter((g) => g.lang === 'en').map((g) => g.text);
 			const glosses: Gloss[] = s.gloss.map((g) => ({
 				lang: g.lang as Language,
 				text: g.text,
@@ -120,13 +134,28 @@ export class JMDict_Dictionary extends Dictionary {
 			}));
 
 			const notes: string[] = [];
-			if (s.info?.length) notes.push(...s.info);
-			if (s.misc?.length) notes.push(...s.misc);
+			const examples: Example[] = [];
+
+			if (s.info?.length) {
+				notes.push(...s.info);
+			}
+			if (s.misc?.length) {
+				notes.push(...s.misc);
+			}
+
+			if (s.examples) {
+				for (const example of s.examples) {
+					examples.push({
+						sentences: example.sentences
+					});
+				}
+			}
 
 			return {
 				partOfSpeech: this.mapPos(s.partOfSpeech),
 				notes: notes.length ? notes : undefined,
 				glosses,
+				examples,
 				meta: {
 					pos: s.partOfSpeech,
 					appliesToKanji: s.appliesToKanji,

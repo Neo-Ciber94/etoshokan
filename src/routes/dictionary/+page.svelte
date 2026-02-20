@@ -198,24 +198,6 @@
 													{sense.notes.join('; ')}
 												</div>
 											{/if}
-
-											<!-- Examples -->
-											{#if sense.examples && sense.examples.length > 0}
-												<div class="mt-2 space-y-1 border-l-2 border-border pl-3">
-													{#each sense.examples as ex}
-														<div class="text-sm">
-															<div class="text-foreground">
-																{ex.text}
-															</div>
-															{#if ex.translation}
-																<div class="text-muted-foreground">
-																	{ex.translation}
-																</div>
-															{/if}
-														</div>
-													{/each}
-												</div>
-											{/if}
 										</div>
 									{/each}
 

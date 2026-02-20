@@ -46,9 +46,13 @@ export type PartOfSpeech =
 	| 'suffix'
 	| 'expression';
 
-export interface Example {
+export interface ExampleSentence {
+	lang: string;
 	text: string;
-	translation?: string;
+}
+
+export interface Example {
+	sentences: ExampleSentence[];
 }
 
 export type Language = 'en' | 'jp';
@@ -58,9 +62,9 @@ export type LookupOptions = {
 };
 
 export type LookupResult = {
-	found: boolean,
-	entries: WordEntry[]
-}
+	found: boolean;
+	entries: WordEntry[];
+};
 
 export abstract class Dictionary {
 	abstract readonly name: string;
