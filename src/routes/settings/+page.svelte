@@ -14,6 +14,10 @@
 	let success = $state('');
 
 	async function clearCache() {
+		if (!confirm('Delete all cache data? (Remote data will NOT be deleted)')) {
+			return;
+		}
+
 		loading = true;
 		error = '';
 		success = '';
