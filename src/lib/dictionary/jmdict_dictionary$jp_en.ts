@@ -234,7 +234,6 @@ export class JMDict_Dictionary extends Dictionary {
 
 		scan(this.kanjiMap);
 		scan(this.kanaMap);
-		console.log([...entries].sort((a, b) => b[1] - a[1]));
 		return [...entries].sort((a, b) => b[1] - a[1]).map(([word]) => word);
 	}
 
