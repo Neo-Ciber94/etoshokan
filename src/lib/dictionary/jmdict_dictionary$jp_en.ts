@@ -207,11 +207,19 @@ export class JMDict_Dictionary extends Dictionary {
 				}
 			}
 
-			// Penalize for unrelated matches
-			totalScore -= unrelatedCount * 20;
+			// Reward for few unrelated glosses
+			const maxUnrelatedBonus = 200;
+			totalScore += Math.max(0, maxUnrelatedBonus - unrelatedCount * 20);
 
-			// Penalize for many senses
-			totalScore -= word.senses.length * 50;
+			// Reward for fewer senses
+			const maxSensesBonus = 200;
+			totalScore += Math.max(0, maxSensesBonus - word.senses.length * 50);
+
+			// // Penalize for unrelated matches
+			// totalScore -= unrelatedCount * 20;
+
+			// // Penalize for many senses
+			// totalScore -= word.senses.length * 50;
 
 			return totalScore;
 		};
