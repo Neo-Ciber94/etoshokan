@@ -84,43 +84,6 @@ interface JMDict_Gloss {
 	text: string;
 }
 
-const STOP_WORDS = [
-	'a',
-	'an',
-	'am',
-	'is',
-	'be',
-	'do',
-	'if',
-	'in',
-	'on',
-	'at',
-	'to',
-	'of',
-	'by',
-	'and',
-	'or',
-	'but',
-	'for',
-	'not',
-	'he',
-	'she',
-	'it',
-	'we',
-	'you',
-	'I',
-	'his',
-	'her',
-	'its',
-	'my',
-	'me',
-	'our',
-	'us',
-	'as',
-	'up',
-	'out'
-];
-
 const JM_DICT_KEY = 'etoshokan:jm_dict_json';
 
 export class JMDict_Dictionary extends Dictionary {
@@ -207,41 +170,59 @@ export class JMDict_Dictionary extends Dictionary {
 		const entries = new Map<WordEntry, number>();
 		const normalized = term.toLowerCase();
 
-		const getWordScore = (word: WordEntry) => {
-			let score = 0;
-			let matchCount: number = 0;
+		const getWordScore = (word: WordEntry): number => {
+			let totalScore = 0;
+			let unrelatedCount = 0;
+
+			if (word.common) {
+				totalScore += 50;
+			}
 
 			for (const sense of word.senses) {
+				let bestSenseScore = -Infinity;
+
 				for (const gloss of sense.glosses) {
 					const text = gloss.text.trim().toLowerCase();
+					let score = 0;
 
 					if (text === normalized) {
-						score += 100;
-						matchCount += 1;
-					} else if (text.includes(` ${normalized}`) || text.includes(` ${normalized}`)) {
-						score += 80;
-						matchCount += 1;
+						score = 100;
+					} else if (text.startsWith(`${normalized} `) || text.endsWith(` ${normalized}`)) {
+						score = 85;
+					} else if (text.includes(` ${normalized} `)) {
+						score = 80;
 					} else if (text.includes(normalized)) {
-						score += 50;
-						matchCount += 1;
+						score = 50;
 					} else {
-						// Word not found
-						score -= 50;
+						unrelatedCount += 1;
 					}
+
+					if (score > bestSenseScore) {
+						bestSenseScore = score;
+					}
+				}
+
+				if (bestSenseScore > 0) {
+					totalScore += bestSenseScore;
 				}
 			}
 
-			// Penalize for too many matches
-			// if (matchCount > 1) {
-			// 	score -= matchCount * 50;
-			// }
+			// Penalize for unrelated matches
+			totalScore -= unrelatedCount * 20;
 
-			return score;
+			// Penalize for many senses
+			totalScore -= word.senses.length * 50;
+
+			return totalScore;
 		};
 
 		const scan = (map: Map<string, WordEntry[]>) => {
 			for (const words of map.values()) {
 				for (const word of words) {
+					if (entries.has(word)) {
+						continue;
+					}
+
 					const score = getWordScore(word);
 
 					if (score > 0) {
