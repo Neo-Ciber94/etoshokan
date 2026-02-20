@@ -102,7 +102,7 @@
 	);
 
 	onMount(async () => {
-		await loadBook();
+		await renderBook();
 	});
 
 	// Toggle reading mode
@@ -119,7 +119,10 @@
 
 	// Sync pageTransitions option with renderer's animated attribute
 	$effect(() => {
-		if (!view?.renderer) return;
+		if (!view?.renderer) {
+			return;
+		}
+
 		if (pageTransitions.value) {
 			view.renderer.setAttribute('animated', '');
 		} else {
@@ -146,7 +149,7 @@
 		});
 	}
 
-	async function loadBook() {
+	async function renderBook() {
 		loading = true;
 		notFound = false;
 
