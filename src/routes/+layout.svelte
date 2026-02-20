@@ -6,9 +6,25 @@
 	import { dictionary } from '$lib/dictionary';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
+	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
+	import { syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 
 	$effect.pre(() => {
 		dictionary.initialize();
+	});
+
+	$effect.pre(() => {
+		async function run() {
+			const hasAnyData = await hasLocalBooksMetadata();
+
+			if (hasAnyData) {
+				return;
+			}
+
+			await syncRemoteMetadata();
+		}
+
+		run();
 	});
 
 	let { children } = $props();
