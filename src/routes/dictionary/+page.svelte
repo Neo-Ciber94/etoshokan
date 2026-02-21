@@ -104,11 +104,11 @@
 		{#if results.length > 0}
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
-					<Card.Root class="relative border border-border py-2 md:py-6">
-						{#if entry.common}
-							<Badge class="absolute top-3 right-3 bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800">common</Badge>
-						{/if}
-						<Card.Content class="px-4 py-1 md:px-6">
+					<Card.Root class="border border-border py-2 md:py-6">
+						<Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
+							{#if entry.common}
+								<Badge class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800">common</Badge>
+							{/if}
 							<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
 								<!-- Left side: Word and Reading -->
 								<div
