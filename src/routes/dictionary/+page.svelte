@@ -1,69 +1,32 @@
 <script lang="ts">
-	import { dictionary } from '$lib/dictionary';
-
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import type { WordEntry } from '$lib/dictionary/core/dictionary';
 	import { page } from '$app/state';
-	import { debounce } from '$lib/runes/debounce.svelte';
 	import { replaceState } from '$app/navigation';
 	import { tick } from 'svelte';
+	import { dictionaryState } from './state.svelte';
 
-	const dict = dictionary;
-
-	let loading = $state(false);
-	let query = $state('');
-	let results = $state<WordEntry[]>([]);
-	let error = $state('');
-
-	const search = debounce(300, async () => {
-		error = '';
-		if (!query || !query.trim()) {
-			results = [];
-			return;
-		}
-		try {
-			loading = true;
-			const res = await dict.lookup(query.trim());
-			console.log(res);
-			results = res.entries;
-		} catch (err) {
-			console.error(err);
-			error = (err && (err as any).message) || String(err);
-		} finally {
-			loading = false;
-		}
-	});
-
-	$effect(() => {
-		async function run() {
-			try {
-				loading = true;
-				await dict.initialize();
-			} catch (err) {
-				console.error(err);
-				error = (err && (err as any).message) || String(err);
-			} finally {
-				loading = false;
-			}
-		}
-
-		run();
-	});
+	const results = $derived(dictionaryState.results);
+	const error = $derived(dictionaryState.error);
+	const loading = $derived(dictionaryState.loading);
 
 	$effect.pre(() => {
 		const currentSearch = page.url.searchParams.get('search');
 
 		if (currentSearch) {
-			query = currentSearch;
+			dictionaryState.search(currentSearch);
 		}
 	});
 
 	$effect(() => {
-		if (query) {
-			search();
-		}
+		// Search each time the query changes
+		const query = dictionaryState.query;
+		dictionaryState.search(query);
+	});
+
+	$effect(() => {
+		const query = dictionaryState.query;
 
 		tick().then(() => {
 			if (query.length === 0) {
@@ -75,9 +38,7 @@
 	});
 
 	function clearResults() {
-		query = '';
-		results = [];
-		error = '';
+		dictionaryState.clear();
 	}
 </script>
 
@@ -96,7 +57,7 @@
 			<div class="relative flex-1">
 				<Input
 					placeholder="Start typing to search... (e.g., sushi, すし, or 寿司)"
-					bind:value={query}
+					bind:value={dictionaryState.query}
 					class="flex-1"
 				/>
 				{#if loading}
