@@ -51,13 +51,12 @@
 	<section class="space-y-4">
 		<div class="space-y-2">
 			<h2 class="text-xl font-semibold">Dictionary</h2>
-			<p class="text-sm text-muted-foreground">Search English or Japanese</p>
 		</div>
 
-		<div class="flex flex-col gap-3 sm:flex-row">
+		<div class="flex gap-3">
 			<div class="relative flex-1">
 				<Input
-					placeholder="Start typing to search... (e.g., sushi, すし, or 寿司)"
+					placeholder="Search English or Japanese"
 					bind:value={dictionaryState.query}
 					class="flex-1"
 				/>
@@ -86,9 +85,26 @@
 							></path>
 						</svg>
 					</div>
+				{:else if dictionaryState.query}
+					<button
+						onclick={clearResults}
+						class="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground sm:hidden"
+						aria-label="Clear search"
+					>
+						<svg
+							class="h-4 w-4"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
 				{/if}
 			</div>
-			<div class="flex gap-2">
+			<div class="hidden gap-2 sm:flex">
 				<Button variant="outline" onclick={clearResults}>Clear</Button>
 			</div>
 		</div>
@@ -107,17 +123,18 @@
 					<Card.Root class="border border-border py-2 md:py-6">
 						<Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
 							{#if entry.common}
-								<Badge class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800">common</Badge>
+								<Badge
+									class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
+									>common</Badge
+								>
 							{/if}
 							<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
 								<!-- Left side: Word and Reading -->
 								<div
-									class="flex flex-row items-center gap-2 border-r-none md:border-r border-border pr-6 md:flex-col md:items-start md:gap-0"
+									class="border-r-none flex flex-row items-center gap-2 border-border pr-6 md:flex-col md:items-start md:gap-0 md:border-r"
 								>
 									{#if entry.reading}
-										<div
-											class="order-2 mb-0 text-base text-muted-foreground md:order-0 md:mb-2"
-										>
+										<div class="order-2 mb-0 text-base text-muted-foreground md:order-0 md:mb-2">
 											{entry.reading}
 										</div>
 									{/if}
