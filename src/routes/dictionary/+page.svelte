@@ -11,18 +11,18 @@
 	const error = $derived(dictionaryState.error);
 	const loading = $derived(dictionaryState.loading);
 
-	$effect.pre(() => {
+	$effect(() => {
+		// Search each time the query changes
+		const query = dictionaryState.query;
+		dictionaryState.search(query);
+	});
+
+	$effect(() => {
 		const currentSearch = page.url.searchParams.get('search');
 
 		if (currentSearch) {
 			dictionaryState.search(currentSearch);
 		}
-	});
-
-	$effect(() => {
-		// Search each time the query changes
-		const query = dictionaryState.query;
-		dictionaryState.search(query);
 	});
 
 	$effect(() => {
@@ -100,7 +100,7 @@
 	</section>
 
 	<section class="space-y-4">
-		{#if results && results.length > 0}
+		{#if results.length > 0}
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
 					<Card.Root class="border border-border py-2 md:py-6">
@@ -162,34 +162,6 @@
 											{/if}
 										</div>
 									{/each}
-
-									<!-- Metadata toggle (discrete) -->
-									{#if entry.senses.some((s) => s.meta)}
-										<details class="group mt-4">
-											<summary
-												class="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground"
-											>
-												<span class="select-none">metadata</span>
-											</summary>
-											<div class="mt-2 space-y-2">
-												{#each entry.senses as sense, senseIdx}
-													{#if sense.meta}
-														<div class="text-xs">
-															<div class="font-medium text-muted-foreground">
-																Sense {senseIdx + 1} metadata:
-															</div>
-															<pre
-																class="mt-1 overflow-auto rounded bg-muted p-2 text-xs text-muted-foreground">{JSON.stringify(
-																	sense.meta,
-																	null,
-																	2
-																)}</pre>
-														</div>
-													{/if}
-												{/each}
-											</div>
-										</details>
-									{/if}
 								</div>
 							</div>
 						</Card.Content>
