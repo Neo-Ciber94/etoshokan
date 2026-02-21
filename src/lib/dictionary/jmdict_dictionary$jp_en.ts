@@ -141,7 +141,7 @@ export class JMDict_Dictionary extends Dictionary {
 			};
 
 			for (const k of w.kanji) {
-				const entry = { ...baseEntry, term: k.text, };
+				const entry = { ...baseEntry, term: k.text };
 				pushTo(this.kanjiMap, k.text, entry);
 			}
 

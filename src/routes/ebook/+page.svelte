@@ -137,14 +137,23 @@
 					<Card.Root
 						class="relative border border-border transition-colors hover:border-primary/50"
 					>
-						<BookSyncStateBadge bookId={book.id} class="absolute top-2 right-2 sm:top-4 sm:right-4" />
+						<BookSyncStateBadge
+							bookId={book.id}
+							class="absolute top-2 right-2 sm:top-4 sm:right-4"
+						/>
 
 						<Card.Content class="mt-2 p-2 sm:mt-3 sm:p-4">
 							<div class="flex flex-col space-y-2 sm:space-y-3">
 								{#if book.cover}
-									<img src={book.cover} alt={book.title} class="h-32 w-full rounded object-cover sm:h-48" />
+									<img
+										src={book.cover}
+										alt={book.title}
+										class="h-32 w-full rounded object-cover sm:h-48"
+									/>
 								{:else}
-									<div class="flex h-32 w-full items-center justify-center rounded bg-muted sm:h-48">
+									<div
+										class="flex h-32 w-full items-center justify-center rounded bg-muted sm:h-48"
+									>
 										<span class="text-2xl sm:text-4xl">📖</span>
 									</div>
 								{/if}

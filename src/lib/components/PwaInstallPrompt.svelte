@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { getCookie, setCookie } from '$lib/utils/cookies';
 
-	const COOKIE_PWA_REMINDER = "etoshokan.pwa-install-reminder"
+	const COOKIE_PWA_REMINDER = 'etoshokan.pwa-install-reminder';
 	const COOKIE_PWA_REMINDER_MS = 1000 * 60 * 24; // 1 day
 
 	let deferredPrompt = $state<BeforeInstallPromptEvent | null>(null);
@@ -45,7 +45,7 @@
 	function dismiss() {
 		show = false;
 		deferredPrompt = null;
-		setCookie(COOKIE_PWA_REMINDER, "1", COOKIE_PWA_REMINDER_MS)
+		setCookie(COOKIE_PWA_REMINDER, '1', COOKIE_PWA_REMINDER_MS);
 	}
 </script>
 

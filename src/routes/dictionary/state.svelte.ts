@@ -11,8 +11,8 @@ class DictionaryState {
 	private isDictionaryReady = false;
 
 	constructor() {
-        this.#waitDictionary()
-    }
+		this.#waitDictionary();
+	}
 
 	async #waitDictionary() {
 		if (this.isDictionaryReady) {

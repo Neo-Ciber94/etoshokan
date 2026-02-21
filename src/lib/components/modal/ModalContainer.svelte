@@ -12,7 +12,7 @@
 	const modals = $derived(getModals());
 	let open = $derived(modals.length > 0);
 
-	$inspect(modals, open).with(console.log)
+	$inspect(modals, open).with(console.log);
 
 	const typeConfig: Record<ModalType, { bg: string; iconColor: string }> = {
 		info: { bg: 'bg-blue-500/10', iconColor: 'text-blue-500' },

@@ -12,7 +12,7 @@ export const auth = betterAuth({
 		cookieCache: {
 			enabled: true,
 			maxAge: SESSION_DURATION_SECONDS
-		},
+		}
 	},
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
 	socialProviders: {

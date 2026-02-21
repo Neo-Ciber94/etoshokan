@@ -17,7 +17,7 @@ const config = {
 			handleUnseenRoutes: 'ignore'
 		},
 		alias: {
-			"$remote": "src/lib/remote"
+			$remote: 'src/lib/remote'
 		},
 		csp: {
 			mode: 'auto'

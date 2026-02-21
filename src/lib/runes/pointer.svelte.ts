@@ -13,8 +13,12 @@ export function usePointer() {
 	});
 
 	return {
-		get x() { return x; },
-		get y() { return y; },
+		get x() {
+			return x;
+		},
+		get y() {
+			return y;
+		},
 		update(newX: number, newY: number) {
 			x = newX;
 			y = newY;

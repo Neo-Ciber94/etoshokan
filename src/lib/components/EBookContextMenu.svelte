@@ -67,13 +67,13 @@
 {#if open}
 	<div
 		bind:this={menuEl}
-		class="fixed z-51 min-w-40 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+		class="fixed z-51 min-w-40 animate-in overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md fade-in-0 zoom-in-95"
 		style="left: {posX}px; top: {posY}px;"
 		role="menu"
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
 			onclick={(ev) => handleItemClick(ev, onTranslate)}
@@ -83,7 +83,7 @@
 		</button>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default select-none items-center gap-3 rounded-sm px-3 py-2.5 text-base hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
 			onclick={(ev) => handleItemClick(ev, onSearch)}

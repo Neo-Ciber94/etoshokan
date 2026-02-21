@@ -24,9 +24,7 @@
 		</Drawer.Header>
 		<div class="flex max-h-[60vh] flex-col overflow-y-auto px-4 pb-6">
 			{#if toc.length === 0}
-				<p class="py-4 text-center text-sm text-muted-foreground">
-					No table of contents available
-				</p>
+				<p class="py-4 text-center text-sm text-muted-foreground">No table of contents available</p>
 			{:else}
 				{#each toc as item}
 					<button
@@ -46,7 +44,7 @@
 					{#if item.subitems}
 						{#each item.subitems as subitem}
 							<button
-								class="rounded-md py-2 pl-6 pr-3 text-left text-sm transition-colors hover:bg-accent {isActive(
+								class="rounded-md py-2 pr-3 pl-6 text-left text-sm transition-colors hover:bg-accent {isActive(
 									subitem.href
 								)
 									? 'bg-accent font-medium text-accent-foreground'

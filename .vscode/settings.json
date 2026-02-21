@@ -2,14 +2,6 @@
 	"files.associations": {
 		"*.css": "tailwindcss"
 	},
-	"cSpell.words": [
-		"etoshokan",
-		"ibkv",
-		"jisho",
-		"JMDICT",
-		"Romaji",
-		"TAURI",
-		"wanakana"
-	],
+	"cSpell.words": ["etoshokan", "ibkv", "jisho", "JMDICT", "Romaji", "TAURI", "wanakana"],
 	"java.configuration.updateBuildConfiguration": "automatic"
 }

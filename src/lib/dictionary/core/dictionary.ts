@@ -66,8 +66,8 @@ export type LookupResult = {
 };
 
 export type LookupOptions = {
-	maxResults?: number
-}
+	maxResults?: number;
+};
 
 export abstract class Dictionary {
 	abstract readonly name: string;
