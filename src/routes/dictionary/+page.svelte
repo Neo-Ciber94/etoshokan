@@ -49,7 +49,7 @@
 <div class="space-y-8">
 	<section class="space-y-4">
 		<div class="space-y-2">
-			<h2 class="text-xl font-semibold">Dictionary Search</h2>
+			<h2 class="text-xl font-semibold">Dictionary</h2>
 			<p class="text-sm text-muted-foreground">Search for Japanese words, kanji, or romaji</p>
 		</div>
 
