@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
+	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { page } from '$app/state';
@@ -103,16 +104,19 @@
 		{#if results.length > 0}
 			<div class="grid gap-6">
 				{#each results as entry, idx (idx)}
-					<Card.Root class="border border-border py-2 md:py-6">
+					<Card.Root class="relative border border-border py-2 md:py-6">
+						{#if entry.common}
+							<Badge class="absolute top-3 right-3 bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800">common</Badge>
+						{/if}
 						<Card.Content class="px-4 py-1 md:px-6">
 							<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
 								<!-- Left side: Word and Reading -->
 								<div
-									class="flex flex-row items-center gap-2 border-r border-border pr-6 md:flex-col md:items-start md:gap-0"
+									class="flex flex-row items-center gap-2 border-r-none md:border-r border-border pr-6 md:flex-col md:items-start md:gap-0"
 								>
 									{#if entry.reading}
 										<div
-											class="order-2 mb-0 text-base text-muted-foreground md:order-first md:mb-2"
+											class="order-2 mb-0 text-base text-muted-foreground md:order-0 md:mb-2"
 										>
 											{entry.reading}
 										</div>
