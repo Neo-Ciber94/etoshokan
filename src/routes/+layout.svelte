@@ -8,6 +8,7 @@
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
 	import { syncRemoteMetadata } from '$lib/ebook/sync.mutation';
+	import { dev } from '$app/environment';
 
 	$effect.pre(() => {
 		dictionary.initialize();
@@ -25,6 +26,11 @@
 		}
 
 		run();
+	});
+
+
+	navigator.serviceWorker.register('/service-worker.js', {
+		type: dev ? 'module' : 'classic'
 	});
 
 	let { children } = $props();

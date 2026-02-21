@@ -1,37 +1,107 @@
+// Disables access to DOM typings like `HTMLElement` which are not available
+// inside a service worker and instantiates the correct globals
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
-import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst } from 'workbox-strategies';
+// Ensures that the `$service-worker` import has proper type definitions
+/// <reference types="@sveltejs/kit" />
 
-declare let self: ServiceWorkerGlobalScope;
+// Only necessary if you have an import from `$env/static/public`
+/// <reference types="../.svelte-kit/ambient.d.ts" />
 
-self.addEventListener('message', (event) => {
-	if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+import { build, files, version } from '$service-worker';
+
+// This gives `self` the correct types
+const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
+
+// Create a unique cache name for this deployment
+const CACHE = `cache-${version}`;
+
+const ASSETS = [
+	...build, // the app itself
+	...files // everything in `static`
+];
+
+self.addEventListener('install', (event) => {
+	// Create a new cache and add all files to it
+	async function addFilesToCache() {
+		const cache = await caches.open(CACHE);
+		await cache.addAll(ASSETS);
+	}
+
+	event.waitUntil(addFilesToCache());
 });
 
-cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
+self.addEventListener('activate', (event) => {
+	// Remove previous cached data from disk
+	async function deleteOldCaches() {
+		for (const key of await caches.keys()) {
+			if (key !== CACHE) await caches.delete(key);
+		}
+	}
 
-const navigationHandler = new NetworkFirst({
-	cacheName: 'navigations',
-	networkTimeoutSeconds: 3
+	event.waitUntil(deleteOldCaches());
 });
 
-registerRoute(
-	new NavigationRoute(
-		async (params) => {
-			try {
-				return await navigationHandler.handle(params);
-			} catch {
-				const cache = await caches.open('navigations');
-				const offlineResponse = await cache.match('offline');
-				if (offlineResponse) return offlineResponse;
-				return Response.error();
+self.addEventListener('fetch', (event) => {
+	// ignore POST requests etc
+	if (event.request.method !== 'GET') {
+		return;
+	}
+
+	// Ignore API requests
+	if (event.request.url.startsWith("/api")) {
+		return;
+	}
+
+	async function respond() {
+		const url = new URL(event.request.url);
+		const cache = await caches.open(CACHE);
+
+		// `build`/`files` can always be served from the cache
+		if (ASSETS.includes(url.pathname)) {
+			const response = await cache.match(url.pathname);
+
+			if (response) {
+				return response;
 			}
-		},
-		{ denylist: [/^\/api\//] }
-	)
-);
+		}
+
+		// for everything else, try the network first, but
+		// fall back to the cache if we're offline
+		try {
+			const response = await fetch(event.request);
+
+			// if we're offline, fetch can return a value that is not a Response
+			// instead of throwing - and we can't pass this non-Response to respondWith
+			if (!(response instanceof Response)) {
+				throw new Error('invalid response from fetch');
+			}
+
+			if (response.status === 200) {
+				cache.put(event.request, response.clone());
+			}
+
+			return response;
+		} catch (err) {
+			const response = await cache.match(event.request);
+
+			if (response) {
+				return response;
+			}
+
+			// Try serve offline page
+			const offlineResponse = await cache.match('offline');
+			if (offlineResponse) {
+				return offlineResponse;
+			}
+
+			// if there's no cache, then just error out
+			// as there is nothing we can do to respond to this request
+			throw err;
+		}
+	}
+
+	event.respondWith(respond());
+});
