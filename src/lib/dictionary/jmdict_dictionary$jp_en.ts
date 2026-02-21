@@ -108,8 +108,9 @@ export class JMDict_Dictionary extends Dictionary {
 		let data = (await ibkv.get(JM_DICT_KEY)) as JMDict_Root | undefined;
 
 		if (!data) {
-			console.log('fetch JSON');
+			console.log('downloading JMDict data');
 			data = await downloadJMDictJSON();
+
 			try {
 				await ibkv.set(JM_DICT_KEY, data);
 			} catch (err) {
@@ -117,29 +118,30 @@ export class JMDict_Dictionary extends Dictionary {
 			}
 		}
 
+		const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
+			const k = normalize(key);
+			const arr = map.get(k) || [];
+			arr.push(entry);
+			map.set(k, arr);
+		};
+
 		console.log('Loading dictionary');
 		for (const w of data.words) {
 			const senses = mapSenses(w.sense);
 			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
 			const isCommon = w.kana.some((x) => x.common) || w.kanji.some((w) => w.common);
+			const term = w.kanji.length ? w.kanji[0].text : (w.kana[0]?.text ?? '');
 
 			const baseEntry: WordEntry = {
-				term: w.kanji.length ? w.kanji[0].text : (w.kana[0]?.text ?? ''),
+				term,
 				reading: canonicalReading,
 				language: 'jp',
 				senses,
 				common: isCommon
 			};
 
-			const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
-				const k = normalize(key);
-				const arr = map.get(k) || [];
-				arr.push(entry);
-				map.set(k, arr);
-			};
-
 			for (const k of w.kanji) {
-				const entry = { ...baseEntry, term: k.text };
+				const entry = { ...baseEntry, term: k.text, };
 				pushTo(this.kanjiMap, k.text, entry);
 			}
 
