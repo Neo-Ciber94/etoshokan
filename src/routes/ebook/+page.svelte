@@ -132,28 +132,28 @@
 				</Card.Content>
 			</Card.Root>
 		{:else}
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4">
 				{#each books.value as book (book.id)}
 					<Card.Root
 						class="relative border border-border transition-colors hover:border-primary/50"
 					>
-						<BookSyncStateBadge bookId={book.id} class="absolute top-4 right-4" />
+						<BookSyncStateBadge bookId={book.id} class="absolute top-2 right-2 sm:top-4 sm:right-4" />
 
-						<Card.Content class="mt-3 p-4">
-							<div class="flex flex-col space-y-3">
+						<Card.Content class="mt-2 p-2 sm:mt-3 sm:p-4">
+							<div class="flex flex-col space-y-2 sm:space-y-3">
 								{#if book.cover}
-									<img src={book.cover} alt={book.title} class="h-48 w-full rounded object-cover" />
+									<img src={book.cover} alt={book.title} class="h-32 w-full rounded object-cover sm:h-48" />
 								{:else}
-									<div class="flex h-48 w-full items-center justify-center rounded bg-muted">
-										<span class="text-4xl">📖</span>
+									<div class="flex h-32 w-full items-center justify-center rounded bg-muted sm:h-48">
+										<span class="text-2xl sm:text-4xl">📖</span>
 									</div>
 								{/if}
 								<div class="flex-1 space-y-1">
-									<h3 class="line-clamp-2 text-sm font-semibold">{book.title}</h3>
+									<h3 class="line-clamp-2 text-xs font-semibold sm:text-sm">{book.title}</h3>
 									<p class="line-clamp-1 text-xs text-muted-foreground">
 										{book.author}
 									</p>
-									<div class={cn('pt-2', !book.progress && 'invisible')}>
+									<div class={cn('pt-1 sm:pt-2', !book.progress && 'invisible')}>
 										<div class="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
 											<div
 												class="h-full bg-primary transition-all"
@@ -165,7 +165,7 @@
 										</p>
 									</div>
 								</div>
-								<div class="flex gap-2">
+								<div class="flex gap-1 sm:gap-2">
 									<Button onclick={() => openBook(book.id)} class="flex-1" size="sm">
 										{book.progress ? 'Continue' : 'Read'}
 									</Button>

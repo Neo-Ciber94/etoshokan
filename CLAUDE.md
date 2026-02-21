@@ -45,6 +45,7 @@ This is a ebook reader that support translations from english to japanese with o
 - Configure for production optimization
 - Use utility classes, avoid custom CSS when possible
 - Dark mode is implemented, should he take in account when adding styles
+- Ensure responsive design for mobile and desktop
 
 ### shadcn-svelte
 
