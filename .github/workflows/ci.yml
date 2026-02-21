@@ -25,6 +25,9 @@ jobs:
         with:
           bun-version-file: '.bun-version'
 
+      - name: Install JS deps
+        run: bun install
+
       # Build
       - name: Build App
         run: bun run build
