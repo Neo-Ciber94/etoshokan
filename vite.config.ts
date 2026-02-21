@@ -27,7 +27,8 @@ export default defineConfig(() => {
 					enabled: true
 				},
 				injectManifest: {
-					globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
+					globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
+					swSrc: 'src/service-worker.ts'
 				}
 			})
 		]
