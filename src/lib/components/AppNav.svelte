@@ -30,7 +30,7 @@
 
 {#if !readingMode.active}
 	<!-- Desktop: top bar -->
-	<header class="border-b border-border bg-card py-1 lg:py-2">
+	<header class="border-b border-border bg-card py-2">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
 			<div class="pl-0 max-lg:landscape:pl-16">
 				<a
