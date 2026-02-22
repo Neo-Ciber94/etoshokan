@@ -1,7 +1,11 @@
 import { getRequestEvent } from '$app/server';
 import { logger, type BetterAuthPlugin } from 'better-auth';
-import { createAuthMiddleware, getSessionFromCtx, signOut } from 'better-auth/api';
-import { deleteGoogleTokenCookies, setGoogleTokenCookies, validateGoogleTokens } from './googleAuth';
+import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
+import {
+	deleteGoogleTokenCookies,
+	setGoogleTokenCookies,
+	validateGoogleTokens
+} from './googleAuth';
 
 export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
@@ -47,10 +51,14 @@ function handleGoogleCallback() {
 				});
 			}
 
-			setGoogleTokenCookies({
+			const accessTokenExpiration = Math.floor(
+				(new Date(account.accessTokenExpiresAt).getTime() - Date.now()) / 1000
+			);
+
+			await setGoogleTokenCookies({
 				authContext: ctx,
 				accessToken: account.accessToken,
-				accessTokenExpiresIn: expiresAtToSeconds(account.accessTokenExpiresAt),
+				accessTokenExpiresIn: accessTokenExpiration,
 				refreshToken: account.refreshToken
 			});
 		}
@@ -59,44 +67,46 @@ function handleGoogleCallback() {
 
 function handleCheckGoogleTokens() {
 	return createAuthMiddleware(async (ctx) => {
-		switch (ctx.path) {
-			// Ignore
-			case '/callback/:id':
-			case '/sign-in':
-				break;
-			// Remove google tokens
-			case '/logout':
-				{
-					const event = getRequestEvent();
-					deleteGoogleTokenCookies(event);
-				}
-				break;
-			// Check if google tokens are valid
-			default:
-				{
-					const session = await getSessionFromCtx(ctx);
-					const userId = session?.user.id;
+		const pathname = ctx.path;
+		console.log(pathname);
 
-					if (userId == null) {
-						return;
-					}
+		if (pathname.startsWith('/callback/:id') || pathname.startsWith('/sign-in')) {
+			// ignore
+		} else if (pathname.startsWith('/sign-out')) {
+			deleteGoogleTokenCookies(ctx);
+			ctx.setCookie('google_access_token', '', {
+				path: '/',
+				maxAge: 0,
+				expires: new Date(0)
+			});
+		} else {
+			const session = await getSessionFromCtx(ctx);
+			const userId = session?.user.id;
 
-					const event = getRequestEvent();
-					const isTokenValid = await validateGoogleTokens(event, ctx);
+			if (userId == null) {
+				return;
+			}
 
-					if (isTokenValid) {
-						return;
-					}
+			const event = getRequestEvent();
+			const isTokenValid = await validateGoogleTokens(event, ctx);
 
-					logger.warn('Invalid google tokens, login out user');
-					const headers = event.request.headers;
-					await signOut({ headers });
-				}
-				break;
+			if (isTokenValid) {
+				return;
+			}
+
+			logger.warn('Invalid google tokens, login out user');
+			const authCookies = Object.values(ctx.context.authCookies);
+			deleteGoogleTokenCookies(ctx);
+
+			// For some reason signOut({ headers }) throw randomly an error
+			for (const cookie of authCookies) {
+				ctx.setCookie(cookie.name, '', {
+					...cookie.options,
+					maxAge: 0,
+					expires: new Date(),
+					path: '/'
+				});
+			}
 		}
 	});
-}
-
-function expiresAtToSeconds(expiresAt: Date): number {
-	return Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
 }

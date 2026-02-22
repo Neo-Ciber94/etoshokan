@@ -100,6 +100,7 @@ export async function getGoogleAccessToken(event: RequestEvent) {
 
 export async function getGoogleRefreshToken(event: RequestEvent) {
 	const encoded = event.cookies.get(GOOGLE_REFRESH_TOKEN_COOKIE);
+
 	if (!encoded) {
 		return null;
 	}
@@ -107,9 +108,18 @@ export async function getGoogleRefreshToken(event: RequestEvent) {
 	return await decryptAes(encoded, SECRET);
 }
 
-export function deleteGoogleTokenCookies(event: RequestEvent) {
-	event.cookies.delete(GOOGLE_ACCESS_TOKEN_COOKIE, { path: '/' });
-	event.cookies.delete(GOOGLE_REFRESH_TOKEN_COOKIE, { path: '/' });
+export function deleteGoogleTokenCookies(ctx: MiddlewareContext<MiddlewareOptions, AuthContext>) {
+	ctx.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, '', {
+		path: '/',
+		maxAge: 0,
+		expires: new Date()
+	});
+
+	ctx.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, '', {
+		path: '/',
+		maxAge: 0,
+		expires: new Date()
+	});
 }
 
 export async function validateGoogleTokens(
@@ -124,6 +134,8 @@ export async function validateGoogleTokens(
 
 	const refreshToken = await getGoogleRefreshToken(event);
 
+	console.log({ accessToken, refreshToken });
+
 	if (refreshToken == null) {
 		return false;
 	}
@@ -131,7 +143,7 @@ export async function validateGoogleTokens(
 	try {
 		const authTokens = await refreshGoogleAccessToken(refreshToken);
 
-		setGoogleTokenCookies({
+		await setGoogleTokenCookies({
 			accessToken: authTokens.access_token,
 			accessTokenExpiresIn: authTokens.expires_in,
 			authContext
