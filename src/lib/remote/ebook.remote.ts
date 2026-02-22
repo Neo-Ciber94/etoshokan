@@ -14,7 +14,7 @@ import { ZodError, z } from 'zod';
 
 async function getToken() {
 	const event = getRequestEvent();
-	const accessToken = getGoogleAccessToken(event);
+	const accessToken = await getGoogleAccessToken(event);
 
 	if (accessToken == null) {
 		return { token: null, error: 'Failed to get google access token' } as const;

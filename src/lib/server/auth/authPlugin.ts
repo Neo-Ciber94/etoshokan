@@ -1,7 +1,7 @@
 import { getRequestEvent } from '$app/server';
 import { logger, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, getSessionFromCtx, signOut } from 'better-auth/api';
-import { setGoogleTokenCookies, validateGoogleTokens } from './googleAuth';
+import { deleteGoogleTokenCookies, setGoogleTokenCookies, validateGoogleTokens } from './googleAuth';
 
 export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
@@ -59,29 +59,41 @@ function handleGoogleCallback() {
 
 function handleCheckGoogleTokens() {
 	return createAuthMiddleware(async (ctx) => {
-		const IGNORE_PATHS = ['/callback/:id', '/sign-in', '/logout'];
+		switch (ctx.path) {
+			// Ignore
+			case '/callback/:id':
+			case '/sign-in':
+				break;
+			// Remove google tokens
+			case '/logout':
+				{
+					const event = getRequestEvent();
+					deleteGoogleTokenCookies(event);
+				}
+				break;
+			// Check if google tokens are valid
+			default:
+				{
+					const session = await getSessionFromCtx(ctx);
+					const userId = session?.user.id;
 
-		if (IGNORE_PATHS.some((p) => ctx.path.startsWith(p))) {
-			return;
+					if (userId == null) {
+						return;
+					}
+
+					const event = getRequestEvent();
+					const isTokenValid = await validateGoogleTokens(event, ctx);
+
+					if (isTokenValid) {
+						return;
+					}
+
+					logger.warn('Invalid google tokens, login out user');
+					const headers = event.request.headers;
+					await signOut({ headers });
+				}
+				break;
 		}
-
-		const session = await getSessionFromCtx(ctx);
-		const userId = session?.user.id;
-
-		if (userId == null) {
-			return;
-		}
-
-		const event = getRequestEvent();
-		const isTokenValid = await validateGoogleTokens(event, ctx);
-
-		if (isTokenValid) {
-			return;
-		}
-
-		logger.warn('Invalid google tokens, login out user');
-		const headers = event.request.headers;
-		await signOut({ headers });
 	});
 }
 

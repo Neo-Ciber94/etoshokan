@@ -65,11 +65,12 @@ type SetGoogleTokenCookieArgs = {
 	refreshToken?: string;
 };
 
-export function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
+export async function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
 	const { accessToken, accessTokenExpiresIn, authContext, refreshToken } = args;
 
 	console.log('set google tokens');
-	authContext.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, encryptAes(accessToken, SECRET), {
+	const encryptedAccessToken = await encryptAes(accessToken, SECRET);
+	authContext.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, encryptedAccessToken, {
 		path: '/',
 		httpOnly: true,
 		secure: !dev,
@@ -78,7 +79,8 @@ export function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
 	});
 
 	if (refreshToken) {
-		authContext.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, encryptAes(refreshToken, SECRET), {
+		const encryptedRefreshToken = await encryptAes(refreshToken, SECRET);
+		authContext.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, encryptedRefreshToken, {
 			path: '/',
 			httpOnly: true,
 			secure: !dev,
@@ -88,20 +90,21 @@ export function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
 	}
 }
 
-export function getGoogleAccessToken(event: RequestEvent): string | null {
+export async function getGoogleAccessToken(event: RequestEvent) {
 	const encoded = event.cookies.get(GOOGLE_ACCESS_TOKEN_COOKIE);
 	if (!encoded) {
 		return null;
 	}
-	return decryptAes(encoded, SECRET);
+	return await decryptAes(encoded, SECRET);
 }
 
-export function getGoogleRefreshToken(event: RequestEvent): string | null {
+export async function getGoogleRefreshToken(event: RequestEvent) {
 	const encoded = event.cookies.get(GOOGLE_REFRESH_TOKEN_COOKIE);
 	if (!encoded) {
 		return null;
 	}
-	return decryptAes(encoded, SECRET);
+
+	return await decryptAes(encoded, SECRET);
 }
 
 export function deleteGoogleTokenCookies(event: RequestEvent) {
@@ -113,13 +116,13 @@ export async function validateGoogleTokens(
 	event: RequestEvent,
 	authContext: MiddlewareContext<MiddlewareOptions, AuthContext>
 ) {
-	const accessToken = getGoogleAccessToken(event);
+	const accessToken = await getGoogleAccessToken(event);
 
 	if (accessToken) {
 		return true;
 	}
 
-	const refreshToken = getGoogleRefreshToken(event);
+	const refreshToken = await getGoogleRefreshToken(event);
 
 	if (refreshToken == null) {
 		return false;
