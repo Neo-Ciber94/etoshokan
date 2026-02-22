@@ -2,7 +2,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+// import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+
 
 export default defineConfig(() => {
 	return {
@@ -17,19 +18,22 @@ export default defineConfig(() => {
 		test: {},
 		plugins: [
 			tailwindcss(),
-			sveltekit(),
-			SvelteKitPWA({
-				strategies: 'injectManifest',
-				registerType: 'autoUpdate',
-				devOptions: {
-					enabled: true
-				},
-				injectManifest: {
-					swSrc: 'src/service-worker.ts',
-					swDest: 'service-worker.js',
-					globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
-				}
-			})
+			sveltekit()
+			// SvelteKitPWA({
+			// 	registerType: 'autoUpdate',
+			// 	injectRegister: false,
+			// 	devOptions: {
+			// 		enabled: true
+			// 	},
+			// 	manifest: {
+			// 		name: 'Etoshokan',
+			// 		short_name: 'Etoshokan',
+			// 		start_url: '/',
+			// 		display: 'standalone',
+			// 		background_color: '#0f172a',
+			// 		theme_color: '#202020'
+			// 	}
+			// })
 		]
 	};
 });

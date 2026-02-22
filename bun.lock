@@ -29,6 +29,7 @@
         "@tailwindcss/vite": "4.1.18",
         "@tauri-apps/cli": "2.10.0",
         "@types/node": "20",
+        "@types/web-app-manifest": "^1.0.9",
         "@vite-pwa/sveltekit": "1.1.0",
         "better-auth": "1.3.4",
         "bits-ui": "2.14.4",
@@ -660,6 +661,8 @@
     "@types/resolve": ["@types/resolve@1.20.2", "", {}, "sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q=="],
 
     "@types/trusted-types": ["@types/trusted-types@2.0.7", "", {}, "sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw=="],
+
+    "@types/web-app-manifest": ["@types/web-app-manifest@1.0.9", "", {}, "sha512-aVz1aXTubyL6nvVRyz9W7QR60zHLTiCGAafqYRc/RYUjA1GFc4npUUr7RlfO1+yP6gVvxzFmIVp8ULLYqhBRdA=="],
 
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 

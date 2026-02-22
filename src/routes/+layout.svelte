@@ -5,7 +5,6 @@
 	import { ModalContainer } from '$lib/components/modal';
 	import { dictionary } from '$lib/dictionary';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
-	import { pwaInfo } from 'virtual:pwa-info';
 	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
 	import { syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 	import { dev } from '$app/environment';
@@ -28,20 +27,24 @@
 		run();
 	});
 
-
-	navigator.serviceWorker.register('/service-worker.js', {
-		type: dev ? 'module' : 'classic'
+	$effect.pre(() => {
+		navigator.serviceWorker.register('/service-worker.js', {
+			type: dev ? 'module' : 'classic'
+		});
 	});
 
 	let { children } = $props();
-
-	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 </script>
 
 <svelte:head>
-	<link rel="icon" href={'/favicon.ico'} />
+	<link rel="icon" href="/favicon.ico" />
+	<link rel="manifest" href="/manifest.webmanifest" />
+	<meta name="theme-color" content="#202020" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="Etoshokan" />
 	<title>Etoshokan</title>
-	{@html webManifestLink}
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">

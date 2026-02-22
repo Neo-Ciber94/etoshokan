@@ -16,7 +16,9 @@ import { build, files, version } from '$service-worker';
 const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
 
 // Create a unique cache name for this deployment
-const CACHE = `cache-${version}`;
+const CACHE_NAME = `cache-${version}`;
+
+const OFFLINE_URL = '/offline';
 
 const ASSETS = [
 	...build, // the app itself
@@ -26,8 +28,9 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
-		const cache = await caches.open(CACHE);
+		const cache = await caches.open(CACHE_NAME);
 		await cache.addAll(ASSETS);
+		await cache.add(OFFLINE_URL)
 	}
 
 	event.waitUntil(addFilesToCache());
@@ -37,7 +40,9 @@ self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
 		for (const key of await caches.keys()) {
-			if (key !== CACHE) await caches.delete(key);
+			if (key !== CACHE_NAME) {
+				await caches.delete(key);
+			}
 		}
 	}
 
@@ -51,13 +56,13 @@ self.addEventListener('fetch', (event) => {
 	}
 
 	// Ignore API requests
-	if (event.request.url.startsWith("/api")) {
+	if (event.request.url.startsWith('/api')) {
 		return;
 	}
 
 	async function respond() {
 		const url = new URL(event.request.url);
-		const cache = await caches.open(CACHE);
+		const cache = await caches.open(CACHE_NAME);
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
@@ -92,7 +97,7 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			// Try serve offline page
-			const offlineResponse = await cache.match('offline');
+			const offlineResponse = await cache.match(OFFLINE_URL);
 			if (offlineResponse) {
 				return offlineResponse;
 			}
