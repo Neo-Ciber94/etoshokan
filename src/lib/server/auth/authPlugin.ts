@@ -68,7 +68,6 @@ function handleGoogleCallback() {
 function handleCheckGoogleTokens() {
 	return createAuthMiddleware(async (ctx) => {
 		const pathname = ctx.path;
-		console.log(pathname);
 
 		if (pathname.startsWith('/callback/:id') || pathname.startsWith('/sign-in')) {
 			// ignore
