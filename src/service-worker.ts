@@ -30,7 +30,7 @@ self.addEventListener('install', (event) => {
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE_NAME);
 		await cache.addAll(ASSETS);
-		await cache.add(OFFLINE_URL)
+		await cache.add(OFFLINE_URL);
 	}
 
 	event.waitUntil(addFilesToCache());
@@ -50,18 +50,19 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+	const url = new URL(event.request.url);
+
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') {
 		return;
 	}
 
 	// Ignore API requests
-	if (event.request.url.startsWith('/api')) {
+	if (url.pathname.startsWith('/api')) {
 		return;
 	}
 
 	async function respond() {
-		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE_NAME);
 
 		// `build`/`files` can always be served from the cache
