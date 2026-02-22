@@ -1,4 +1,4 @@
 import type { Dictionary } from './core/dictionary';
-import { JMDict_Dictionary } from './jmdict_dictionary$jp_en';
+import { JMDict_EngDictionary } from './jmdict/jmdict_eng';
 
-export const dictionary: Dictionary = new JMDict_Dictionary();
+export const dictionary: Dictionary = new JMDict_EngDictionary();

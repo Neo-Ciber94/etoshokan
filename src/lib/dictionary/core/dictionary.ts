@@ -1,4 +1,9 @@
 export interface WordEntry {
+	/**
+	 * Id for this entry
+	 */
+	id: string;
+
 	/** Original query term (normalized) */
 	term: string;
 
@@ -73,6 +78,7 @@ export abstract class Dictionary {
 	abstract readonly name: string;
 
 	abstract initialize(): Promise<void>;
+	abstract getById(wordId: string): Promise<WordEntry | null>;
 	abstract lookup(term: string, options?: LookupOptions): Promise<LookupResult>;
 	abstract clear(): Promise<void>;
 }

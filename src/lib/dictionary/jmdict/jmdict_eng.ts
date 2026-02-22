@@ -1,3 +1,4 @@
+import { hashBase64 } from '$lib/utils/hash';
 import {
 	Dictionary,
 	type Language,
@@ -8,151 +9,49 @@ import {
 	type LookupResult,
 	type Example,
 	type LookupOptions
-} from './core/dictionary';
-import { BlobReader, ZipReader } from '@zip.js/zip.js';
+} from '../core/dictionary';
 import * as ibkv from 'idb-keyval';
 import * as wanakana from 'wanakana';
+import type {
+	JMDict_Root,
+	JMDict_Word,
+	JMDict_KanaEntry,
+	JMDict_KanjiEntry,
+	JMDict_Sense
+} from './types';
+import { downloadJMDictJSON } from './utils';
 
-interface JMDict_Root {
-	version: string;
-	languages: string[];
-	commonOnly: boolean;
-	dictDate: string;
-	dictRevisions: string[];
-	tags: Record<string, string>;
-	words: JMDict_Word[];
-}
-
-interface JMDict_Word {
-	id: string;
-	kanji: JMDict_KanjiEntry[];
-	kana: JMDict_KanaEntry[];
-	sense: JMDict_Sense[];
-}
-
-interface JMDict_KanjiEntry {
-	text: string;
-	common: boolean;
-	tags: string[];
-}
-
-interface JMDict_KanaEntry {
-	text: string;
-	common: boolean;
-	tags: string[];
-	appliesToKanji: string[];
-}
-
-interface JMDict_Sense {
-	partOfSpeech: string[];
-	appliesToKanji: string[];
-	appliesToKana: string[];
-	related: JMDict_RelatedTerm[];
-	antonym: string[];
-	field: string[];
-	dialect: string[];
-	misc: string[];
-	info: string[];
-	languageSource: JMDict_LanguageSource[];
-	gloss: JMDict_Gloss[];
-	examples?: JMDict_Example[];
-}
-
-type JMDict_Example = {
-	text: string;
-	sentences: JMDict_ExampleSentence[];
-};
-
-type JMDict_ExampleSentence = {
-	lang: string;
-	text: string;
-};
-
-type JMDict_RelatedTerm = [string];
-
-interface JMDict_LanguageSource {
-	lang: string;
-	text?: string;
-	partial?: boolean;
-	wasei?: boolean;
-}
-
-interface JMDict_Gloss {
-	lang: string;
-	gender: string | null;
-	type: string | null;
-	text: string;
-}
-
-const JM_DICT_KEY = 'etoshokan:jm_dict_json';
-
-export class JMDict_Dictionary extends Dictionary {
-	readonly name: string = 'JMDict';
-	readonly supportedLanguage: Language = 'jp';
-
-	private kanaMap: Map<string, WordEntry[]> = new Map();
-	private kanjiMap: Map<string, WordEntry[]> = new Map();
+export class JMDict_EngDictionary extends Dictionary {
+	readonly name: string = 'JMDict (eng)';
+	private wordsIndex = new Map<string, WordEntry>();
+	private kanaMap = new Map<string, WordEntry[]>();
+	private kanjiMap = new Map<string, WordEntry[]>();
 
 	private loadingPromise?: Promise<void> = undefined;
 	private loaded = false;
-
-	constructor() {
-		super();
-	}
 
 	async loadDictionary() {
 		if (this.loaded) {
 			return;
 		}
 
-		let data = (await ibkv.get(JM_DICT_KEY)) as JMDict_Root | undefined;
+		console.log('Loading jmdict');
 
-		if (!data) {
-			console.log('downloading JMDict data');
-			data = await downloadJMDictJSON();
-
-			try {
-				await ibkv.set(JM_DICT_KEY, data);
-			} catch (err) {
-				console.error(err);
-			}
+		try {
+			const { kanaMap, kanjiMap, wordsIndex } = await getDictionaryData();
+			this.kanaMap = kanaMap;
+			this.kanjiMap = kanjiMap;
+			this.wordsIndex = wordsIndex;
+			console.log('Jmdict dictionary was loaded');
+		} catch (err) {
+			console.error('Failed to load dictionary', err);
 		}
-
-		const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
-			const k = normalize(key);
-			const arr = map.get(k) || [];
-			arr.push(entry);
-			map.set(k, arr);
-		};
-
-		console.log('Loading dictionary');
-		for (const w of data.words) {
-			const senses = mapSenses(w.sense);
-			const canonicalReading = w.kana.length ? w.kana[0].text : undefined;
-			const isCommon = w.kana.some((x) => x.common) || w.kanji.some((w) => w.common);
-			const term = w.kanji.length ? w.kanji[0].text : (w.kana[0]?.text ?? '');
-
-			const baseEntry: WordEntry = {
-				term,
-				reading: canonicalReading,
-				language: 'jp',
-				senses,
-				common: isCommon
-			};
-
-			for (const k of w.kanji) {
-				const entry = { ...baseEntry, term: k.text };
-				pushTo(this.kanjiMap, k.text, entry);
-			}
-
-			for (const k of w.kana) {
-				const entry = { ...baseEntry, term: k.text, reading: k.text }; // keep kana reading
-				pushTo(this.kanaMap, k.text, entry);
-			}
-		}
-
-		console.log('Dictionary finished loading');
 		this.loaded = true;
+	}
+
+	async getById(wordId: string) {
+		await this.initialize();
+		return this.wordsIndex.get(wordId) ?? null;
 	}
 
 	async clear() {
@@ -364,6 +263,11 @@ function deduplicate(items: WordEntry[]) {
 	return entries;
 }
 
+function computeId(word: JMDict_Word, entry: JMDict_KanaEntry | JMDict_KanjiEntry) {
+	const glosses = word.sense.flatMap((s) => s.gloss).map((g) => g.text);
+	return hashBase64([...glosses, entry.text]);
+}
+
 function mapSenses(senses: JMDict_Sense[]): Sense[] {
 	return senses.map((s) => {
 		const glosses: Gloss[] = s.gloss.map((g) => ({
@@ -405,6 +309,70 @@ function mapSenses(senses: JMDict_Sense[]): Sense[] {
 	});
 }
 
+const JM_DICT_KEY = 'etoshokan:jm_dict_json';
+const JMDICT_JSON_URL = '/jmdict-eng-3.6.2+20260202123847.json.zip';
+
+async function getDictionaryData() {
+	const kanjiMap = new Map<string, WordEntry[]>();
+	const kanaMap = new Map<string, WordEntry[]>();
+	const wordsIndex = new Map<string, WordEntry>();
+
+	let data = (await ibkv.get(JM_DICT_KEY)) as JMDict_Root | undefined;
+
+	if (!data) {
+		console.log(`Downloading JMDict data: ${JMDICT_JSON_URL}`);
+		data = await downloadJMDictJSON(JMDICT_JSON_URL);
+
+		try {
+			await ibkv.set(JM_DICT_KEY, data);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	const pushTo = (map: Map<string, WordEntry[]>, key: string, entry: WordEntry) => {
+		const k = normalize(key);
+		const arr = map.get(k) || [];
+		arr.push(entry);
+		map.set(k, arr);
+	};
+
+	for (const w of data.words) {
+		const senses = mapSenses(w.sense);
+		const term = w.kanji.length ? w.kanji[0].text : (w.kana[0]?.text ?? '');
+
+		for (const k of w.kanji) {
+			const id = computeId(w, k);
+			const entry: WordEntry = {
+				id,
+				term,
+				common: k.common,
+				language: 'jp',
+				senses: senses,
+				reading: k.text
+			};
+			pushTo(kanjiMap, k.text, entry);
+			wordsIndex.set(id, entry);
+		}
+
+		for (const k of w.kana) {
+			const id = computeId(w, k);
+			const entry: WordEntry = {
+				id,
+				term,
+				common: k.common,
+				language: 'jp',
+				senses: senses,
+				reading: k.text
+			};
+			pushTo(kanaMap, k.text, entry);
+			wordsIndex.set(id, entry);
+		}
+	}
+
+	return { kanjiMap, kanaMap, wordsIndex };
+}
+
 function mapPartOfSpeech(posArr?: string[]): PartOfSpeech | undefined {
 	if (!posArr || posArr.length === 0) {
 		return undefined;
@@ -432,61 +400,6 @@ function normalize(s: string) {
 	return s.trim().normalize('NFKC');
 }
 
-const JMDICT_JSON_URL = '/jmdict-eng-3.6.2+20260202123847.json.zip';
-
-async function downloadJMDictJSON() {
-	const response = await fetch(JMDICT_JSON_URL);
-	const buffer = await response.arrayBuffer();
-	const blob = new Blob([buffer]);
-
-	const zipFileReader = new BlobReader(blob);
-	const transformStream = new TransformStream();
-	const textPromise = new Response(transformStream.readable).text();
-
-	const zipReader = new ZipReader(zipFileReader);
-	const zipEntries = await zipReader.getEntries();
-	const firstEntry = zipEntries.shift()!;
-
-	if (!('getData' in firstEntry)) {
-		throw new Error('Invalid zip entry');
-	}
-
-	await firstEntry.getData(transformStream.writable);
-	await zipReader.close();
-
-	const jsonText = await textPromise;
-	const json = JSON.parse(jsonText);
-	return json as JMDict_Root;
-}
-
 function splitAt(s: string, index: number): string[] {
 	return [s.slice(0, index), s.slice(index + 1)];
 }
-
-// type Sortable = string | number | Date | boolean;
-
-// function sortBy<T>(items: T[], keySelector: (value: T) => Sortable): T[] {
-// 	return [...items].sort((a, b) => {
-// 		const ka = keySelector(a);
-// 		const kb = keySelector(b);
-
-// 		if (ka instanceof Date && kb instanceof Date) {
-// 			return ka.getTime() - kb.getTime();
-// 		}
-
-// 		if (typeof ka === 'boolean' && typeof kb === 'boolean') {
-// 			return Number(ka) - Number(kb);
-// 		}
-
-// 		if (typeof ka === 'number' && typeof kb === 'number') {
-// 			return ka - kb;
-// 		}
-
-// 		if (typeof ka === 'string' && typeof kb === 'string') {
-// 			return ka.localeCompare(kb);
-// 		}
-
-// 		// fallback for mixed types (shouldn't really happen)
-// 		return String(ka).localeCompare(String(kb));
-// 	});
-// }
