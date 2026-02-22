@@ -1,42 +1,52 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
-
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = 'AES-GCM';
 const IV_LENGTH = 12;
-const TAG_LENGTH = 16;
 
-function deriveKey(secret: string): Buffer {
-	return createHash('sha256').update(secret).digest();
+async function deriveKey(secret: string): Promise<CryptoKey> {
+	const encoded = new TextEncoder().encode(secret);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+
+	return crypto.subtle.importKey('raw', hashBuffer, { name: ALGORITHM }, false, [
+		'encrypt',
+		'decrypt'
+	]);
 }
 
-export function encryptAes(value: string, secret: string): string {
-	const key = deriveKey(secret);
-	const iv = randomBytes(IV_LENGTH);
-	const cipher = createCipheriv(ALGORITHM, key, iv);
+export async function encryptAes(value: string, secret: string): Promise<string> {
+	const key = await deriveKey(secret);
+	const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+	const encoded = new TextEncoder().encode(value);
 
-	const encrypted = Buffer.concat([cipher.update(value, 'utf-8'), cipher.final()]);
-	const tag = cipher.getAuthTag();
+	// AES-GCM in Web Crypto appends the 16-byte auth tag automatically
+	const encrypted = await crypto.subtle.encrypt({ name: ALGORITHM, iv }, key, encoded);
 
-	return Buffer.concat([iv, tag, encrypted]).toString('base64url');
+	const result = new Uint8Array(IV_LENGTH + encrypted.byteLength);
+	result.set(iv, 0);
+	result.set(new Uint8Array(encrypted), IV_LENGTH);
+
+	return btoa(String.fromCharCode(...result))
+		.replace(/\+/g, '-')
+		.replace(/\//g, '_')
+		.replace(/=+$/, '');
 }
 
-export function decryptAes(encoded: string, secret: string): string | null {
+export async function decryptAes(encoded: string, secret: string): Promise<string | null> {
 	try {
-		const buf = Buffer.from(encoded, 'base64url');
+		const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+		const buf = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
-		if (buf.length < IV_LENGTH + TAG_LENGTH) {
+		// IV (12) + tag (16) minimum
+		if (buf.length < IV_LENGTH + 16) {
 			return null;
 		}
 
 		const iv = buf.subarray(0, IV_LENGTH);
-		const tag = buf.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
-		const encrypted = buf.subarray(IV_LENGTH + TAG_LENGTH);
+		const encrypted = buf.subarray(IV_LENGTH); // tag is already appended inside
 
-		const key = deriveKey(secret);
-		const decipher = createDecipheriv(ALGORITHM, key, iv);
-		decipher.setAuthTag(tag);
+		const key = await deriveKey(secret);
 
-		const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-		return decrypted.toString('utf-8');
+		const decrypted = await crypto.subtle.decrypt({ name: ALGORITHM, iv }, key, encrypted);
+
+		return new TextDecoder().decode(decrypted);
 	} catch {
 		return null;
 	}

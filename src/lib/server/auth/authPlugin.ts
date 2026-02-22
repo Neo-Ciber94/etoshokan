@@ -7,12 +7,6 @@ export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
 		id: 'google-auth',
 		hooks: {
-			// before: [
-			// 	{
-			// 		matcher: () => true,
-			// 		handler: handleCheckGoogleTokens()
-			// 	}
-			// ],
 			after: [
 				{
 					matcher: (ctx) => ctx.path.startsWith('/callback/:id'),
@@ -33,18 +27,24 @@ function handleGoogleCallback() {
 			const userId = ctx.context.newSession?.user.id;
 
 			if (userId == null) {
-				throw new Error('Failed to get user id');
+				throw ctx.error('UNAUTHORIZED', {
+					message: 'Failed to get user id'
+				});
 			}
 
 			const accounts = await ctx.context.internalAdapter.findAccountByUserId(userId);
 			const account = accounts[0]; // Cannot be null
 
 			if (accounts.length == 0 || account == null) {
-				throw new Error('Failed to get account');
+				throw ctx.error('UNAUTHORIZED', {
+					message: 'Failed to get account'
+				});
 			}
 
 			if (!account.accessToken || !account.refreshToken || !account.accessTokenExpiresAt) {
-				throw new Error('Missing google auth tokens');
+				throw ctx.error('UNAUTHORIZED', {
+					message: 'Missing google auth tokens'
+				});
 			}
 
 			setGoogleTokenCookies({
@@ -82,7 +82,6 @@ function handleCheckGoogleTokens() {
 		logger.warn('Invalid google tokens, login out user');
 		const headers = event.request.headers;
 		await signOut({ headers });
-		//await auth.api.signOut({ headers });
 	});
 }
 
