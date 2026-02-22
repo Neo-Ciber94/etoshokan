@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Drawer from '$lib/components/ui/drawer';
 	import type { TocItem } from '$lib/ebook/ebook.types';
+	import { cn } from '$lib/utils';
 
 	interface Props {
 		open: boolean;
@@ -28,11 +29,12 @@
 			{:else}
 				{#each toc as item}
 					<button
-						class="rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent {isActive(
-							item.href
-						)
-							? 'bg-accent font-medium text-accent-foreground'
-							: 'text-muted-foreground'}"
+						class={cn(
+							`rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent`,
+							isActive(item.href)
+								? 'bg-accent font-medium text-accent-foreground'
+								: 'text-muted-foreground'
+						)}
 						aria-current={isActive(item.href) ? 'true' : undefined}
 						onclick={() => {
 							onNavigate(item.href);
