@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { PUBLIC_LOG_DISABLED, PUBLIC_LOG_LEVEL } from '$env/static/public';
+import * as env from '$env/static/public';
 import { getLogLevel, type Logger, LogLevel } from '.';
+
 
 abstract class BaseLogger implements Logger {
 	abstract log(level: LogLevel, message: unknown, ...args: unknown[]): void;
@@ -97,11 +98,11 @@ class NoopLogger extends BaseLogger {
 }
 
 function getLogger() {
-	if (PUBLIC_LOG_DISABLED) {
+	if (env.PUBLIC_LOG_DISABLED) {
 		return new NoopLogger(LogLevel.DEBUG);
 	}
 
-	const minLogLevel = (PUBLIC_LOG_LEVEL || 'info') as LogLevel;
+	const minLogLevel = (env.PUBLIC_LOG_LEVEL || 'info') as LogLevel;
 	return new ConsoleLogger(minLogLevel);
 }
 
