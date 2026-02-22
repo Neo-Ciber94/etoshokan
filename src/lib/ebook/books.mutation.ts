@@ -40,7 +40,9 @@ export async function deleteLocalBook(id: string): Promise<void> {
 		metadata.filter((m) => m.id !== id)
 	);
 
-	if (await isLoggedIn()) {
+	const isLogged = await isLoggedIn();
+
+	if (isLogged) {
 		// Not need to wait for BE
 		Promise.resolve().then(async () => {
 			try {
@@ -105,7 +107,9 @@ export async function updateLocalBookZoom(id: string, zoom: number): Promise<voi
 		}
 	});
 
-	if (await isLoggedIn()) {
+	const isLogged = await isLoggedIn();
+
+	if (isLogged) {
 		Promise.resolve().then(async () => {
 			try {
 				const result = await updateZoom({ id, zoom });
@@ -143,7 +147,9 @@ export async function updateLocalBookProgress(
 		}
 	});
 
-	if (await isLoggedIn()) {
+	const isLogged = await isLoggedIn();
+
+	if (isLogged) {
 		Promise.resolve().then(async () => {
 			try {
 				const result = await updateProgress({ id, cfi, progress });
@@ -169,17 +175,19 @@ async function uploadLocalBook(
 	uploadState: UploadState = 'uploaded'
 ) {
 	const bookId = crypto.randomUUID();
+	const bookMetadata: BookMetadata = {
+		...metadata,
+		id: bookId,
+		addedAt: Date.now()
+	};
 
 	await saveLocalBook({
 		file: bookData,
-		metadata: {
-			...metadata,
-			id: bookId,
-			addedAt: Date.now()
-		}
+		metadata: bookMetadata
 	});
 
 	await setBookUploadState(bookId, uploadState);
+	return bookMetadata;
 }
 
 export async function uploadBookFromFile(file: File) {
@@ -209,15 +217,30 @@ export async function uploadBookFromFile(file: File) {
 		cover: coverDataUrl
 	};
 
-	await uploadBook(partialBookMetadata, bookData);
+	return await uploadBook(partialBookMetadata, bookData);
 }
 
-export async function uploadBook(metadata: UploadLocalBook, bookData: ArrayBuffer) {
+export const enum UploadResultStatus {
+	UploadedLocally = 'uploaded_locally',
+	UploadedRemote = 'uploaded_remote',
+	RemoteFailedUploadedLocally = 'remote_failed_uploaded_locally'
+}
+
+export type UploadResult = {
+	status: UploadResultStatus;
+	metadata: BookMetadata;
+};
+
+export async function uploadBook(
+	metadata: UploadLocalBook,
+	bookData: ArrayBuffer
+): Promise<UploadResult> {
 	// If we fail we try to save it locally
 	const tryUploadBookLocally = () => uploadLocalBook(metadata, bookData, 'pending');
 
-	try {
-		// FIXME: Bail if is not online
+	const isLogged = await isLoggedIn();
+
+	if (isLogged) {
 		const uploadResult = await uploadBookToServer({
 			...metadata,
 			ebookData: bookData
@@ -232,14 +255,25 @@ export async function uploadBook(metadata: UploadLocalBook, bookData: ArrayBuffe
 			});
 
 			await setBookUploadState(bookMetadata.id, 'uploaded');
-			return uploadResult.result;
+			return {
+				status: UploadResultStatus.UploadedRemote,
+				metadata: bookMetadata
+			};
 		} else {
-			await tryUploadBookLocally();
-			throw new Error(uploadResult.error);
+			// Save locally on error
+			const bookMetadata = await tryUploadBookLocally();
+			return {
+				status: UploadResultStatus.RemoteFailedUploadedLocally,
+				metadata: bookMetadata
+			};
 		}
-	} catch (err) {
-		await tryUploadBookLocally();
-		throw err;
+	} else {
+		// Save locally
+		const bookMetadata = await tryUploadBookLocally();
+		return {
+			status: UploadResultStatus.UploadedLocally,
+			metadata: bookMetadata
+		};
 	}
 }
 

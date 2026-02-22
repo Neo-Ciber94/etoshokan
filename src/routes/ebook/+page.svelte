@@ -3,7 +3,12 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { deleteLocalBook, uploadBookFromFile } from '$lib/ebook/books.mutation';
+	import {
+		deleteLocalBook,
+		uploadBookFromFile,
+		UploadResultStatus,
+		type UploadResult
+	} from '$lib/ebook/books.mutation';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
@@ -11,9 +16,18 @@
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { cn } from '$lib/utils';
+	import { tick } from 'svelte';
 
 	const books = useBooksMetadata();
 	let uploadingBook = $state(false);
+
+	function onUploadResult(uploadResult: UploadResult) {
+		switch (uploadResult.status) {
+			case UploadResultStatus.RemoteFailedUploadedLocally:
+				alert('Failed to upload book remotely, but was saved locally');
+				break;
+		}
+	}
 
 	async function handleFileUpload(event: Event) {
 		const input = event.target as HTMLInputElement;
@@ -30,7 +44,9 @@
 			const uploadBookPromise = uploadBookFromFile(file);
 			await openModal.pending(uploadBookPromise, {
 				title: 'Uploading book',
-				onSuccess() {
+				onSuccess(result) {
+					tick().then(() => onUploadResult(result));
+
 					return {
 						title: 'Book uploaded'
 					};

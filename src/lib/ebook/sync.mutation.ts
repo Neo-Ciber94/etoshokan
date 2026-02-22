@@ -136,8 +136,8 @@ export async function uploadMissingBook(bookId: string) {
 		throw new Error('Failed to upload missing book, metadata not found');
 	}
 
-	const result = await uploadBook(bookMetadata, bookData);
-	await migrateBook(bookId, result.id);
+	const { metadata } = await uploadBook(bookMetadata, bookData);
+	await migrateBook(bookId, metadata.id);
 	await removeBookSyncEntry(bookId);
 }
 
