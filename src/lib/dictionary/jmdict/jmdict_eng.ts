@@ -144,7 +144,10 @@ export class JMDict_EngDictionary extends Dictionary {
 
 		scan(this.kanjiMap);
 		scan(this.kanaMap);
-		const values = [...entries].sort((a, b) => b[1] - a[1]).map(([word]) => word);
+		const values = [...entries]
+			.sort((a, b) => b[1] - a[1])
+			.map(([word]) => word)
+			.slice(0, results.maxSize);
 		results.push(...values);
 	}
 

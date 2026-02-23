@@ -3,6 +3,8 @@
 	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { ModalContainer } from '$lib/components/modal';
+	import SaveAsDialog from '$lib/components/SaveAsDialog.svelte';
+	import EditCategoryDialog from '$lib/components/EditCategoryDialog.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
@@ -60,6 +62,8 @@
 
 <PwaInstallPrompt />
 <ModalContainer />
+<SaveAsDialog />
+<EditCategoryDialog />
 
 <style>
 	:global(html) {

@@ -79,14 +79,14 @@
 </script>
 
 <button
-	class="fixed inset-0 z-9998 cursor-default appearance-none border-none bg-transparent"
+	class="fixed inset-0 z-40 cursor-default appearance-none border-none bg-transparent"
 	onclick={handleClose}
 	aria-label="Close dictionary lookup"
 ></button>
 
 <div
 	bind:this={boxEl}
-	class="fixed right-4 bottom-4 left-4 z-9999 mx-auto max-w-lg touch-none rounded-xl border border-border bg-card shadow-lg select-none"
+	class="fixed right-4 bottom-4 left-4 z-41 mx-auto max-w-lg touch-none rounded-xl border border-border bg-card shadow-lg select-none"
 	class:shadow-xl={isDragging}
 	style="transform: translateY({offsetY}px)"
 	onclick={(e) => e.stopPropagation()}
