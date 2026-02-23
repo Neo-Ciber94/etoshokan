@@ -73,7 +73,7 @@
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm w-full"
 			role="menuitem"
 			tabindex="-1"
 			onclick={(ev) => handleItemClick(ev, onTranslate)}
@@ -83,7 +83,7 @@
 		</button>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm w-full"
 			role="menuitem"
 			tabindex="-1"
 			onclick={(ev) => handleItemClick(ev, onSearch)}
