@@ -67,7 +67,7 @@
 {#if open}
 	<div
 		bind:this={menuEl}
-		class="fixed z-51 min-w-40 animate-in overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md fade-in-0 zoom-in-95"
+		class="fixed min-w-40 animate-in overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md fade-in-0 zoom-in-95"
 		style="left: {posX}px; top: {posY}px;"
 		role="menu"
 	>

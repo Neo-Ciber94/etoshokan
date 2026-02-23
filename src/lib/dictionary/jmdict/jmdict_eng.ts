@@ -20,6 +20,7 @@ import type {
 	JMDict_Sense
 } from './types';
 import { downloadJMDictJSON } from './utils';
+import { FixedList } from './fixedList';
 
 export class JMDict_EngDictionary extends Dictionary {
 	readonly name: string = 'JMDict (eng)';
@@ -67,7 +68,7 @@ export class JMDict_EngDictionary extends Dictionary {
 		await this.loadingPromise;
 	}
 
-	searchEnglish(term: string): WordEntry[] {
+	searchEnglish(term: string, results: FixedList<WordEntry>) {
 		const entries = new Map<WordEntry, number>();
 		const normalized = term.toLowerCase();
 
@@ -143,11 +144,11 @@ export class JMDict_EngDictionary extends Dictionary {
 
 		scan(this.kanjiMap);
 		scan(this.kanaMap);
-		return [...entries].sort((a, b) => b[1] - a[1]).map(([word]) => word);
+		const values = [...entries].sort((a, b) => b[1] - a[1]).map(([word]) => word);
+		results.push(...values);
 	}
 
-	searchContainsKana(term: string): WordEntry[] {
-		const results: WordEntry[] = [];
+	searchContainsKana(term: string, results: FixedList<WordEntry>) {
 		const seen = new Set<string>();
 
 		const scan = (map: Map<string, WordEntry[]>) => {
@@ -185,21 +186,20 @@ export class JMDict_EngDictionary extends Dictionary {
 
 		scan(this.kanjiMap);
 		scan(this.kanaMap);
-		return results;
 	}
 
-	searchJapanese(term: string) {
+	searchJapanese(term: string, results: FixedList<WordEntry>) {
 		const fromKanji = this.kanjiMap.get(term) ?? [];
 		const fromKana = this.kanaMap.get(term) ?? [];
-		const results: WordEntry[] = [...fromKanji, ...fromKana];
-		return results;
+		const values: WordEntry[] = [...fromKanji, ...fromKana];
+		results.push(...values);
 	}
 
-	search(term: string, isJapanese: boolean) {
+	search(term: string, isJapanese: boolean, results: FixedList<WordEntry>) {
 		if (isJapanese) {
-			return this.searchJapanese(term);
+			this.searchJapanese(term, results);
 		} else {
-			return this.searchEnglish(term);
+			this.searchEnglish(term, results);
 		}
 	}
 
@@ -220,30 +220,27 @@ export class JMDict_EngDictionary extends Dictionary {
 		}
 
 		let found = true;
+		const results = new FixedList<WordEntry>(maxResults);
 		const isJapanese = wanakana.isJapanese(term);
-		const results = this.search(term, isJapanese);
+		this.search(term, isJapanese, results);
 
 		if (results.length === 0) {
 			found = false;
 
 			if (isJapanese) {
-				const values = this.searchContainsKana(term);
-				results.push(...values);
+				this.searchContainsKana(term, results);
 			} else {
 				const hira = wanakana.toHiragana(term);
 				const kata = wanakana.toKatakana(term);
 				console.log('search english to kana', { hira, kata });
-				const englishToHiraganaResults = this.search(hira, true);
-				const englishToKatakanaResults = this.search(kata, true);
-				results.push(...englishToHiraganaResults);
-				results.push(...englishToKatakanaResults);
+				this.search(hira, true, results);
+				this.search(kata, true, results);
 			}
 		}
 
 		console.log({ term, found, isJapanese, results });
 
-		const limitedResults = results.slice(0, maxResults);
-		const entries = deduplicate(limitedResults);
+		const entries = deduplicate(results.toArray());
 		return { found, entries };
 	}
 }

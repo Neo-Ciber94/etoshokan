@@ -27,7 +27,7 @@ export function hashBase64(values: string[]): string {
 		binary += String.fromCharCode(b);
 	}
 
-	return btoa(binary);
+	return btoa(binary).replace('=', '');
 }
 
 function toHex(buffer: ArrayBuffer) {

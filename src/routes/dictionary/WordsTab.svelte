@@ -1,117 +1,150 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Badge } from '$lib/components/ui/badge';
-	import { wordsStorage } from './words-storage.svelte';
+  import * as Card from '$lib/components/ui/card'
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+  import { Badge } from '$lib/components/ui/badge'
+  import { wordsStorage } from '$lib/dictionary/words-storage.svelte'
+  import SaveWordActions from '$lib/components/SaveWordActions.svelte'
+
+  let filter = $state<string>('all')
+
+  const totalWords = $derived(wordsStorage.categories.reduce((sum, c) => sum + c.words.length, 0))
+
+  const displayCategories = $derived(
+    filter === 'all'
+      ? wordsStorage.categories.filter((c) => c.words.length > 0)
+      : wordsStorage.categories.filter((c) => c.category === filter && c.words.length > 0)
+  )
 </script>
 
 <section class="space-y-4">
-	{#if wordsStorage.words.length > 0}
-		<div class="grid gap-6">
-			{#each wordsStorage.words as entry (entry.term + entry.language)}
-				<Card.Root class="border border-border py-2 md:py-6">
-					<Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
-						<div class="flex items-start justify-between gap-2">
-							{#if entry.common}
-								<Badge
-									class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
-									>common</Badge
-								>
-							{:else}
-								<div></div>
-							{/if}
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									<button
-										class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-										aria-label="Options"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="currentColor"
-										>
-											<circle cx="12" cy="5" r="1.5" />
-											<circle cx="12" cy="12" r="1.5" />
-											<circle cx="12" cy="19" r="1.5" />
-										</svg>
-									</button>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content align="end">
-									<DropdownMenu.Item
-										onclick={() => wordsStorage.delete(entry.term, entry.language)}
-									>
-										Delete
-									</DropdownMenu.Item>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</div>
+  <div class="flex flex-wrap gap-2">
+    <button
+      onclick={() => (filter = 'all')}
+      class="rounded-full border px-3 py-1 text-sm transition-colors {filter === 'all'
+        ? 'border-foreground bg-foreground text-background'
+        : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
+    >
+      All
+    </button>
+    {#each wordsStorage.categoryNames as cat (cat)}
+      <button
+        onclick={() => (filter = cat)}
+        class="rounded-full border px-3 py-1 text-sm transition-colors {filter === cat
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}"
+      >
+        {cat}
+      </button>
+    {/each}
+  </div>
 
-						<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
-							<!-- Left side: Word and Reading -->
-							<div
-								class="border-r-none flex flex-row items-center gap-2 border-border pr-6 md:flex-col md:items-start md:gap-0 md:border-r"
-							>
-								{#if entry.reading}
-									<div class="order-2 mb-0 text-base text-muted-foreground md:order-0 md:mb-2">
-										{entry.reading}
-									</div>
-								{/if}
-								<div class="text-2xl font-bold text-foreground md:text-5xl">
-									{entry.term}
-								</div>
-							</div>
+  {#if totalWords > 0}
+    {#each displayCategories as { category, words }}
+      <div class="space-y-3">
+        {#if filter === 'all'}
+          <h3 class="text-sm font-medium text-muted-foreground">{category}</h3>
+        {/if}
+        <div class="grid gap-6">
+          {#each words as entry (entry.term + entry.language)}
+            <Card.Root class="border border-border py-2 md:py-6">
+              <Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
+                <div class="flex items-start justify-between gap-2">
+                  {#if entry.common}
+                    <Badge
+                      class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
+                      >common</Badge
+                    >
+                  {:else}
+                    <div></div>
+                  {/if}
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                      <button
+                        class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="Options"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <circle cx="12" cy="5" r="1.5" />
+                          <circle cx="12" cy="12" r="1.5" />
+                          <circle cx="12" cy="19" r="1.5" />
+                        </svg>
+                      </button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content align="end">
+                      <SaveWordActions {entry} />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Root>
+                </div>
 
-							<!-- Right side: Meanings -->
-							<div class="space-y-2 md:space-y-4">
-								{#each entry.senses as sense, senseIdx (senseIdx)}
-									<div class="space-y-1 md:space-y-2">
-										<div class="flex items-center gap-2">
-											<span class="text-lg font-semibold text-foreground">
-												{senseIdx + 1}.
-											</span>
-											{#if sense.partOfSpeech}
-												<span
-													class="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
-												>
-													{sense.partOfSpeech}
-												</span>
-											{/if}
-										</div>
+                <div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
+                  <div
+                    class="border-r-none flex flex-row items-center gap-2 border-border pr-6 md:flex-col md:items-start md:gap-0 md:border-r"
+                  >
+                    {#if entry.reading}
+                      <div class="order-2 mb-0 text-base text-muted-foreground md:order-0 md:mb-2">
+                        {entry.reading}
+                      </div>
+                    {/if}
+                    <div class="text-2xl font-bold text-foreground md:text-5xl">
+                      {entry.term}
+                    </div>
+                  </div>
 
-										{#if sense.glosses}
-											<div class="space-y-1">
-												{#each sense.glosses as gloss, glossIdx}
-													<div class="text-sm text-foreground md:text-base">
-														{#if sense.glosses.length > 1}
-															<span class="text-muted-foreground">{glossIdx + 1}.</span>
-														{/if}
-														{gloss.text}
-													</div>
-												{/each}
-											</div>
-										{/if}
+                  <div class="space-y-2 md:space-y-4">
+                    {#each entry.senses as sense, senseIdx (senseIdx)}
+                      <div class="space-y-1 md:space-y-2">
+                        <div class="flex items-center gap-2">
+                          <span class="text-lg font-semibold text-foreground">
+                            {senseIdx + 1}.
+                          </span>
+                          {#if sense.partOfSpeech}
+                            <span
+                              class="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+                            >
+                              {sense.partOfSpeech}
+                            </span>
+                          {/if}
+                        </div>
 
-										{#if sense.notes && sense.notes.length > 0}
-											<div class="text-sm text-muted-foreground italic">
-												{sense.notes.join('; ')}
-											</div>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						</div>
-					</Card.Content>
-				</Card.Root>
-			{/each}
-		</div>
-	{:else}
-		<div class="rounded-md border border-border bg-muted p-8 text-center">
-			<p class="text-sm text-muted-foreground">
-				No saved words yet. Save words from the search tab.
-			</p>
-		</div>
-	{/if}
+                        {#if sense.glosses}
+                          <div class="space-y-1">
+                            {#each sense.glosses as gloss, glossIdx}
+                              <div class="text-sm text-foreground md:text-base">
+                                {#if sense.glosses.length > 1}
+                                  <span class="text-muted-foreground">{glossIdx + 1}.</span>
+                                {/if}
+                                {gloss.text}
+                              </div>
+                            {/each}
+                          </div>
+                        {/if}
+
+                        {#if sense.notes && sense.notes.length > 0}
+                          <div class="text-sm text-muted-foreground italic">
+                            {sense.notes.join('; ')}
+                          </div>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              </Card.Content>
+            </Card.Root>
+          {/each}
+        </div>
+      </div>
+    {/each}
+  {:else}
+    <div class="rounded-md border border-border bg-muted p-8 text-center">
+      <p class="text-sm text-muted-foreground">
+        No saved words yet. Save words from the search tab.
+      </p>
+    </div>
+  {/if}
 </section>

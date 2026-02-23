@@ -122,8 +122,8 @@
 		padding-top: env(safe-area-inset-top);
 	}
 
-	html,
+	/* html,
 	body {
 		scrollbar-gutter: stable both-edges;
-	}
+	} */
 }

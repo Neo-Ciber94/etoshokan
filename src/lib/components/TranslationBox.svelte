@@ -2,6 +2,8 @@
 	import { dictionary } from '$lib/dictionary';
 	import { type LookupResult } from '$lib/dictionary/core/dictionary';
 	import { cn } from '$lib/utils';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 
 	const MAX_TEXT_LENGTH = 80;
 
@@ -122,13 +124,38 @@
 						class:border-border={i > 0}
 						class:pt-3={i > 0}
 					>
-						<div class="flex flex-row items-center gap-4">
-							<div class="text-xl text-foreground">{entry.term}</div>
-							<div>
-								{#if entry.reading && entry.reading !== entry.term}
-									<span class="text-sm text-muted-foreground">{entry.reading}</span>
-								{/if}
+						<div class="flex flex-row items-center justify-between gap-4">
+							<div class="flex flex-row items-center gap-4">
+								<div class="text-xl text-foreground">{entry.term}</div>
+								<div>
+									{#if entry.reading && entry.reading !== entry.term}
+										<span class="text-sm text-muted-foreground">{entry.reading}</span>
+									{/if}
+								</div>
 							</div>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									<button
+										class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+										aria-label="Options"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+										>
+											<circle cx="12" cy="5" r="1.5" />
+											<circle cx="12" cy="12" r="1.5" />
+											<circle cx="12" cy="19" r="1.5" />
+										</svg>
+									</button>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content align="end" >
+									<SaveWordActions {entry} />
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
 						</div>
 
 						{#each entry.senses as sense}

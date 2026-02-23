@@ -8,7 +8,7 @@
 	import { replaceState } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { dictionaryState } from './state.svelte';
-	import { wordsStorage } from './words-storage.svelte';
+	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 
 	const results = $derived(dictionaryState.results);
 	const error = $derived(dictionaryState.error);
@@ -39,17 +39,6 @@
 
 	function clearResults() {
 		dictionaryState.clear();
-	}
-
-	function toggleSave(term: string, language: string) {
-		if (wordsStorage.isSaved(term, language)) {
-			wordsStorage.delete(term, language);
-		} else {
-			const entry = dictionaryState.results.find((e) => e.term === term && e.language === language);
-			if (entry) {
-				wordsStorage.save(entry);
-			}
-		}
 	}
 </script>
 
@@ -146,9 +135,7 @@
 									</button>
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content align="end">
-									<DropdownMenu.Item onclick={() => toggleSave(entry.term, entry.language)}>
-										{wordsStorage.isSaved(entry.term, entry.language) ? 'Unsave' : 'Save'}
-									</DropdownMenu.Item>
+									<SaveWordActions {entry} />
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
 						</div>
