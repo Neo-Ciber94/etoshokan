@@ -340,6 +340,7 @@ async function getDictionaryData() {
 	for (const w of data.words) {
 		const senses = mapSenses(w.sense);
 		const term = w.kanji.length ? w.kanji[0].text : (w.kana[0]?.text ?? '');
+		const canonicalReading = w.kana[0]?.text ?? w.kanji[0]?.text ?? '';
 
 		for (const k of w.kanji) {
 			const id = computeId(w, k);
@@ -349,7 +350,7 @@ async function getDictionaryData() {
 				common: k.common,
 				language: 'jp',
 				senses: senses,
-				reading: k.text
+				reading: canonicalReading
 			};
 			pushTo(kanjiMap, k.text, entry);
 			wordsIndex.set(id, entry);
@@ -363,7 +364,7 @@ async function getDictionaryData() {
 				common: k.common,
 				language: 'jp',
 				senses: senses,
-				reading: k.text
+				reading: canonicalReading
 			};
 			pushTo(kanaMap, k.text, entry);
 			wordsIndex.set(id, entry);
