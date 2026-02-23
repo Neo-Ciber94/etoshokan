@@ -37,5 +37,11 @@ export async function getRemoteBooksNotInLocal() {
 }
 
 export async function hasLocalBooksMetadata() {
-	return (await get(METADATA_KEY)) != null;
+	const booksMetadata = await get(METADATA_KEY);
+
+	if (booksMetadata == null) {
+		return false;
+	}
+
+	return Array.isArray(booksMetadata) && booksMetadata.length > 0;
 }

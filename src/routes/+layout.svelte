@@ -8,6 +8,9 @@
 	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
 	import { syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 	import { dev } from '$app/environment';
+	import { authClient } from '$lib/auth-client';
+
+	const session = authClient.useSession();
 
 	$effect.pre(() => {
 		dictionary.initialize();
@@ -15,16 +18,14 @@
 
 	$effect.pre(() => {
 		async function run() {
-			const hasAnyData = await hasLocalBooksMetadata();
-
-			if (hasAnyData) {
-				return;
-			}
-
 			await syncRemoteMetadata();
 		}
 
-		run();
+		const unsubscribe = session.subscribe(run);
+
+		return () => {
+			unsubscribe();
+		};
 	});
 
 	$effect.pre(() => {
