@@ -1,6 +1,6 @@
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
+import { building, dev } from '$app/environment';
 
 export async function handle({ event, resolve }) {
 	// https://svelte.dev/docs/cli/devtools-json
