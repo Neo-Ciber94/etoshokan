@@ -28,7 +28,7 @@ export function googleAuthPlugin(): BetterAuthPlugin {
 function handleGoogleCallback() {
 	return createAuthMiddleware(async (ctx) => {
 		if (ctx.path === '/callback/:id') {
-			const userId = ctx.context.newSession?.user.id;
+			const userId = ctx.context.newSession?.user.id || ctx.context.session?.user?.id;
 
 			if (userId == null) {
 				throw ctx.error('UNAUTHORIZED', {
