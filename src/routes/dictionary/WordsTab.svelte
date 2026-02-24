@@ -7,6 +7,7 @@
 	import { editCategoryDialog } from '$lib/components/edit-category-dialog.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import LanguageFlag from '$lib/components/LanguageFlag.svelte';
 
 	let filter = $state<string>('all');
 
@@ -61,14 +62,15 @@
 						<Card.Root class="border border-border py-2 md:py-6">
 							<Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
 								<div class="flex items-start justify-between gap-2">
-									{#if entry.common}
-										<Badge
-											class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
-											>common</Badge
-										>
-									{:else}
-										<div></div>
-									{/if}
+									<div class="flex items-center gap-1.5">
+										{#if entry.common}
+											<Badge
+												class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
+												>common</Badge
+											>
+										{/if}
+										<LanguageFlag language={entry.language} class="size-6" />
+									</div>
 									<DropdownMenu.Root>
 										<DropdownMenu.Trigger>
 											<button
