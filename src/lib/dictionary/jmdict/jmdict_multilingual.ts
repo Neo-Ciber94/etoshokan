@@ -48,7 +48,6 @@ export class MultilingualDictionary extends Dictionary {
 					found: engResult && spaResult.found,
 					entries
 				};
-				break;
 			}
 		}
 	}

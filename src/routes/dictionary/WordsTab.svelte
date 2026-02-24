@@ -71,8 +71,15 @@
 										{/if}
 										<LanguageFlag language={entry.language} class="size-6" />
 									</div>
-									<DropdownMenu.Root>
-										<DropdownMenu.Trigger>
+									<div class="flex items-center gap-1">
+										<a
+											href="/dictionary/{entry.id}"
+											class="flex h-7 items-center rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+										>
+											More
+										</a>
+										<DropdownMenu.Root>
+											<DropdownMenu.Trigger>
 											<button
 												class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
 												aria-label="Options"
@@ -94,6 +101,7 @@
 											<SaveWordActions {entry} />
 										</DropdownMenu.Content>
 									</DropdownMenu.Root>
+									</div>
 								</div>
 
 								<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">

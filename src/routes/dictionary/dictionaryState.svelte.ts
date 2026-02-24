@@ -1,5 +1,5 @@
 import { dictionary } from '$lib/dictionary';
-import type { WordEntry } from '$lib/dictionary/core/dictionary';
+import type { LookupOptions, WordEntry } from '$lib/dictionary/core/dictionary';
 import { debounce } from '$lib/runes/debounce.svelte';
 
 class DictionaryState {
@@ -25,7 +25,7 @@ class DictionaryState {
 		this.isDictionaryReady = true;
 	}
 
-	search = debounce(300, async (term: string) => {
+	search = debounce(300, async (term: string, options?: LookupOptions) => {
 		await this.#waitDictionary();
 
 		this.error = '';
@@ -37,7 +37,7 @@ class DictionaryState {
 		}
 		try {
 			this.loading = true;
-			const res = await dictionary.lookup(term.trim());
+			const res = await dictionary.lookup(term.trim(), options);
 			this.results = res.entries;
 		} catch (err) {
 			console.error(err);

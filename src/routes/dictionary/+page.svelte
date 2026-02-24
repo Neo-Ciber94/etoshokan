@@ -1,8 +1,13 @@
 <script lang="ts">
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { Search, Bookmark } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Search, Bookmark, Settings } from '@lucide/svelte';
 	import SearchTab from './SearchTab.svelte';
 	import WordsTab from './WordsTab.svelte';
+	import DictionaryOptionsDialog from '$lib/components/DictionaryOptionsDialog.svelte';
+	import { searchOptions } from './searchOptions.svelte';
+
+	let optionsOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -10,7 +15,12 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<h2 class="text-xl font-semibold">Dictionary</h2>
+	<div class="flex items-center justify-between">
+		<h2 class="text-xl font-semibold">Dictionary</h2>
+		<Button variant="outline" size="icon" onclick={() => (optionsOpen = true)} aria-label="Options">
+			<Settings size={16} />
+		</Button>
+	</div>
 
 	<Tabs.Root value="search">
 		<Tabs.List class="w-full">
@@ -25,3 +35,9 @@
 		</Tabs.Content>
 	</Tabs.Root>
 </div>
+
+<DictionaryOptionsDialog
+	bind:open={optionsOpen}
+	bind:language={searchOptions.language}
+	bind:maxResults={searchOptions.maxResults}
+/>

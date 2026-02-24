@@ -7,7 +7,8 @@
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
 	import { tick } from 'svelte';
-	import { dictionaryState } from './state.svelte';
+	import { dictionaryState } from './dictionaryState.svelte';
+	import { searchOptions } from './searchOptions.svelte';
 	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 	import LanguageFlag from '$lib/components/LanguageFlag.svelte';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
@@ -44,15 +45,23 @@
 		return lang;
 	}
 
+	function buildOptions() {
+		return {
+			maxResults: searchOptions.maxResults,
+			lang: searchOptions.language === 'all' ? undefined : searchOptions.language
+		};
+	}
+
 	$effect(() => {
 		const query = dictionaryState.query;
-		dictionaryState.search(query);
+		const opts = buildOptions();
+		dictionaryState.search(query, opts);
 	});
 
 	$effect(() => {
 		const currentSearch = page.url.searchParams.get('search');
 		if (currentSearch) {
-			dictionaryState.search(currentSearch);
+			dictionaryState.search(currentSearch, buildOptions());
 		}
 	});
 
@@ -151,8 +160,15 @@
 									{:else}
 										<div></div>
 									{/if}
-									<DropdownMenu.Root>
-										<DropdownMenu.Trigger>
+									<div class="flex items-center gap-1">
+										<a
+											href="/dictionary/{entry.id}"
+											class="flex h-7 items-center rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+										>
+											More
+										</a>
+										<DropdownMenu.Root>
+											<DropdownMenu.Trigger>
 											<button
 												class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
 												aria-label="Options"
@@ -174,6 +190,7 @@
 											<SaveWordActions {entry} />
 										</DropdownMenu.Content>
 									</DropdownMenu.Root>
+									</div>
 								</div>
 
 								<div class="grid gap-2 md:grid-cols-[auto_1fr] md:gap-6">
