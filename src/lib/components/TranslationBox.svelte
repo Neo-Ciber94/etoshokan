@@ -6,6 +6,8 @@
 	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 
 	const MAX_TEXT_LENGTH = 80;
+	const MAX_SENSES = 3;
+	const MAX_GLOSSES = 3;
 
 	interface Props {
 		searchTerm: string;
@@ -151,13 +153,13 @@
 										</svg>
 									</button>
 								</DropdownMenu.Trigger>
-								<DropdownMenu.Content align="end" >
+								<DropdownMenu.Content align="end">
 									<SaveWordActions {entry} />
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
 						</div>
 
-						{#each entry.senses as sense}
+						{#each entry.senses.slice(0, MAX_SENSES) as sense}
 							<div class="flex items-baseline gap-1.5 text-base leading-snug">
 								{#if sense.partOfSpeech}
 									<span
@@ -167,7 +169,10 @@
 									</span>
 								{/if}
 								<span class="text-foreground">
-									{sense.glosses.map((g) => g.text).join('; ')}
+									{sense.glosses
+										.slice(0, MAX_GLOSSES)
+										.map((g) => g.text)
+										.join('; ')}
 								</span>
 							</div>
 						{/each}
