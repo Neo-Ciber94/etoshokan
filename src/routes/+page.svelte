@@ -50,7 +50,8 @@
 			authClient.signIn.social({ provider: 'google' });
 		} else {
 			const result = await clientAuthSignIn({
-				provider: 'google'
+				provider: 'google',
+				callbackURL: '/auth/success'
 			});
 
 			if (result.success) {

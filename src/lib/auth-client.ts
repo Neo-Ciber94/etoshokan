@@ -11,6 +11,7 @@ export async function isLoggedIn(): Promise<boolean> {
 
 type ClientAuthSignInOptions = {
 	provider: string;
+	callbackURL?: string;
 };
 
 export async function clientAuthSignIn(options: ClientAuthSignInOptions) {
