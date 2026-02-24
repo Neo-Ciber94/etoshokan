@@ -19,7 +19,7 @@ export async function clientAuthSignIn(options: ClientAuthSignInOptions) {
 			body: JSON.stringify(options),
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application-json'
+				'Content-Type': 'application/json'
 			}
 		});
 
