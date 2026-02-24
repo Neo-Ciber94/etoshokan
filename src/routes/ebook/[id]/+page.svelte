@@ -25,12 +25,11 @@
 	import { cn } from '$lib/utils';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
-	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
 	import { isMobile } from '$lib/utils/isMobile';
-	import { isWeb } from '$lib/utils/isWeb';
 	import { downloadBookData } from '$lib/ebook/sync.mutation';
 	import { openModal } from '$lib/components/modal';
 	import { isDark } from '$lib/runes/theme.svelte';
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -389,22 +388,7 @@
 		const url = new URL(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`);
 		url.searchParams.set('color_theme', dark ? 'dark' : 'light');
 		const jishoUrl = url.toString();
-
-		if (isWeb()) {
-			console.log('Opening tab on browser');
-			window.open(jishoUrl, '_blank');
-		} else {
-			try {
-				console.log('Opening tab on chrome');
-				await open_chrome({
-					url: jishoUrl,
-					toolbarColor: 'black'
-				});
-			} catch (err) {
-				console.error('Failed to open tab: ', err);
-				window.open(jishoUrl, '_blank');
-			}
-		}
+		await openBrowserTab(jishoUrl);
 	}
 
 	function nextPage() {

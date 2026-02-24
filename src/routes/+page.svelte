@@ -3,10 +3,11 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
-	import { authClient } from '$lib/auth-client';
+	import { authClient, clientAuthSignIn } from '$lib/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
 	const books = useBooksMetadata();
 	const session = authClient.useSession();
@@ -27,9 +28,22 @@
 		goto(`/ebook/${id}`);
 	}
 
-	function loginWithGoogle() {
-		console.log('click');
-		authClient.signIn.social({ provider: 'google' });
+	async function loginWithGoogle() {
+		if (isWeb()) {
+			authClient.signIn.social({ provider: 'google' });
+		} else {
+			const result = await clientAuthSignIn({
+				provider: 'google'
+			});
+
+			if (result.success) {
+				console.log(result);
+				// We need to open on a custom tab to allow sign-in on webview
+				openBrowserTab(result.data.url);
+			} else {
+				alert(result.error);
+			}
+		}
 	}
 </script>
 
