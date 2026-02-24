@@ -43,11 +43,18 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center gap-3">
-		<Button variant="ghost" size="icon" onclick={() => goto('/dictionary')} aria-label="Back">
+	<div class="flex items-center gap-5">
+		<Button
+			variant="outline"
+			class="flex flex-row gap-2 w-fit px-2"
+			size="icon"
+			onclick={() => goto('/dictionary')}
+			aria-label="Back"
+		>
 			<ChevronLeft size={20} />
+			<span>Back</span>
 		</Button>
-		<h2 class="text-xl font-semibold">{entry?.term ?? 'Loading...'}</h2>
+		<h2 class="text-2xl font-semibold">{entry?.term ?? 'Loading...'}</h2>
 	</div>
 
 	{#if loading}
