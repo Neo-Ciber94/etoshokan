@@ -49,18 +49,9 @@
 		if (isWeb()) {
 			authClient.signIn.social({ provider: 'google' });
 		} else {
-			const result = await clientAuthSignIn({
-				provider: 'google',
-				callbackURL: '/auth/success'
-			});
-
-			if (result.success) {
-				console.log(result);
-				// We need to open on a custom tab to allow sign-in on webview
-				openBrowserTab(result.data.url);
-			} else {
-				alert(`Failed to login with google: ${result.error}`);
-			}
+			// We open a custom tab to sign-in inside webviews
+			const url = new URL('/auth/sign-in/external', window.location.origin);
+			openBrowserTab(url.toString());
 		}
 	}
 </script>
