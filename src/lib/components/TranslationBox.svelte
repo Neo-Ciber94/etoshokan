@@ -32,7 +32,6 @@
 			loading = true;
 
 			try {
-				await dictionary.initialize();
 				searchResult = await dictionary.lookup(searchTerm);
 			} catch (err) {
 				console.error(err);
