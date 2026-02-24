@@ -41,7 +41,7 @@
 				// We need to open on a custom tab to allow sign-in on webview
 				openBrowserTab(result.data.url);
 			} else {
-				alert(result.error);
+				alert(`Failed to login with google: ${result.error}`);
 			}
 		}
 	}
