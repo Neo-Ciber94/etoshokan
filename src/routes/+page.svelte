@@ -8,6 +8,7 @@
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';
 	import { openBrowserTab } from '$lib/utils/openBrowserTab';
+	import { getMessageChannel } from '$lib/common/message-channel';
 
 	const books = useBooksMetadata();
 	const session = authClient.useSession();
@@ -15,6 +16,22 @@
 
 	$effect.pre(() => {
 		web = isWeb();
+	});
+
+	$effect.pre(() => {
+		const { unsubscribe } = getMessageChannel().subscribe((message) => {
+			if (message && typeof message === 'object') {
+				const event = Reflect.get(message, 'event');
+
+				if (event === 'reload-page') {
+					location.reload();
+				}
+			}
+		});
+
+		return () => {
+			unsubscribe();
+		};
 	});
 
 	const recentBooks = $derived(
