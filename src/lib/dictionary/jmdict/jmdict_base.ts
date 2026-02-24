@@ -9,6 +9,8 @@ import * as wanakana from 'wanakana';
 import { FixedList } from './fixedList';
 import { getJmdictData } from './utils';
 
+const SHORT_WORD_LENGTH = 3;
+
 export type JMDictOptions = {
 	jmdictUrl: string;
 	cacheKey: string;
@@ -63,6 +65,35 @@ export abstract class JMDictBase extends Dictionary {
 		}
 
 		await this.loadingPromise;
+	}
+
+	searchShortWord(term: string, results: FixedList<WordEntry>) {
+		if (term.length > SHORT_WORD_LENGTH) {
+			return;
+		}
+
+		const hira = wanakana.toHiragana(term);
+		const kana = wanakana.toKatakana(term);
+		const temp = new FixedList<WordEntry>(results.maxSize);
+		this.searchJapanese(hira, temp);
+		this.searchJapanese(kana, temp);
+
+		// shorter and common first
+		const shortWords = temp
+			.toArray()
+			.sort((a, b) => {
+				const aLen = a.reading?.length ?? Number.POSITIVE_INFINITY;
+				const bLen = b.reading?.length ?? Number.POSITIVE_INFINITY;
+				return aLen - bLen;
+			})
+			.sort((a, b) => {
+				if (a.common === b.common) {
+					return 0;
+				}
+				return a.common ? -1 : 1;
+			});
+
+		results.push(...shortWords);
 	}
 
 	searchOnForeignLanguage(term: string, results: FixedList<WordEntry>) {
@@ -139,12 +170,17 @@ export abstract class JMDictBase extends Dictionary {
 			}
 		};
 
+		if (term.length <= SHORT_WORD_LENGTH) {
+			this.searchShortWord(term, results);
+		}
+
 		scan(this.kanjiMap);
 		scan(this.kanaMap);
 		const values = [...entries]
 			.sort((a, b) => b[1] - a[1])
 			.map(([word]) => word)
 			.slice(0, results.maxSize);
+
 		results.push(...values);
 	}
 
