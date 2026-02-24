@@ -204,7 +204,15 @@ export abstract class JMDictBase extends Dictionary {
 	}
 
 	async lookup(term: string, options?: LookupOptions): Promise<LookupResult> {
-		const { maxResults = 100 } = options || {};
+		const baseLang = this.options.lang;
+		const { maxResults = 100, lang = baseLang } = options || {};
+
+		if (lang != baseLang) {
+			return {
+				entries: [],
+				found: false
+			};
+		}
 
 		if (!this.loaded) {
 			await this.initialize();

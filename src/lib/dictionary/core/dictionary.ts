@@ -72,6 +72,7 @@ export type LookupResult = {
 
 export type LookupOptions = {
 	maxResults?: number;
+	lang?: string;
 };
 
 export abstract class Dictionary {

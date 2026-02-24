@@ -27,21 +27,30 @@ export class MultilingualDictionary extends Dictionary {
 	}
 
 	async lookup(term: string, options?: LookupOptions): Promise<LookupResult> {
-		const { maxResults = 5 } = options || {};
+		const { maxResults = 5, lang } = options || {};
 
-		const entries: WordEntry[] = [];
-		const [engResult, spaResult] = await Promise.all([
-			this.engDict.lookup(term, { maxResults }),
-			this.spaDict.lookup(term, { maxResults })
-		]);
+		switch (lang) {
+			case 'en':
+				return this.engDict.lookup(term, { maxResults });
+			case 'es':
+				return this.spaDict.lookup(term, { maxResults });
+			default: {
+				const entries: WordEntry[] = [];
+				const [engResult, spaResult] = await Promise.all([
+					this.engDict.lookup(term, { maxResults }),
+					this.spaDict.lookup(term, { maxResults })
+				]);
 
-		entries.push(...engResult.entries);
-		entries.push(...spaResult.entries);
+				entries.push(...engResult.entries);
+				entries.push(...spaResult.entries);
 
-		return {
-			found: engResult && spaResult.found,
-			entries
-		};
+				return {
+					found: engResult && spaResult.found,
+					entries
+				};
+				break;
+			}
+		}
 	}
 
 	async clear(): Promise<void> {
