@@ -17,6 +17,7 @@ export async function clientAuthSignIn(options: ClientAuthSignInOptions) {
 	try {
 		const res = await fetch('/api/auth/sign-in/social', {
 			body: JSON.stringify(options),
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application-json'
 			}
