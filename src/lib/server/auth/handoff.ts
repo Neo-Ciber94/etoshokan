@@ -21,7 +21,9 @@ export async function createHandoffToken({
 	sessionData,
 	googleRefreshToken
 }: HandOffTokenParams): Promise<string | null> {
-	if (!sessionToken) return null;
+	if (!sessionToken) {
+		return null;
+	}
 
 	const data: HandoffData = {
 		sessionToken,
@@ -35,11 +37,16 @@ export async function createHandoffToken({
 
 export async function decryptHandoffToken(token: string): Promise<HandoffData | null> {
 	const json = await decryptAes(token, env.BETTER_AUTH_SECRET);
-	if (!json) return null;
+	if (!json) {
+		return null;
+	}
 
 	try {
 		const data = JSON.parse(json) as HandoffData;
-		if (data.expiresAt < Date.now()) return null;
+		if (data.expiresAt < Date.now()) {
+			return null;
+		}
+		
 		return data;
 	} catch {
 		return null;

@@ -3,7 +3,7 @@ export function isTauri() {
 		return false;
 	}
 
-	return '__TAURI_INTERNALS__' in window;
+	return typeof window.__TAURI_INTERNALS__ !== 'undefined';
 }
 
 export function isWeb() {
