@@ -17,6 +17,8 @@ This is a ebook reader that support translations from english to japanese with o
 - **Only minimal comments** unless explicitly requested
 - **No Emojis**
 - Use brackets, even on simple returns
+- **Always** log the error on a try-catch, never silently fail
+- **Always** log error if a null-check fails, specially on the server
 
 ### Package Management
 
