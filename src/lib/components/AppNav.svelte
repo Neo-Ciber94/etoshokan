@@ -6,7 +6,7 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '$lib/client/auth-client';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
 

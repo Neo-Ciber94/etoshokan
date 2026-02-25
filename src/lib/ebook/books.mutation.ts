@@ -9,7 +9,7 @@ import {
 	updateProgress,
 	uploadBookToServer
 } from '$lib/remote/ebook.remote';
-import { isLoggedIn } from '$lib/auth-client';
+import { isLoggedIn } from '$lib/client/auth-client';
 import { setBookUploadState, setBookSyncState } from './sync.mutation';
 import { getLocalBooksMetadata, getLocalBookData } from './books.query';
 import { BOOK_PREFIX, METADATA_KEY } from './storage.utils';

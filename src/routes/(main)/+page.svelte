@@ -3,7 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
-	import { authClient, clientAuthSignIn } from '$lib/auth-client';
+	import { authClient, clientAuthSignIn } from '$lib/client/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';

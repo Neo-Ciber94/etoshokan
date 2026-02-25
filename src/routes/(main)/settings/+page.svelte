@@ -2,7 +2,7 @@
 	import { dictionary } from '$lib/dictionary';
 	import { Button } from '$lib/components/ui/button';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '$lib/client/auth-client';
 	import { clearSyncEntries, syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 	import { clearLocalBooks } from '$lib/ebook/books.mutation';
 

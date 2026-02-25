@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authClient, clientAuthSignIn } from '$lib/auth-client';
+	import { authClient, clientAuthSignIn } from '$lib/client/auth-client';
 	import { isTauri } from '$lib/utils/isWeb';
 	import { open_chrome } from 'tauri-plugin-in-app-browser-api';
 

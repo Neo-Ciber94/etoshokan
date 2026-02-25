@@ -9,7 +9,7 @@
 	import { hasLocalBooksMetadata } from '$lib/ebook/books.query';
 	import { syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 	import { dev } from '$app/environment';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '$lib/client/auth-client';
 
 	const session = authClient.useSession();
 
