@@ -47,13 +47,7 @@
 
 			<div class="space-y-2">
 				<label for="max-results" class="text-sm font-medium">Max Results</label>
-				<Input
-					id="max-results"
-					type="number"
-					min="1"
-					max="50"
-					bind:value={maxResults}
-				/>
+				<Input id="max-results" type="number" min="1" max="50" bind:value={maxResults} />
 			</div>
 		</div>
 

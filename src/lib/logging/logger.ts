@@ -2,7 +2,6 @@
 import * as env from '$env/static/public';
 import { getLogLevel, type Logger, LogLevel } from '.';
 
-
 abstract class BaseLogger implements Logger {
 	abstract log(level: LogLevel, message: unknown, ...args: unknown[]): void;
 

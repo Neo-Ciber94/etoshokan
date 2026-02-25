@@ -1,15 +1,15 @@
 class EditCategoryDialogState {
-  open = $state(false)
-  categoryName = $state('')
+	open = $state(false);
+	categoryName = $state('');
 
-  show(name: string) {
-    this.categoryName = name
-    this.open = true
-  }
+	show(name: string) {
+		this.categoryName = name;
+		this.open = true;
+	}
 
-  close() {
-    this.open = false
-  }
+	close() {
+		this.open = false;
+	}
 }
 
-export const editCategoryDialog = new EditCategoryDialogState()
+export const editCategoryDialog = new EditCategoryDialogState();

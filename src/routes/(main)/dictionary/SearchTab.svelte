@@ -169,27 +169,27 @@
 										</a>
 										<DropdownMenu.Root>
 											<DropdownMenu.Trigger>
-											<button
-												class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-												aria-label="Options"
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="16"
-													height="16"
-													viewBox="0 0 24 24"
-													fill="currentColor"
+												<button
+													class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+													aria-label="Options"
 												>
-													<circle cx="12" cy="5" r="1.5" />
-													<circle cx="12" cy="12" r="1.5" />
-													<circle cx="12" cy="19" r="1.5" />
-												</svg>
-											</button>
-										</DropdownMenu.Trigger>
-										<DropdownMenu.Content align="end">
-											<SaveWordActions {entry} />
-										</DropdownMenu.Content>
-									</DropdownMenu.Root>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="16"
+														height="16"
+														viewBox="0 0 24 24"
+														fill="currentColor"
+													>
+														<circle cx="12" cy="5" r="1.5" />
+														<circle cx="12" cy="12" r="1.5" />
+														<circle cx="12" cy="19" r="1.5" />
+													</svg>
+												</button>
+											</DropdownMenu.Trigger>
+											<DropdownMenu.Content align="end">
+												<SaveWordActions {entry} />
+											</DropdownMenu.Content>
+										</DropdownMenu.Root>
 									</div>
 								</div>
 

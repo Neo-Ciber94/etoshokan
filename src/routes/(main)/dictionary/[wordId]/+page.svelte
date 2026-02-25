@@ -46,7 +46,7 @@
 	<div class="flex items-center gap-5">
 		<Button
 			variant="outline"
-			class="flex flex-row gap-2 w-fit px-2"
+			class="flex w-fit flex-row gap-2 px-2"
 			size="icon"
 			onclick={() => goto('/dictionary')}
 			aria-label="Back"
