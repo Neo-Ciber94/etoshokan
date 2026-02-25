@@ -108,9 +108,7 @@
 	<nav
 		class="fixed top-0 bottom-0 left-0 z-40 hidden min-w-16 flex-col items-center justify-center gap-4 border-r border-border bg-card max-lg:landscape:flex"
 	>
-		<div
-			class="flex flex-col items-center justify-center gap-4 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
-		>
+		<div class="flex flex-col items-center justify-center gap-4 px-safe-area-inset-x-max">
 			{#each navItems as item}
 				{@const active = isActive(item.href, $page.url.pathname)}
 				<a
