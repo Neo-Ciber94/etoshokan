@@ -1,19 +1,23 @@
 <script lang="ts">
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import LanguageIcon from '@lucide/svelte/icons/languages';
+	import CopyIcon from '@lucide/svelte/icons/copy';
+	import { isDark } from '$lib/runes/theme.svelte';
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
 	let {
 		open = $bindable(false),
 		x = 0,
 		y = 0,
 		onTranslate,
-		onSearch
+		text = ''
 	}: {
 		open: boolean;
 		x: number;
 		y: number;
 		onTranslate?: () => void;
 		onSearch?: () => void;
+		text?: string;
 	} = $props();
 
 	let menuEl: HTMLDivElement | undefined = $state();
@@ -62,6 +66,24 @@
 		ev.preventDefault();
 		callback?.();
 	}
+
+	async function handleSearch() {
+		const dark = isDark();
+		const url = new URL(`https://jisho.org/search/${encodeURIComponent(text)}`);
+		url.searchParams.set('color_theme', dark ? 'dark' : 'light');
+		const jishoUrl = url.toString();
+		await openBrowserTab(jishoUrl);
+	}
+
+	async function handleCopy(ev: Event) {
+		handleItemClick(ev);
+
+		try {
+			await navigator.clipboard.writeText(text);
+		} catch (err) {
+			console.error(err);
+		}
+	}
 </script>
 
 {#if open}
@@ -73,7 +95,7 @@
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm w-full"
+			class="flex w-full cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
 			onclick={(ev) => handleItemClick(ev, onTranslate)}
@@ -83,13 +105,23 @@
 		</button>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<button
-			class="flex cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm w-full"
+			class="flex w-full cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
 			role="menuitem"
 			tabindex="-1"
-			onclick={(ev) => handleItemClick(ev, onSearch)}
+			onclick={handleSearch}
 		>
 			<SearchIcon class="size-5 md:size-4" />
 			Search
+		</button>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<button
+			class="flex w-full cursor-default items-center gap-3 rounded-sm px-3 py-2.5 text-base select-none hover:bg-accent hover:text-accent-foreground md:gap-2 md:px-2 md:py-1.5 md:text-sm"
+			role="menuitem"
+			tabindex="-1"
+			onclick={handleCopy}
+		>
+			<CopyIcon class="size-5 md:size-4" />
+			Copy
 		</button>
 	</div>
 {/if}

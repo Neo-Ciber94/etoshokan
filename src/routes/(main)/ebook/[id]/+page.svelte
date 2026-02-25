@@ -28,8 +28,6 @@
 	import { isMobile } from '$lib/utils/isMobile';
 	import { downloadBookData } from '$lib/ebook/sync.mutation';
 	import { openModal } from '$lib/components/modal';
-	import { isDark } from '$lib/runes/theme.svelte';
-	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
 	// svelte-ignore non_reactive_update
 	let readerContainer: HTMLDivElement;
@@ -383,14 +381,6 @@
 		showTranslation = true;
 	}
 
-	async function handleSearch() {
-		const dark = isDark();
-		const url = new URL(`https://jisho.org/search/${encodeURIComponent(contextMenu.text)}`);
-		url.searchParams.set('color_theme', dark ? 'dark' : 'light');
-		const jishoUrl = url.toString();
-		await openBrowserTab(jishoUrl);
-	}
-
 	function nextPage() {
 		if (!view) {
 			return;
@@ -514,8 +504,8 @@
 			bind:open={contextMenu.isOpen}
 			x={pointer.x}
 			y={pointer.y}
+			text={contextMenu.text}
 			onTranslate={handleTranslate}
-			onSearch={handleSearch}
 		/>
 
 		<!-- Page indicator -->
