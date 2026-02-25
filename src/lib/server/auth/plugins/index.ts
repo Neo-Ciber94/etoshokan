@@ -1,5 +1,5 @@
 import { getRequestEvent } from '$app/server';
-import { logger, type BetterAuthPlugin } from 'better-auth';
+import { type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import {
 	deleteGoogleTokenCookies,
@@ -7,6 +7,7 @@ import {
 	validateGoogleTokens
 } from '../googleAuth';
 import { deeplinkHandoff, exchangeToken } from './endpoints';
+import { logger } from '$lib/logging/logger';
 
 export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
