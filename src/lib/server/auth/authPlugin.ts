@@ -17,7 +17,7 @@ export function googleAuthPlugin(): BetterAuthPlugin {
 					handler: handleGoogleCallback()
 				},
 				{
-					matcher: () => true,
+					matcher: (ctx) => !['/callback/:id', '/sign-in'].some((p) => ctx.path.startsWith(p)),
 					handler: handleCheckGoogleTokens()
 				}
 			]
@@ -31,11 +31,9 @@ function handleGoogleCallback() {
 			const userId = ctx.context.newSession?.user.id || ctx.context.session?.user?.id;
 
 			if (userId == null) {
-				// throw ctx.error('UNAUTHORIZED', {
-				// 	message: 'Failed to get user id'
-				// });
-				console.error('Failed to get user id');
-				return;
+				throw ctx.error('UNAUTHORIZED', {
+					message: 'Failed to get user id'
+				});
 			}
 
 			const accounts = await ctx.context.internalAdapter.findAccountByUserId(userId);
@@ -71,9 +69,7 @@ function handleCheckGoogleTokens() {
 	return createAuthMiddleware(async (ctx) => {
 		const pathname = ctx.path;
 
-		if (pathname.startsWith('/callback/:id') || pathname.startsWith('/sign-in')) {
-			// ignore
-		} else if (pathname.startsWith('/sign-out')) {
+		if (pathname.startsWith('/sign-out')) {
 			deleteGoogleTokenCookies(ctx);
 			ctx.setCookie('google_access_token', '', {
 				path: '/',
