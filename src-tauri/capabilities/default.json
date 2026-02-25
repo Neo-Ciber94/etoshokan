@@ -7,11 +7,11 @@
   ],
   "permissions": [
     "core:default",
+    "core:event:default",
     "in-app-browser:default",
     "in-app-browser:allow-open-safari",
     "in-app-browser:allow-close-safari",
     "in-app-browser:allow-open-chrome",
-    "core:event:default",
     "deep-link:default"
   ]
 }
