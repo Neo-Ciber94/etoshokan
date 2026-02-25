@@ -12,6 +12,8 @@
 		let unlisten: (() => void) | undefined;
 
 		async function handleUrls(urls: string[]) {
+			console.log('Deep-linking to: ', urls);
+
 			for (const urlStr of urls) {
 				try {
 					const url = new URL(urlStr);
@@ -23,6 +25,8 @@
 						if (token) {
 							window.location.href = `/api/auth/exchange-token?token=${encodeURIComponent(token)}`;
 							return;
+						} else {
+							console.error('Handoff token not found');
 						}
 					}
 				} catch (err) {
