@@ -39,9 +39,11 @@ function handleGoogleCallback() {
 			const userId = ctx.context.newSession?.user.id || ctx.context.session?.user?.id;
 
 			if (userId == null) {
-				throw ctx.error('UNAUTHORIZED', {
-					message: 'Failed to get user id'
-				});
+				// throw ctx.error('UNAUTHORIZED', {
+				// 	message: 'Failed to get user id'
+				// });
+				console.error("Failed to get user id")
+				return;
 			}
 
 			const accounts = await ctx.context.internalAdapter.findAccountByUserId(userId);
