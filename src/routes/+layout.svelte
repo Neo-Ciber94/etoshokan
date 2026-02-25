@@ -5,7 +5,7 @@
 	let { children } = $props();
 
 	$effect(() => {
-		if (isTauri()) {
+		if (!isTauri()) {
 			return;
 		}
 
