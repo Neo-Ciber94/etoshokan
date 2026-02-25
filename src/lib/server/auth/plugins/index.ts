@@ -18,14 +18,21 @@ export function googleAuthPlugin(): BetterAuthPlugin {
 		hooks: {
 			after: [
 				{
-					matcher: (ctx) => ctx.path.startsWith('/callback/:id'),
+					matcher: (ctx) => ctx.path != null && ctx.path.startsWith('/callback/:id'),
 					handler: handleGoogleCallback()
 				},
 				{
-					matcher: (ctx) =>
-						!['/callback/:id', '/sign-in', '/deeplink-handoff', '/exchange-token'].some((p) =>
-							ctx.path.startsWith(p)
-						),
+					matcher: (ctx) => {
+						const pathname = ctx.path;
+						//return true;
+
+						if (!pathname) {
+							return false;
+						}
+						return !['/callback/:id', '/sign-in', '/deeplink-handoff', '/exchange-token'].some(
+							(p) => pathname.startsWith(p)
+						);
+					},
 					handler: handleCheckGoogleTokens()
 				}
 			]
@@ -42,7 +49,7 @@ function handleGoogleCallback() {
 				// throw ctx.error('UNAUTHORIZED', {
 				// 	message: 'Failed to get user id'
 				// });
-				console.error("Failed to get user id")
+				console.error('Failed to get user id');
 				return;
 			}
 
@@ -81,11 +88,6 @@ function handleCheckGoogleTokens() {
 
 		if (pathname.startsWith('/sign-out')) {
 			deleteGoogleTokenCookies(ctx);
-			ctx.setCookie('google_access_token', '', {
-				path: '/',
-				maxAge: 0,
-				expires: new Date(0)
-			});
 		} else {
 			const session = await getSessionFromCtx(ctx);
 			const userId = session?.user.id;
@@ -108,7 +110,7 @@ function handleCheckGoogleTokens() {
 			// For some reason signOut({ headers }) throw randomly an error
 			for (const cookie of authCookies) {
 				ctx.setCookie(cookie.name, '', {
-					...cookie.options,
+					...cookie.attributes,
 					maxAge: 0,
 					expires: new Date(),
 					path: '/'

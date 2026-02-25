@@ -15,10 +15,14 @@ export const auth = betterAuth({
 		}
 	},
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
+	account: {
+		storeStateStrategy: 'cookie',
+		storeAccountCookie: true
+	},
 	socialProviders: {
 		google: {
 			accessType: 'offline',
-			prompt: 'select_account+consent',
+			prompt: 'select_account consent',
 			clientId: process.env.GOOGLE_CLIENT_ID as string,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
 			scope: ['https://www.googleapis.com/auth/drive.file']
