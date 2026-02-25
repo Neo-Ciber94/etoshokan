@@ -5,11 +5,16 @@ import {
 	deleteGoogleTokenCookies,
 	setGoogleTokenCookies,
 	validateGoogleTokens
-} from './googleAuth';
+} from '../googleAuth';
+import { deeplinkHandoff, exchangeToken } from './endpoints';
 
 export function googleAuthPlugin(): BetterAuthPlugin {
 	return {
 		id: 'google-auth',
+		endpoints: {
+			deeplinkHandoff,
+			exchangeToken
+		},
 		hooks: {
 			after: [
 				{
@@ -17,7 +22,10 @@ export function googleAuthPlugin(): BetterAuthPlugin {
 					handler: handleGoogleCallback()
 				},
 				{
-					matcher: (ctx) => !['/callback/:id', '/sign-in'].some((p) => ctx.path.startsWith(p)),
+					matcher: (ctx) =>
+						!['/callback/:id', '/sign-in', '/deeplink-handoff', '/exchange-token'].some((p) =>
+							ctx.path.startsWith(p)
+						),
 					handler: handleCheckGoogleTokens()
 				}
 			]

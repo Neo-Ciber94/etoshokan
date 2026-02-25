@@ -4,11 +4,10 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { AuthContext, MiddlewareContext, MiddlewareOptions } from 'better-auth';
 import { logger } from '$lib/logging/logger';
 import { dev } from '$app/environment';
+import { GOOGLE_ACCESS_TOKEN_COOKIE, GOOGLE_REFRESH_TOKEN_COOKIE, MAX_COOKIE_AGE_SECONDS } from './constants';
 
-const GOOGLE_ACCESS_TOKEN_COOKIE = 'google_access_token';
-const GOOGLE_REFRESH_TOKEN_COOKIE = 'google_refresh_token';
 const ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 60;
-const MAX_COOKIE_AGE_SECONDS = 60 * 60 * 24 * 355; // 1 year
+
 const SECRET = env.BETTER_AUTH_SECRET;
 
 type GoogleTokenResponse = {

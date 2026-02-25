@@ -3,7 +3,7 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { SESSION_DURATION_SECONDS } from '$lib/constants';
-import { googleAuthPlugin } from './authPlugin';
+import { googleAuthPlugin } from './plugins';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
