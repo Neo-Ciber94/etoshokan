@@ -57,7 +57,9 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// Ignore API requests
+	// Ignore API requests,
+	// We should ignore /auth/ path to prevent cache auth requests, we want to change it to /api/auth but there is an issue:
+	// https://github.com/nextauthjs/next-auth/discussions/13326
 	if (url.pathname.startsWith('/api') || url.pathname.startsWith('/auth/')) {
 		return;
 	}
