@@ -3,12 +3,11 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
-	import { authClient, clientAuthSignIn } from '$lib/client/auth-client';
+	import { authClient } from '$lib/client/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';
-	import { openBrowserTab } from '$lib/utils/openBrowserTab';
-	import { getMessageChannel } from '$lib/common/message-channel';
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';;
 
 	const books = useBooksMetadata();
 	const session = authClient.useSession();
@@ -16,22 +15,6 @@
 
 	$effect.pre(() => {
 		web = isWeb();
-	});
-
-	$effect.pre(() => {
-		const { unsubscribe } = getMessageChannel().subscribe((message) => {
-			if (message && typeof message === 'object') {
-				const event = Reflect.get(message, 'event');
-
-				if (event === 'reload-page') {
-					location.reload();
-				}
-			}
-		});
-
-		return () => {
-			unsubscribe();
-		};
 	});
 
 	const recentBooks = $derived(
