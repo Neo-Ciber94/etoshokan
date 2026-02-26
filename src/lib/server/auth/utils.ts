@@ -88,8 +88,6 @@ async function decodeAccountCookie(accountCookie: string, secret: string) {
 		'better-auth-account'
 	);
 
-	console.log({ accountData });
-
 	const result = accountSchema.safeParse(accountData);
 
 	if (!result.success) {
