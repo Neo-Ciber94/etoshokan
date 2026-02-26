@@ -1,155 +1,76 @@
-import { encryptAes, decryptAes } from '$lib/server/utils';
-import { env } from '$env/dynamic/private';
 import type { RequestEvent } from '@sveltejs/kit';
-import type { AuthContext, MiddlewareContext, MiddlewareOptions } from 'better-auth';
-import { logger } from '$lib/logging/logger';
-import { dev } from '$app/environment';
-import { GOOGLE_ACCESS_TOKEN_COOKIE, GOOGLE_REFRESH_TOKEN_COOKIE, MAX_COOKIE_AGE_SECONDS } from './constants';
-
-const ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 60;
-
-const SECRET = env.BETTER_AUTH_SECRET;
 
 type GoogleTokenResponse = {
-	access_token: string;
-	expires_in: number;
-	scope: string;
-	token_type: string;
-	id_token?: string;
-};
+  access_token: string
+  expires_in: number
+  scope: string
+  token_type: string
+  id_token?: string
+}
+
+type GoogleAuthTokenResult =
+  | { token: string; error: null }
+  | { token: null; error: string }
+
+export async function getGoogleAccessToken(event: RequestEvent): Promise<GoogleAuthTokenResult> {
+  const session = await event.locals.auth()
+
+  if (session == null) {
+    console.error('No session found')
+    return { token: null, error: 'Not authenticated' }
+  }
+
+  if (session.error === 'RefreshAccessTokenError') {
+    console.error('Google access token refresh failed')
+    return { token: null, error: 'Failed to refresh google access token' }
+  }
+
+  if (!session.access_token) {
+    console.error('No access token in session')
+    return { token: null, error: 'Failed to get google access token' }
+  }
+
+  return { token: session.access_token, error: null }
+}
 
 export async function refreshGoogleAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
-	const params = new URLSearchParams({
-		client_id: process.env.GOOGLE_CLIENT_ID!,
-		client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-		refresh_token: refreshToken,
-		grant_type: 'refresh_token'
-	});
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token'
+  })
 
-	const res = await fetch('https://oauth2.googleapis.com/token', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
-		},
-		body: params.toString()
-	});
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  })
 
-	if (!res.ok) {
-		const error = await res.text();
-		throw new Error(`Failed to refresh access token: ${error}`);
-	}
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(`Failed to refresh access token: ${error}`)
+  }
 
-	const data = (await res.json()) as GoogleTokenResponse;
-	return data;
+  const data = (await res.json()) as GoogleTokenResponse
+  return data
 }
 
 export async function revokeGoogleToken(refreshOrAccessToken: string) {
-	const res = await fetch(`https://oauth2.googleapis.com/revoke?token=${refreshOrAccessToken}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
-		}
-	});
+  const res = await fetch(
+    `https://oauth2.googleapis.com/revoke?token=${refreshOrAccessToken}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }
+  )
 
-	if (!res.ok) {
-		const error = await res.text();
-		throw new Error(`Failed to revoke token: ${error}`);
-	}
-}
-
-type SetGoogleTokenCookieArgs = {
-	authContext: MiddlewareContext<MiddlewareOptions, AuthContext>;
-	accessToken: string;
-	accessTokenExpiresIn: number;
-	refreshToken?: string;
-};
-
-export async function setGoogleTokenCookies(args: SetGoogleTokenCookieArgs) {
-	const { accessToken, accessTokenExpiresIn, authContext, refreshToken } = args;
-
-	console.log('set google tokens');
-	const encryptedAccessToken = await encryptAes(accessToken, SECRET);
-	authContext.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, encryptedAccessToken, {
-		path: '/',
-		httpOnly: true,
-		secure: !dev,
-		sameSite: 'Lax',
-		maxAge: accessTokenExpiresIn - ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS
-	});
-
-	if (refreshToken) {
-		const encryptedRefreshToken = await encryptAes(refreshToken, SECRET);
-		authContext.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, encryptedRefreshToken, {
-			path: '/',
-			httpOnly: true,
-			secure: !dev,
-			sameSite: 'Lax',
-			maxAge: MAX_COOKIE_AGE_SECONDS
-		});
-	}
-}
-
-export async function getGoogleAccessToken(event: RequestEvent) {
-	const encoded = event.cookies.get(GOOGLE_ACCESS_TOKEN_COOKIE);
-	if (!encoded) {
-		return null;
-	}
-	return await decryptAes(encoded, SECRET);
-}
-
-export async function getGoogleRefreshToken(event: RequestEvent) {
-	const encoded = event.cookies.get(GOOGLE_REFRESH_TOKEN_COOKIE);
-
-	if (!encoded) {
-		return null;
-	}
-
-	return await decryptAes(encoded, SECRET);
-}
-
-export function deleteGoogleTokenCookies(ctx: MiddlewareContext<MiddlewareOptions, AuthContext>) {
-	ctx.setCookie(GOOGLE_ACCESS_TOKEN_COOKIE, '', {
-		path: '/',
-		maxAge: 0,
-		expires: new Date()
-	});
-
-	ctx.setCookie(GOOGLE_REFRESH_TOKEN_COOKIE, '', {
-		path: '/',
-		maxAge: 0,
-		expires: new Date()
-	});
-}
-
-export async function validateGoogleTokens(
-	event: RequestEvent,
-	authContext: MiddlewareContext<MiddlewareOptions, AuthContext>
-) {
-	const accessToken = await getGoogleAccessToken(event);
-
-	if (accessToken) {
-		return true;
-	}
-
-	const refreshToken = await getGoogleRefreshToken(event);
-
-	console.log({ accessToken, refreshToken });
-
-	if (refreshToken == null) {
-		return false;
-	}
-
-	try {
-		const authTokens = await refreshGoogleAccessToken(refreshToken);
-
-		await setGoogleTokenCookies({
-			accessToken: authTokens.access_token,
-			accessTokenExpiresIn: authTokens.expires_in,
-			authContext
-		});
-		return true;
-	} catch (err) {
-		logger.error('Failed to refresh access token', err);
-		return false;
-	}
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(`Failed to revoke token: ${error}`)
+  }
 }

@@ -1,8 +1,7 @@
-import { auth } from '$lib/server/auth';
 import type { RequestHandler } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async ({ request }) => {
-	const session = await auth.api.getSession(request);
+export const GET: RequestHandler = async ({ locals }) => {
+	const session = await locals.auth();
 	console.log({ session });
 	return new Response();
 };

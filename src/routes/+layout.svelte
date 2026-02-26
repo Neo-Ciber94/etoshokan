@@ -23,7 +23,7 @@
 						const token = url.searchParams.get('token');
 
 						if (token) {
-							window.location.href = `/api/auth/exchange-token?token=${encodeURIComponent(token)}`;
+							window.location.href = `/auth/exchange-token?token=${encodeURIComponent(token)}`;
 							return;
 						} else {
 							console.error('Handoff token not found');

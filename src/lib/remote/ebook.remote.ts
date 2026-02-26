@@ -13,14 +13,7 @@ import {
 import { ZodError, z } from 'zod';
 
 async function getToken() {
-	const event = getRequestEvent();
-	const accessToken = await getGoogleAccessToken(event);
-
-	if (accessToken == null) {
-		return { token: null, error: 'Failed to get google access token' } as const;
-	}
-
-	return { token: accessToken, error: null } as const;
+	return getGoogleAccessToken(getRequestEvent());
 }
 
 export const uploadBookToServer = command(UploadBookFormDataSchema, async (input) => {

@@ -1,12 +1,24 @@
-import type { User, Session } from 'better-auth';
+declare module '@auth/core/types' {
+	interface Session {
+		access_token: string;
+		error?: string;
+	}
+}
+
+declare module '@auth/core/jwt' {
+	interface JWT {
+		access_token?: string;
+		refresh_token?: string;
+		access_token_expires_at?: number;
+		error?: string;
+	}
+}
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
 declare global {
 	namespace App {
 		interface Locals {
-			user?: User;
-			session?: Session;
+			auth: () => Promise<import('@auth/core/types').Session | null>;
 		}
 
 		// interface Error {}

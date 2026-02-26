@@ -67,6 +67,7 @@
 		"vitest": "4.0.18"
 	},
 	"dependencies": {
+		"@auth/sveltekit": "^1.11.1",
 		"@tauri-apps/plugin-deep-link": "~2",
 		"@tauri-apps/plugin-haptics": "2",
 		"@zip.js/zip.js": "2.8.17",

@@ -1,41 +1,73 @@
-import { createAuthClient } from 'better-auth/svelte';
+import { writable } from 'svelte/store';
+import * as client from '@auth/sveltekit/client';
+import type { Session } from '@auth/core/types';
 
-export const authClient = createAuthClient({
-	// config
-});
+const AUTH_BASE = '/api/auth';
 
-export async function isLoggedIn(): Promise<boolean> {
-	const session = await authClient.getSession();
-	return session.data != null;
-}
-
-type ClientAuthSignInOptions = {
-	provider: string;
-	callbackURL?: string;
+type SessionStore = {
+	data: Session | null;
+	isPending: boolean;
 };
 
-export async function clientAuthSignIn(options: ClientAuthSignInOptions) {
-	try {
-		const res = await fetch('/api/auth/sign-in/social', {
-			body: JSON.stringify(options),
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
+function createSessionStore() {
+	const store = writable<SessionStore>({ data: null, isPending: true });
 
-		if (!res.ok) {
-			throw new Error(`Failed to sign-in: ${res.status} (${res.statusText})`);
+	async function reload() {
+		try {
+			const res = await fetch(`${AUTH_BASE}/session`);
+			const session: Session | null = res.ok ? await res.json() : null;
+			store.set({ data: session?.user ? session : null, isPending: false });
+		} catch (err) {
+			console.error('Failed to fetch session', err);
+			store.set({ data: null, isPending: false });
 		}
+	}
 
-		const json = await res.json();
-		return {
-			success: true,
-			data: {
-				redirect: Boolean(json.redirect),
-				url: String(json.url)
-			}
-		} as const;
+	if (typeof window !== 'undefined') {
+		reload();
+	}
+
+	return { subscribe: store.subscribe, reload };
+}
+
+const _session = createSessionStore();
+
+export const authClient = {
+	useSession: () => _session,
+
+	signIn: {
+		social: ({ provider, callbackURL }: { provider: string; callbackURL?: string }) => {
+			return client.signIn(provider, { callbackUrl: callbackURL });
+		}
+	},
+
+	signOut: () => {
+		return client.signOut();
+	}
+};
+
+export async function isLoggedIn(): Promise<boolean> {
+	try {
+		const res = await fetch(`${AUTH_BASE}/session`);
+		if (!res.ok) return false;
+		const session: Session | null = await res.json();
+		return session?.user != null;
+	} catch (err) {
+		console.error('Failed to check login status', err);
+		return false;
+	}
+}
+
+export async function clientAuthSignIn({
+	provider,
+	callbackURL
+}: {
+	provider: string;
+	callbackURL?: string;
+}) {
+	try {
+		await authClient.signIn.social({ provider, callbackURL });
+		return { success: true } as const;
 	} catch (err) {
 		console.error(err);
 		const error = err instanceof Error ? err.message : 'Failed to login';
