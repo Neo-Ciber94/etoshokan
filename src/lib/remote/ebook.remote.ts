@@ -1,7 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { UploadBookFormDataSchema } from '$lib/ebook/ebook.types';
 import { logger } from '$lib/logging/logger';
-import { getGoogleAccessToken } from '$lib/server/auth/googleAuth';
+import { getGoogleAccessToken } from '$lib/server/auth/utils';
 import {
 	deleteBookFromDrive,
 	getDriveBookData,
