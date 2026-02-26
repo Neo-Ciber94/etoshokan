@@ -24,36 +24,39 @@ export const deeplinkHandoff = createAuthEndpoint(
 
 export const exchangeToken = createAuthEndpoint(
 	'/exchange-token',
-	{ method: 'GET' },
+	{ method: 'POST' },
 	async (ctx) => {
-		const token = ctx.query?.token;
+		const token = ctx.body?.token;
 
 		if (!token) {
 			console.error('Token to exchange not found');
-			throw ctx.redirect('/');
+			return new Response(null, { status: 403 });
 		}
 
-		const data = await decryptHandoffToken(token);
+		try {
+			const data = await decryptHandoffToken(token);
 
-		if (!data) {
-			console.error('Failed to decrypt handoff token');
-			throw ctx.redirect('/');
+			if (!data) {
+				console.error('Failed to decrypt handoff token');
+				return new Response(null, { status: 403 });
+			}
+
+			const { sessionToken, sessionData, accountData } = ctx.context.authCookies;
+
+			ctx.setCookie(sessionToken.name, data.sessionToken, {
+				...sessionToken.attributes
+			});
+
+			ctx.setCookie(sessionData.name, data.sessionData, {
+				...sessionData.attributes
+			});
+
+			ctx.setCookie(accountData.name, data.accountData, {
+				...accountData.attributes
+			});
+		} catch (err) {
+			console.error('Failed to exchange token', err);
+			return new Response(null, { status: 500 });
 		}
-
-		const { sessionToken, sessionData, accountData } = ctx.context.authCookies;
-
-		ctx.setCookie(sessionToken.name, data.sessionToken, {
-			...sessionToken.attributes
-		});
-
-		ctx.setCookie(sessionData.name, data.sessionData, {
-			...sessionData.attributes
-		});
-
-		ctx.setCookie(accountData.name, data.accountData, {
-			...accountData.attributes
-		});
-
-		throw ctx.redirect('/');
 	}
 );

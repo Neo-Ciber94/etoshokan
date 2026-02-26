@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import { isTauri } from '$lib/utils/isWeb';
+	import { getCookie, setCookie } from '$lib/utils/cookies';
 
 	let { children } = $props();
 
@@ -21,10 +22,29 @@
 					// {scheme}://auth/callback?token=<token>
 					if (url.hostname === 'auth' && url.pathname === '/callback') {
 						const token = url.searchParams.get('token');
+						const tokenWasExchanged = getCookie('token-exchanged');
+
+						if (tokenWasExchanged) {
+							return;
+						}
 
 						if (token) {
-							window.location.href = `/api/auth/exchange-token?token=${encodeURIComponent(token)}`;
-							return;
+							// Send the token so the BE can set the cookies
+							const response = await fetch('/api/auth/exchange-token', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json'
+								},
+								body: JSON.stringify({ token })
+							});
+
+							if (!response.ok) {
+								return alert(`Failed to exchange login token: ${response.status}`);
+							}
+
+							// Set a cookie and load the page
+							setCookie('token-exchanged', '1', 1000 * 60);
+							location.reload();
 						} else {
 							console.error('Handoff token not found');
 						}
