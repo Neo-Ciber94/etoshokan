@@ -54,6 +54,8 @@ export const exchangeToken = createAuthEndpoint(
 			ctx.setCookie(accountData.name, data.accountData, {
 				...accountData.attributes
 			});
+
+			return new Response(null, { status: 200 });
 		} catch (err) {
 			console.error('Failed to exchange token', err);
 			return new Response(null, { status: 500 });
