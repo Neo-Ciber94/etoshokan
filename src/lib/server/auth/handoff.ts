@@ -1,34 +1,37 @@
 import { encryptAes, decryptAes } from '$lib/server/utils';
 import { env } from '$env/dynamic/private';
+import z from 'zod';
 
 const HANDOFF_TTL_MS = 60 * 1000; // 1min
 
-type HandoffData = {
-	sessionToken: string;
-	sessionData: string | null;
-	googleRefreshToken: string | null;
-	expiresAt: number;
-};
+const handoffSchema = z.object({
+	sessionToken: z.string(),
+	sessionData: z.string(),
+	accountData: z.string(),
+	expiresAt: z.number()
+});
+
+type HandoffData = z.output<typeof handoffSchema>;
 
 type HandOffTokenParams = {
 	sessionToken: string | undefined;
 	sessionData: string | undefined;
-	googleRefreshToken: string | undefined;
+	accountData: string | undefined;
 };
 
 export async function createHandoffToken({
 	sessionToken,
 	sessionData,
-	googleRefreshToken
+	accountData
 }: HandOffTokenParams): Promise<string | null> {
-	if (!sessionToken) {
+	if (!sessionToken || !sessionData || !accountData) {
 		return null;
 	}
 
 	const data: HandoffData = {
 		sessionToken,
-		sessionData: sessionData ?? null,
-		googleRefreshToken: googleRefreshToken ?? null,
+		sessionData,
+		accountData,
 		expiresAt: Date.now() + HANDOFF_TTL_MS
 	};
 
@@ -37,16 +40,25 @@ export async function createHandoffToken({
 
 export async function decryptHandoffToken(token: string): Promise<HandoffData | null> {
 	const json = await decryptAes(token, env.BETTER_AUTH_SECRET);
+
 	if (!json) {
 		return null;
 	}
 
 	try {
-		const data = JSON.parse(json) as HandoffData;
+		const result = handoffSchema.safeParse(JSON.parse(json));
+
+		if (!result.success) {
+			console.error(z.prettifyError(result.error));
+			return null;
+		}
+
+		const data = result.data;
+
 		if (data.expiresAt < Date.now()) {
 			return null;
 		}
-		
+
 		return data;
 	} catch {
 		return null;
