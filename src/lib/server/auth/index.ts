@@ -11,14 +11,11 @@ export const auth = betterAuth({
 	session: {
 		cookieCache: {
 			enabled: true,
-			maxAge: SESSION_DURATION_SECONDS
+			maxAge: SESSION_DURATION_SECONDS,
 		}
 	},
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
-	account: {
-		storeStateStrategy: 'cookie',
-		storeAccountCookie: true
-	},
+
 	socialProviders: {
 		google: {
 			accessType: 'offline',
