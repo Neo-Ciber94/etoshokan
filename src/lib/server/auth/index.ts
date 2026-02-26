@@ -2,7 +2,6 @@ import { betterAuth } from 'better-auth';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
-import { SESSION_DURATION_SECONDS } from '$lib/constants';
 import { googleAuthPlugin } from './plugins';
 
 export const auth = betterAuth({
@@ -11,7 +10,9 @@ export const auth = betterAuth({
 	session: {
 		cookieCache: {
 			enabled: true,
-			maxAge: SESSION_DURATION_SECONDS,
+			refreshCache: true,
+			maxAge: 60 * 5, // 5min
+			version: '1'
 		}
 	},
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
