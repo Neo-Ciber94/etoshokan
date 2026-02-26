@@ -22,11 +22,6 @@
 					// {scheme}://auth/callback?token=<token>
 					if (url.hostname === 'auth' && url.pathname === '/callback') {
 						const token = url.searchParams.get('token');
-						const tokenWasExchanged = getCookie('token-exchanged');
-
-						if (tokenWasExchanged) {
-							return;
-						}
 
 						if (token) {
 							// Send the token so the BE can set the cookies
@@ -43,7 +38,6 @@
 							}
 
 							// Set a cookie and load the page
-							setCookie('token-exchanged', '1', 1000 * 60);
 							location.reload();
 						} else {
 							console.error('Handoff token not found');
