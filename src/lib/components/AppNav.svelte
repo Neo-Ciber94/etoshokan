@@ -6,11 +6,11 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
-	import { authClient } from '$lib/client/auth-client';
+	import { useSession } from '$lib/client/session.svelte';
+
+	const session = useSession();
 	import ThemeToggle from './ThemeToggle.svelte';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
-
-	const session = authClient.useSession();
 
 	const navItems = [
 		{ href: '/', label: 'Home', icon: HouseIcon },
@@ -72,10 +72,10 @@
 
 				<ThemeToggle classname="md:hidden block" />
 
-				{#if $session.data?.user?.image}
+				{#if session.data?.user?.image}
 					<img
-						src={$session.data.user.image}
-						alt={$session.data.user.name || 'User'}
+						src={session.data.user.image}
+						alt={session.data.user.name || 'User'}
 						class="size-8 rounded-full object-cover"
 						referrerpolicy="no-referrer"
 					/>

@@ -9,11 +9,16 @@ import {
 	updateProgress,
 	uploadBookToServer
 } from '$lib/remote/ebook.remote';
-import { isLoggedIn } from '$lib/client/auth-client';
 import { setBookUploadState, setBookSyncState } from './sync.mutation';
 import { getLocalBooksMetadata, getLocalBookData } from './books.query';
 import { BOOK_PREFIX, METADATA_KEY } from './storage.utils';
 import type { UploadState } from './sync.types';
+import { sessionStore } from '$lib/client/session-store';
+
+async function isLoggedIn() {
+	const result = await sessionStore.getAuth();
+	return result != null;
+}
 
 export async function saveLocalBook(book: StoredBook): Promise<void> {
 	await set(`${BOOK_PREFIX}${book.metadata.id}`, book.file);

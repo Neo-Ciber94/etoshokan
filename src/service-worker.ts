@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
 	}
 
 	// Ignore API requests
-	if (url.pathname.startsWith('/api')) {
+	if (url.pathname.startsWith('/api') || url.pathname.startsWith('/auth/')) {
 		return;
 	}
 

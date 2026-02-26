@@ -4,6 +4,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { useBooksMetadata } from '$lib/ebook/books.svelte';
 	import { authClient } from '$lib/client/auth-client';
+	import { useSession } from '$lib/client/session.svelte';
+
+	const session = useSession();
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';
@@ -11,7 +14,6 @@
 	import { getMessageChannel } from '$lib/common/message-channel';
 
 	const books = useBooksMetadata();
-	const session = authClient.useSession();
 	let web = $state(true);
 
 	$effect.pre(() => {
@@ -68,9 +70,9 @@
 		</p>
 	</section>
 
-	{#if $session.isPending}
+	{#if session.isPending}
 		<Loading />
-	{:else if !$session.data}
+	{:else if !session.data}
 		<section>
 			<Button onclick={loginWithGoogle} variant="outline" class="w-full gap-3 sm:w-auto">
 				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">

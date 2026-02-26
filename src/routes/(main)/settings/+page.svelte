@@ -3,10 +3,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { authClient } from '$lib/client/auth-client';
+	import { useSession } from '$lib/client/session.svelte';
+
+	const session = useSession();
 	import { clearSyncEntries, syncRemoteMetadata } from '$lib/ebook/sync.mutation';
 	import { clearLocalBooks } from '$lib/ebook/books.mutation';
-
-	const session = authClient.useSession();
 	const dict = dictionary;
 
 	let loading = $state(false);
@@ -98,7 +99,7 @@
 		</div>
 	</section>
 
-	{#if $session.data}
+	{#if session.data}
 		<section class="space-y-4">
 			<h3 class="text-lg font-semibold">Account</h3>
 			<div class="flex flex-col gap-3 rounded-md border border-border p-4">
