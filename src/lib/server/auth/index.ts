@@ -16,7 +16,10 @@ export const auth = betterAuth({
 		}
 	},
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
-
+	account: {
+		storeAccountCookie: true,
+		storeStateStrategy: 'cookie'
+	},
 	socialProviders: {
 		google: {
 			accessType: 'offline',
