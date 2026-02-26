@@ -6,7 +6,7 @@ import { getAccountFromCtx } from '../utils';
 const IGNORE_ROUTES = [
 	'/callback/:id',
 	'/sign-in',
-	'sign-out',
+	'/sign-out',
 	'/deeplink-handoff',
 	'/exchange-token'
 ];
