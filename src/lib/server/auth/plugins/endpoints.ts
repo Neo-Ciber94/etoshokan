@@ -55,7 +55,7 @@ export const exchangeToken = createAuthEndpoint(
 				...accountData.attributes
 			});
 
-			return new Response(null, { status: 200 });
+			return ctx.json({ success: true });
 		} catch (err) {
 			console.error('Failed to exchange token', err);
 			return ctx.json({ error: 'failed to exchange token' }, { status: 500 });
