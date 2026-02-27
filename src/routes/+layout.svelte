@@ -11,6 +11,13 @@
 
 		let unlisten: (() => void) | undefined;
 
+		async function tokenKey(token: string): Promise<string> {
+			const data = new TextEncoder().encode(token);
+			const hash = await crypto.subtle.digest('SHA-256', data);
+			const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
+			return `token-exchanged-${base64}`;
+		}
+
 		async function handleUrls(urls: string[]) {
 			console.log('Deep-linking to: ', urls);
 
@@ -22,11 +29,14 @@
 					if (url.hostname === 'auth' && url.pathname === '/callback') {
 						const token = url.searchParams.get('token');
 
-						if (sessionStorage.getItem('token-exchanged')) {
-							return;
-						}
-
 						if (token) {
+							// Prevent re-exchange of the same token — getCurrent() keeps returning
+							// the launch URL on every reload, so we scope the flag to a hash of the token
+							const key = await tokenKey(token);
+							if (sessionStorage.getItem(key)) {
+								return;
+							}
+
 							// Send the token so the BE can set the cookies
 							const response = await fetch('/api/auth/exchange-token', {
 								method: 'POST',
@@ -41,9 +51,7 @@
 								return alert(`Failed to exchange login token: ${response.status}: ${text}`);
 							}
 
-							// We need to set a flag otherwise we will be stuck on a loop,
-							// because 'handleUrls' will be getting called with the 'token' until the app is reloaded
-							sessionStorage.setItem('token-exchanged', '1');
+							sessionStorage.setItem(key, '1');
 							location.reload();
 						} else {
 							console.error('Handoff token not found');
