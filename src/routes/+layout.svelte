@@ -11,7 +11,7 @@
 
 		let unlisten: (() => void) | undefined;
 
-		async function tokenKey(token: string): Promise<string> {
+		async function hashToken(token: string): Promise<string> {
 			const data = new TextEncoder().encode(token);
 			const hash = await crypto.subtle.digest('SHA-256', data);
 			const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
@@ -32,7 +32,7 @@
 						if (token) {
 							// Prevent re-exchange of the same token — getCurrent() keeps returning
 							// the launch URL on every reload, so we scope the flag to a hash of the token
-							const key = await tokenKey(token);
+							const key = await hashToken(token);
 							if (sessionStorage.getItem(key)) {
 								return;
 							}
