@@ -1,7 +1,6 @@
 <script lang="ts">
 	import './layout.css';
 	import { isTauri } from '$lib/utils/isWeb';
-	import { getCookie, setCookie } from '$lib/utils/cookies';
 
 	let { children } = $props();
 
@@ -23,6 +22,10 @@
 					if (url.hostname === 'auth' && url.pathname === '/callback') {
 						const token = url.searchParams.get('token');
 
+						if (sessionStorage.getItem('token-exchanged')) {
+							return;
+						}
+
 						if (token) {
 							// Send the token so the BE can set the cookies
 							const response = await fetch('/api/auth/exchange-token', {
@@ -38,7 +41,9 @@
 								return alert(`Failed to exchange login token: ${response.status}: ${text}`);
 							}
 
-							// Set a cookie and load the page
+							// We need to set a flag otherwise we will be stuck on a loop,
+							// because 'handleUrls' will be getting called with the 'token' until the app is reloaded
+							sessionStorage.setItem('token-exchanged', '1');
 							location.reload();
 						} else {
 							console.error('Handoff token not found');
