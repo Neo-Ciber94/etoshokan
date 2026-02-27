@@ -4,14 +4,20 @@ import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { googleAuthPlugin } from './plugins';
 
+const MAX_SESSION_DURATION = 60 * 60 * 24 * 365; // 1 year
+const SESSION_REFRESH = 60 * 5; //5 min
+
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	session: {
+		expiresIn: MAX_SESSION_DURATION,
+		updateAge: SESSION_REFRESH,
+		freshAge: 0,
 		cookieCache: {
 			enabled: true,
 			refreshCache: true,
-			maxAge: 60 * 5, // 5min
+			maxAge: SESSION_REFRESH,
 			version: '1'
 		}
 	},
