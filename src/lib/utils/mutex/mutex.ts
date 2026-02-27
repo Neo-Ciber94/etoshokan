@@ -13,11 +13,12 @@ export class Mutex {
 		};
 	}
 
-	async run(cb: () => Promise<void>) {
+	async run<T>(cb: () => Promise<T>) {
 		const lock = await this.lock();
 
 		try {
-			await cb();
+			const result = await cb();
+			return result;
 		} finally {
 			lock.unlock();
 		}
