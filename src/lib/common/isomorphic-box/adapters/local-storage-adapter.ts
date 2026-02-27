@@ -1,16 +1,25 @@
 import z from 'zod';
-import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
+import {
+	StorageAdapter,
+	type StorageAdapterContext,
+	type KeyValueStorage
+} from '../storage-adapter';
 import type { HasId } from '../types';
+import { Mutex } from '$lib/utils/mutex/mutex';
+
+type StorageProvider = () => Storage;
 
 export class LocalStorageAdapter<T extends HasId> extends StorageAdapter<T> {
-	private storage: () => Storage;
+	private storage: StorageProvider;
+	readonly local: KeyValueStorage;
 
 	constructor(
 		readonly key: string,
-		storage?: () => Storage
+		storage?: StorageProvider
 	) {
 		super();
 		this.storage = storage ?? (() => localStorage);
+		this.local = new KeyValueLocalStorage(key, this.storage);
 	}
 
 	private getJson(ctx: StorageAdapterContext<T>) {
@@ -79,5 +88,76 @@ export class LocalStorageAdapter<T extends HasId> extends StorageAdapter<T> {
 	clear(): Promise<void> {
 		this.storage().removeItem(this.key);
 		return Promise.resolve();
+	}
+}
+
+const keyValueSchema = z.record(z.string(), z.any());
+
+type AnyRecord = Record<string, unknown>;
+
+class KeyValueLocalStorage implements KeyValueStorage {
+	private mutex = new Mutex();
+
+	constructor(
+		readonly baseKey: string,
+		private readonly storage: StorageProvider
+	) {}
+
+	getData() {
+		const key = `${this.baseKey}/local`;
+		const storage = this.storage();
+
+		try {
+			const raw = storage.getItem(key);
+			if (raw == null) {
+				return {};
+			}
+
+			const json = JSON.parse(raw);
+			const result = keyValueSchema.parse(json);
+			return result;
+		} catch (err) {
+			console.error(err);
+			return {};
+		}
+	}
+
+	async mutate<T>(updater: (prevValue: AnyRecord) => T) {
+		const key = `${this.baseKey}/local`;
+		const storage = this.storage();
+
+		return await this.mutex.run(async () => {
+			const data = this.getData();
+			const result = updater(data);
+			storage.setItem(key, JSON.stringify(data));
+			return result;
+		});
+	}
+
+	async set(key: string, value: unknown): Promise<void> {
+		await this.mutate((obj) => {
+			obj[key] = value;
+		});
+	}
+
+	delete(key: string): Promise<boolean> {
+		return this.mutate((obj) => {
+			if (obj[key] === undefined) {
+				return false;
+			}
+
+			delete obj[key];
+			return true;
+		});
+	}
+
+	get(key: string): Promise<unknown> {
+		const data = this.getData();
+		return data[key];
+	}
+
+	getAll(): Promise<unknown[]> {
+		const result = Object.values(this.getData());
+		return Promise.resolve(result);
 	}
 }
