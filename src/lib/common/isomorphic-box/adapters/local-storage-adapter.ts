@@ -19,7 +19,7 @@ export class LocalStorageAdapter<T extends HasId> extends StorageAdapter<T> {
 	) {
 		super();
 		this.storage = storage ?? (() => localStorage);
-		this.local = new KeyValueLocalStorage(key, this.storage);
+		this.local = new KeyValueLocalStorage(`${key}/kv`, this.storage);
 	}
 
 	private getJson(ctx: StorageAdapterContext<T>) {
@@ -99,12 +99,12 @@ class KeyValueLocalStorage implements KeyValueStorage {
 	private mutex = new Mutex();
 
 	constructor(
-		readonly baseKey: string,
+		readonly localKey: string,
 		private readonly storage: StorageProvider
 	) {}
 
 	getData() {
-		const key = `${this.baseKey}/local`;
+		const key = this.localKey;
 		const storage = this.storage();
 
 		try {
@@ -123,7 +123,7 @@ class KeyValueLocalStorage implements KeyValueStorage {
 	}
 
 	async mutate<T>(updater: (prevValue: AnyRecord) => T) {
-		const key = `${this.baseKey}/local`;
+		const key = this.localKey;
 		const storage = this.storage();
 
 		return await this.mutex.run(async () => {
