@@ -1,5 +1,5 @@
 import z from 'zod';
-import { BoxAdapter, type BoxAdapterContext } from '../box-adapter';
+import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
 import type { HasId } from '../types';
 
 type IDBConfig = {
@@ -8,7 +8,7 @@ type IDBConfig = {
 	version?: number;
 };
 
-export class IndexedDbAdapter<T extends HasId> extends BoxAdapter<T> {
+export class IndexedDbAdapter<T extends HasId> extends StorageAdapter<T> {
 	private dbPromise: Promise<IDBDatabase>;
 
 	constructor(readonly config: IDBConfig) {
@@ -54,7 +54,7 @@ export class IndexedDbAdapter<T extends HasId> extends BoxAdapter<T> {
 		});
 	}
 
-	getAll(ctx: BoxAdapterContext<T>): Promise<T[]> {
+	getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
 		return this.withStore('readonly', (store) => {
 			return new Promise<T[]>((resolve) => {
 				const req = store.getAll();
@@ -71,7 +71,7 @@ export class IndexedDbAdapter<T extends HasId> extends BoxAdapter<T> {
 		});
 	}
 
-	getById(id: T['id'], ctx: BoxAdapterContext<T>): Promise<T | null> {
+	getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
 		return this.withStore('readonly', (store) => {
 			return new Promise<T | null>((resolve) => {
 				const req = store.get(id);
@@ -93,7 +93,7 @@ export class IndexedDbAdapter<T extends HasId> extends BoxAdapter<T> {
 		});
 	}
 
-	async has(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		return (await this.getById(id, ctx)) != null;
 	}
 
@@ -107,7 +107,7 @@ export class IndexedDbAdapter<T extends HasId> extends BoxAdapter<T> {
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}

@@ -1,10 +1,10 @@
 import { z, type ZodType } from 'zod';
-import type { BoxAdapter } from './box-adapter';
+import type { StorageAdapter } from './storage-adapter';
 import type { HasId } from './types';
 
-type IsomorphicBoxContext<E extends HasId, TSchema extends ZodType<E>> = {
+type IsomorphicStorageContext<E extends HasId, TSchema extends ZodType<E>> = {
 	schema: TSchema;
-	adapter: BoxAdapter<z.output<TSchema>>;
+	adapter: StorageAdapter<z.output<TSchema>>;
 };
 
 type AnyRecord = Record<string, unknown>;
@@ -14,10 +14,10 @@ type Initializer<
 	TSchema extends ZodType<E>,
 	TOutput extends AnyRecord = AnyRecord
 > = {
-	(ctx: IsomorphicBoxContext<E, TSchema>): TOutput;
+	(ctx: IsomorphicStorageContext<E, TSchema>): TOutput;
 };
 
-type IsomorphicBoxOptions<
+type IsomorphicStorageOptions<
 	E extends HasId,
 	TSchema extends ZodType<E>,
 	TQuery extends Initializer<E, TSchema>,
@@ -30,15 +30,15 @@ type IsomorphicBoxOptions<
 	};
 };
 
-export function createIsomorphicBox<
+export function createIsometricStorage<
 	E extends HasId,
 	TSchema extends ZodType<E>,
 	TQuery extends Initializer<E, TSchema>,
 	TMutation extends Initializer<E, TSchema>
->(options: IsomorphicBoxOptions<E, TSchema, TQuery, TMutation>) {
+>(options: IsomorphicStorageOptions<E, TSchema, TQuery, TMutation>) {
 	return {
-		adapt(adapter: BoxAdapter<z.output<TSchema>>) {
-			const ctx: IsomorphicBoxContext<E, TSchema> = { schema: options.schema, adapter };
+		adapt(adapter: StorageAdapter<z.output<TSchema>>) {
+			const ctx: IsomorphicStorageContext<E, TSchema> = { schema: options.schema, adapter };
 			const query = options.prepare.query(ctx);
 			const mutation = options.prepare.mutation(ctx);
 			return {

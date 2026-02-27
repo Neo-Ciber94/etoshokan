@@ -1,8 +1,8 @@
 import z from 'zod';
-import { BoxAdapter, type BoxAdapterContext } from '../box-adapter';
+import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
 import type { HasId } from '../types';
 
-export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
+export class LocalStorageAdapter<T extends HasId> extends StorageAdapter<T> {
 	private storage: () => Storage;
 
 	constructor(
@@ -13,7 +13,7 @@ export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
 		this.storage = storage ?? (() => localStorage);
 	}
 
-	private getJson(ctx: BoxAdapterContext<T>) {
+	private getJson(ctx: StorageAdapterContext<T>) {
 		const key = this.key;
 		const storage = this.storage();
 		const raw = storage.getItem(key);
@@ -26,7 +26,7 @@ export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
 		return result;
 	}
 
-	private mutate(ctx: BoxAdapterContext<T>, updater: (values: T[]) => T[]) {
+	private mutate(ctx: StorageAdapterContext<T>, updater: (values: T[]) => T[]) {
 		const key = this.key;
 
 		try {
@@ -40,7 +40,7 @@ export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
 		}
 	}
 
-	getAll(ctx: BoxAdapterContext<T>): Promise<T[]> {
+	getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
 		try {
 			const result = this.getJson(ctx);
 			return Promise.resolve(result);
@@ -50,19 +50,19 @@ export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
 		}
 	}
 
-	async getById(id: T['id'], ctx: BoxAdapterContext<T>): Promise<T | null> {
+	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
 		const results = await this.getAll(ctx);
 		return results.find((x) => x.id === id) ?? null;
 	}
 
-	async add(value: Omit<T, 'id'>, ctx: BoxAdapterContext<T>): Promise<T> {
+	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
 		const id = crypto.randomUUID();
 		const newValue = { id, ...value } as T;
 		this.mutate(ctx, (values) => [...values, newValue]);
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}
@@ -71,7 +71,7 @@ export class LocalStorageAdapter<T extends HasId> extends BoxAdapter<T> {
 		return true;
 	}
 
-	async has(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		const result = await this.getById(id, ctx);
 		return result != null;
 	}

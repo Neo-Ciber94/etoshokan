@@ -1,5 +1,5 @@
 import z from 'zod';
-import { BoxAdapter, type BoxAdapterContext } from '../box-adapter';
+import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
 import type { HasId } from '../types';
 
 const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files';
@@ -38,7 +38,7 @@ type GoogleDriveAdapterConfig = {
  * });
  * ```
  */
-export class GoogleDriveAdapter<T extends HasId> extends BoxAdapter<T> {
+export class GoogleDriveAdapter<T extends HasId> extends StorageAdapter<T> {
 	/** Cached Drive file ID for the JSON store file. */
 	private fileIdCache: string | null = null;
 
@@ -153,7 +153,7 @@ export class GoogleDriveAdapter<T extends HasId> extends BoxAdapter<T> {
 	 * Each entry is validated with `ctx.schema`; invalid entries are discarded
 	 * with a console error so one corrupt record cannot break the whole store.
 	 */
-	private async readStore(ctx: BoxAdapterContext<T>): Promise<Record<string, T>> {
+	private async readStore(ctx: StorageAdapterContext<T>): Promise<Record<string, T>> {
 		const fileId = await this.findFileId();
 
 		if (!fileId) {
@@ -248,12 +248,12 @@ export class GoogleDriveAdapter<T extends HasId> extends BoxAdapter<T> {
 		}
 	}
 
-	async getAll(ctx: BoxAdapterContext<T>): Promise<T[]> {
+	async getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
 		const store = await this.readStore(ctx);
 		return Object.values(store);
 	}
 
-	async getById(id: T['id'], ctx: BoxAdapterContext<T>): Promise<T | null> {
+	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
 		const store = await this.readStore(ctx);
 		const record = store[id as string];
 
@@ -264,11 +264,11 @@ export class GoogleDriveAdapter<T extends HasId> extends BoxAdapter<T> {
 		return record;
 	}
 
-	async has(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		return (await this.getById(id, ctx)) !== null;
 	}
 
-	async add(value: Omit<T, 'id'>, ctx: BoxAdapterContext<T>): Promise<T> {
+	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
 		const newValue = { id: crypto.randomUUID(), ...value } as T;
 		const store = await this.readStore(ctx);
 		store[newValue.id as string] = newValue;
@@ -276,7 +276,7 @@ export class GoogleDriveAdapter<T extends HasId> extends BoxAdapter<T> {
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: BoxAdapterContext<T>): Promise<boolean> {
+	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}
