@@ -34,7 +34,8 @@
 							});
 
 							if (!response.ok) {
-								return alert(`Failed to exchange login token: ${response.status}`);
+								const text = await response.text();
+								return alert(`Failed to exchange login token: ${response.status}: ${text}`);
 							}
 
 							// Set a cookie and load the page

@@ -30,7 +30,7 @@ export const exchangeToken = createAuthEndpoint(
 
 		if (!token) {
 			console.error('Token to exchange not found');
-			return new Response(null, { status: 403 });
+			return ctx.json({ error: 'token not found' }, { status: 403 });
 		}
 
 		try {
@@ -38,7 +38,7 @@ export const exchangeToken = createAuthEndpoint(
 
 			if (!data) {
 				console.error('Failed to decrypt handoff token');
-				return new Response(null, { status: 403 });
+				return ctx.json({ error: 'invalid token' }, { status: 403 });
 			}
 
 			const { sessionToken, sessionData, accountData } = ctx.context.authCookies;
@@ -58,7 +58,7 @@ export const exchangeToken = createAuthEndpoint(
 			return new Response(null, { status: 200 });
 		} catch (err) {
 			console.error('Failed to exchange token', err);
-			return new Response(null, { status: 500 });
+			return ctx.json({ error: 'failed to exchange token' }, { status: 500 });
 		}
 	}
 );
