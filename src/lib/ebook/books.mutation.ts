@@ -1,6 +1,6 @@
 import { set, del } from 'idb-keyval';
 import type { BookMetadata, StoredBook } from './ebook.types';
-import { Mutex } from '$lib/utils/mutex';
+import { Mutex } from '$lib/utils/mutex/mutex';
 import ePub from 'epubjs';
 import { blobToDataURL } from '$lib/utils/blobToDataURL';
 import {
