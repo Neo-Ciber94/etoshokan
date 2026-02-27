@@ -1,21 +1,28 @@
-import z from 'zod';
-import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
-import type { HasId } from '../types';
-
-const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files';
-const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files';
+import z from 'zod'
+import {
+  NoopKeyValueStorage,
+  StorageAdapter,
+  type StorageAdapterContext
+} from '../storage-adapter'
+import type { HasId } from '../types'
+import {
+  findFileByName,
+  findOrCreateFolder,
+  readFileAsText,
+  writeTextFile
+} from '$lib/server/google/googleDrive'
 
 type GoogleDriveAdapterConfig = {
-	/** OAuth 2.0 access token with at least the `drive.file` scope. */
-	accessToken: string;
-	/** The name of the JSON file to use as the data store (e.g. "my-store.json"). */
-	fileName: string;
-	/**
-	 * The name of the Drive folder to store the file in.
-	 * The folder will be created if it does not exist.
-	 */
-	folderName: string;
-};
+  /** OAuth 2.0 access token with at least the `drive.file` scope. */
+  accessToken: string
+  /** The name of the JSON file to use as the data store (e.g. "my-store.json"). */
+  fileName: string
+  /**
+   * The name of the Drive folder to store the file in.
+   * The folder will be created if it does not exist.
+   */
+  folderName: string
+}
 
 /**
  * A BoxAdapter backed by a single JSON file on Google Drive.
@@ -39,255 +46,152 @@ type GoogleDriveAdapterConfig = {
  * ```
  */
 export class GoogleDriveAdapter<T extends HasId> extends StorageAdapter<T> {
-	/** Cached Drive file ID for the JSON store file. */
-	private fileIdCache: string | null = null;
+  readonly local = new NoopKeyValueStorage()
 
-	/** Cached Drive folder ID (resolved from `config.folderName`). */
-	private folderIdCache: string | null = null;
+  /** Cached Drive file ID for the JSON store file. */
+  private fileIdCache: string | null = null
 
-	constructor(readonly config: GoogleDriveAdapterConfig) {
-		super();
-	}
+  /** Cached Drive folder ID (resolved from `config.folderName`). */
+  private folderIdCache: string | null = null
 
-	private authHeaders(): HeadersInit {
-		return {
-			Authorization: `Bearer ${this.config.accessToken}`,
-			'Content-Type': 'application/json'
-		};
-	}
+  constructor(readonly config: GoogleDriveAdapterConfig) {
+    super()
+  }
 
-	/**
-	 * Resolves the Drive folder ID for `config.folderName`.
-	 * If the folder does not exist it is created.
-	 * Returns `null` when no `folderName` is configured (use Drive root).
-	 */
-	private async resolveFolderId(): Promise<string | null> {
-		if (!this.config.folderName) {
-			return null;
-		}
+  /**
+   * Resolves the Drive folder ID for `config.folderName`.
+   * If the folder does not exist it is created.
+   * Returns `null` when no `folderName` is configured (use Drive root).
+   */
+  private async resolveFolderId(): Promise<string | null> {
+    if (!this.config.folderName) {
+      return null
+    }
 
-		if (this.folderIdCache) {
-			return this.folderIdCache;
-		}
+    if (this.folderIdCache) {
+      return this.folderIdCache
+    }
 
-		const { folderName } = this.config;
+    this.folderIdCache = await findOrCreateFolder(this.config.accessToken, this.config.folderName)
+    return this.folderIdCache
+  }
 
-		const q = encodeURIComponent(
-			`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`
-		);
+  /* ----------------------- File resolution / creation --------------------- */
 
-		const searchRes = await fetch(`${DRIVE_FILES_URL}?q=${q}&fields=files(id)&spaces=drive`, {
-			headers: this.authHeaders()
-		});
+  /**
+   * Resolves the Drive file ID for `config.fileName` inside the resolved
+   * folder (or root). Returns `null` if the file does not yet exist.
+   */
+  private async findFileId(): Promise<string | null> {
+    if (this.fileIdCache) {
+      return this.fileIdCache
+    }
 
-		if (!searchRes.ok) {
-			throw new Error(`Drive folder search failed: ${searchRes.status} ${searchRes.statusText}`);
-		}
+    const folderId = await this.resolveFolderId()
+    const parentClause = folderId ? folderId : undefined
 
-		const searchData = (await searchRes.json()) as { files: { id: string }[] };
+    const fileId = await findFileByName(this.config.accessToken, this.config.fileName, parentClause)
 
-		if (searchData.files.length > 0) {
-			this.folderIdCache = searchData.files[0].id;
-			return this.folderIdCache;
-		}
+    if (fileId) {
+      this.fileIdCache = fileId
+    }
 
-		// Folder does not exist – create it
-		const createRes = await fetch(DRIVE_FILES_URL, {
-			method: 'POST',
-			headers: this.authHeaders(),
-			body: JSON.stringify({
-				name: folderName,
-				mimeType: 'application/vnd.google-apps.folder'
-			})
-		});
+    return fileId
+  }
 
-		if (!createRes.ok) {
-			throw new Error(`Drive folder creation failed: ${createRes.status} ${createRes.statusText}`);
-		}
+  /* ----------------------------- JSON I/O --------------------------------- */
 
-		const created = (await createRes.json()) as { id: string };
-		this.folderIdCache = created.id;
-		return this.folderIdCache;
-	}
+  /**
+   * Reads the entire store from Drive as a `{ [id]: T }` map.
+   * Each entry is validated with `ctx.schema`; invalid entries are discarded
+   * with a console error so one corrupt record cannot break the whole store.
+   */
+  private async readStore(ctx: StorageAdapterContext<T>): Promise<Record<string, T>> {
+    const fileId = await this.findFileId()
 
-	/* ----------------------- File resolution / creation --------------------- */
+    if (!fileId) {
+      return {}
+    }
 
-	/**
-	 * Resolves the Drive file ID for `config.fileName` inside the resolved
-	 * folder (or root). Returns `null` if the file does not yet exist.
-	 */
-	private async findFileId(): Promise<string | null> {
-		if (this.fileIdCache) {
-			return this.fileIdCache;
-		}
+    let raw: unknown
 
-		const folderId = await this.resolveFolderId();
-		const { fileName } = this.config;
+    try {
+      const text = await readFileAsText(this.config.accessToken, fileId)
+      raw = JSON.parse(text)
+    } catch {
+      console.error('GoogleDriveAdapter.readStore, file is not valid JSON, returning empty store')
+      return {}
+    }
 
-		const parentClause = folderId ? `'${folderId}' in parents` : `'root' in parents`;
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      console.error('GoogleDriveAdapter.readStore, unexpected root shape, returning empty store')
+      return {}
+    }
 
-		const q = encodeURIComponent(`name='${fileName}' and ${parentClause} and trashed=false`);
+    const storeSchema = z.record(z.string(), ctx.schema)
+    return storeSchema.parse(raw)
+  }
 
-		const res = await fetch(`${DRIVE_FILES_URL}?q=${q}&fields=files(id)&spaces=drive`, {
-			headers: this.authHeaders()
-		});
+  /**
+   * Writes (overwrites) the entire store back to Drive.
+   * Creates the file (and folder, if configured) if they do not exist yet.
+   */
+  private async writeStore(store: Record<string, T>): Promise<void> {
+    const folderId = await this.resolveFolderId()
+    const existingId = await this.findFileId()
 
-		if (!res.ok) {
-			throw new Error(`Drive file search failed: ${res.status} ${res.statusText}`);
-		}
+    const newId = await writeTextFile(this.config.accessToken, JSON.stringify(store, null, 2), {
+      fileId: existingId,
+      fileName: this.config.fileName,
+      parentId: folderId ?? undefined,
+      contentType: 'application/json'
+    })
 
-		const data = (await res.json()) as { files: { id: string }[] };
-		const fileId = data.files[0]?.id ?? null;
+    if (!this.fileIdCache) {
+      this.fileIdCache = newId
+    }
+  }
 
-		if (fileId) {
-			this.fileIdCache = fileId;
-		}
+  async getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
+    const store = await this.readStore(ctx)
+    return Object.values(store)
+  }
 
-		return fileId;
-	}
+  async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
+    const store = await this.readStore(ctx)
+    const record = store[id as string]
 
-	/* ----------------------------- JSON I/O --------------------------------- */
+    if (record === undefined) {
+      return null
+    }
 
-	/**
-	 * Reads the entire store from Drive as a `{ [id]: T }` map.
-	 * Each entry is validated with `ctx.schema`; invalid entries are discarded
-	 * with a console error so one corrupt record cannot break the whole store.
-	 */
-	private async readStore(ctx: StorageAdapterContext<T>): Promise<Record<string, T>> {
-		const fileId = await this.findFileId();
+    return record
+  }
 
-		if (!fileId) {
-			return {};
-		}
+  async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+    return (await this.getById(id, ctx)) !== null
+  }
 
-		const res = await fetch(`${DRIVE_FILES_URL}/${fileId}?alt=media`, {
-			headers: this.authHeaders()
-		});
+  async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
+    const newValue = { id: crypto.randomUUID(), ...value } as T
+    const store = await this.readStore(ctx)
+    store[newValue.id as string] = newValue
+    await this.writeStore(store)
+    return newValue
+  }
 
-		if (!res.ok) {
-			throw new Error(`Drive file read failed: ${res.status} ${res.statusText}`);
-		}
+  async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+    if (!(await this.has(id, ctx))) {
+      return false
+    }
 
-		let raw: unknown;
+    const store = await this.readStore(ctx)
+    delete store[id as string]
+    await this.writeStore(store)
+    return true
+  }
 
-		try {
-			raw = await res.json();
-		} catch {
-			console.error('GoogleDriveAdapter.readStore, file is not valid JSON, returning empty store');
-			return {};
-		}
-
-		if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-			console.error('GoogleDriveAdapter.readStore, unexpected root shape, returning empty store');
-			return {};
-		}
-
-		const storeSchema = z.record(z.string(), ctx.schema);
-		return storeSchema.parse(raw);
-	}
-
-	/**
-	 * Writes (overwrites) the entire store back to Drive.
-	 * Creates the file (and folder, if configured) if they do not exist yet.
-	 */
-	private async writeStore(store: Record<string, T>): Promise<void> {
-		const body = JSON.stringify(store, null, 2);
-		const existingId = await this.findFileId();
-
-		if (existingId) {
-			const res = await fetch(`${DRIVE_UPLOAD_URL}/${existingId}?uploadType=media`, {
-				method: 'PATCH',
-				headers: {
-					Authorization: `Bearer ${this.config.accessToken}`,
-					'Content-Type': 'application/json'
-				},
-				body
-			});
-
-			if (!res.ok) {
-				throw new Error(`Drive file update failed: ${res.status} ${res.statusText}`);
-			}
-
-			return;
-		}
-
-		// File does not exist – create metadata first, then upload content
-		const folderId = await this.resolveFolderId();
-		const { fileName } = this.config;
-
-		const metadataRes = await fetch(DRIVE_FILES_URL, {
-			method: 'POST',
-			headers: this.authHeaders(),
-			body: JSON.stringify({
-				name: fileName,
-				mimeType: 'application/json',
-				...(folderId ? { parents: [folderId] } : {})
-			})
-		});
-
-		if (!metadataRes.ok) {
-			throw new Error(
-				`Drive file metadata creation failed: ${metadataRes.status} ${metadataRes.statusText}`
-			);
-		}
-
-		const created = (await metadataRes.json()) as { id: string };
-		this.fileIdCache = created.id;
-
-		const res = await fetch(`${DRIVE_UPLOAD_URL}/${this.fileIdCache}?uploadType=media`, {
-			method: 'PATCH',
-			headers: {
-				Authorization: `Bearer ${this.config.accessToken}`,
-				'Content-Type': 'application/json'
-			},
-			body
-		});
-
-		if (!res.ok) {
-			throw new Error(`Drive file content upload failed: ${res.status} ${res.statusText}`);
-		}
-	}
-
-	async getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
-		const store = await this.readStore(ctx);
-		return Object.values(store);
-	}
-
-	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
-		const store = await this.readStore(ctx);
-		const record = store[id as string];
-
-		if (record === undefined) {
-			return null;
-		}
-
-		return record;
-	}
-
-	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		return (await this.getById(id, ctx)) !== null;
-	}
-
-	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
-		const newValue = { id: crypto.randomUUID(), ...value } as T;
-		const store = await this.readStore(ctx);
-		store[newValue.id as string] = newValue;
-		await this.writeStore(store);
-		return newValue;
-	}
-
-	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		if (!(await this.has(id, ctx))) {
-			return false;
-		}
-
-		const store = await this.readStore(ctx);
-		delete store[id as string];
-		await this.writeStore(store);
-		return true;
-	}
-
-	async clear(): Promise<void> {
-		await this.writeStore({});
-	}
+  async clear(): Promise<void> {
+    await this.writeStore({})
+  }
 }
