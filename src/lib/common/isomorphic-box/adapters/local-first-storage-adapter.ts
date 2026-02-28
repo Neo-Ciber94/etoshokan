@@ -1,40 +1,39 @@
-import z from 'zod'
 import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter'
 import type { BaseModel } from '../types'
 import { createIndexDbStore, type IndexDbStore } from './idb-store'
 
 type PendingPayload<T extends BaseModel> =
-	| { type: 'add'; value: Omit<T, 'id'> }
+	| { type: 'set'; localId: string; value: Omit<T, 'id'> }
+	| { type: 'put'; value: T }
 	| { type: 'remove'; id: string }
 	| { type: 'clear' }
 
 type PendingOperation<T extends BaseModel> = PendingPayload<T> & {
-	opId: string
-	seq: number
+	operationId: string
+	timestamp: number
 }
 
 type LocalFirstStorageAdapterOptions<T extends BaseModel> = {
 	key: string
 	isOnline: () => Promise<boolean>
+	localStorage: StorageAdapter<T>
 	remoteStorage: StorageAdapter<T>
 }
 
 export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapter<T> {
 	private readonly options: Readonly<LocalFirstStorageAdapterOptions<T>>
-	private readonly dataStore: IndexDbStore<T>
 	private readonly pendingStore: IndexDbStore<PendingOperation<T>>
 
 	constructor(options: Readonly<LocalFirstStorageAdapterOptions<T>>) {
 		super()
 		this.options = options
-		this.dataStore = createIndexDbStore<T>(`lf-${options.key}`, 'data')
 		this.pendingStore = createIndexDbStore<PendingOperation<T>>(`lf-${options.key}`, 'pending')
 	}
 
 	private async enqueue(payload: PendingPayload<T>): Promise<void> {
-		const opId = crypto.randomUUID()
-		const seq = Date.now()
-		await this.pendingStore.set(opId, { opId, seq, ...payload } as PendingOperation<T>)
+		const operationId = crypto.randomUUID()
+		const timestamp = Date.now()
+		await this.pendingStore.set(operationId, { operationId, timestamp, ...payload } as PendingOperation<T>)
 	}
 
 	async hasPending(): Promise<boolean> {
@@ -44,20 +43,24 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 
 	async pushChanges(ctx: StorageAdapterContext<T>): Promise<void> {
 		const entries = await this.pendingStore.entries()
-		const sorted = entries.map(([, op]) => op).sort((a, b) => a.seq - b.seq)
+		const sorted = entries.map(([, op]) => op).sort((a, b) => a.timestamp - b.timestamp)
 
 		for (const op of sorted) {
 			try {
-				if (op.type === 'add') {
-					await this.options.remoteStorage.add(op.value, ctx)
+				if (op.type === 'set') {
+					const remoteItem = await this.options.remoteStorage.set(op.value, ctx)
+					await this.options.localStorage.put(remoteItem, ctx)
+					await this.options.localStorage.remove(op.localId, ctx)
+				} else if (op.type === 'put') {
+					await this.options.remoteStorage.put(op.value, ctx)
 				} else if (op.type === 'remove') {
 					await this.options.remoteStorage.remove(op.id, ctx)
 				} else if (op.type === 'clear') {
 					await this.options.remoteStorage.clear(ctx)
 				}
-				await this.pendingStore.delete(op.opId)
+				await this.pendingStore.delete(op.operationId)
 			} catch (err) {
-				console.error(`LocalFirstStorageAdapter.pushChanges: failed on operation ${op.opId}`, err)
+				console.error(`LocalFirstStorageAdapter.pushChanges: failed on operation ${op.operationId}`, err)
 				break
 			}
 		}
@@ -65,65 +68,65 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 
 	async pullChanges(ctx: StorageAdapterContext<T>): Promise<void> {
 		const items = await this.options.remoteStorage.getAll(ctx)
-		await this.dataStore.clear()
+		await this.options.localStorage.clear(ctx)
 		for (const item of items) {
-			await this.dataStore.set(item.id, item)
+			await this.options.localStorage.put(item, ctx)
 		}
 	}
 
-	async getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
-		try {
-			const items = await this.dataStore.values()
-			return z.array(ctx.schema).parse(items)
-		} catch (err) {
-			console.error(err)
-			return []
-		}
+	getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
+		return this.options.localStorage.getAll(ctx)
 	}
 
-	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
-		try {
-			const item = await this.dataStore.get(id)
-			if (item === undefined) {
-				return null
-			}
-			return ctx.schema.parse(item)
-		} catch (err) {
-			console.error(err)
-			return null
-		}
+	get(id: string, ctx: StorageAdapterContext<T>): Promise<T | null> {
+		return this.options.localStorage.get(id, ctx)
 	}
 
-	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		return (await this.getById(id, ctx)) != null
+	has(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
+		return this.options.localStorage.has(id, ctx)
 	}
 
-	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
+	async set(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
 		const online = await this.options.isOnline()
 
 		if (online) {
 			try {
-				const remote = await this.options.remoteStorage.add(value, ctx)
-				await this.dataStore.set(remote.id, remote)
-				return remote
+				const remoteItem = await this.options.remoteStorage.set(value, ctx)
+				await this.options.localStorage.put(remoteItem, ctx)
+				return remoteItem
 			} catch (err) {
-				console.error('LocalFirstStorageAdapter.add: remote failed, falling back to local', err)
+				console.error('LocalFirstStorageAdapter.set: remote failed, falling back to local', err)
 			}
 		}
 
-		const id = crypto.randomUUID()
-		const newValue = { id, ...value } as T
-		await this.dataStore.set(id, newValue)
-		await this.enqueue({ type: 'add', value })
-		return newValue
+		const localItem = await this.options.localStorage.set(value, ctx)
+		await this.enqueue({ type: 'set', localId: localItem.id, value })
+		return localItem
 	}
 
-	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+		const result = await this.options.localStorage.put(value, ctx)
+
+		const online = await this.options.isOnline()
+		if (online) {
+			try {
+				await this.options.remoteStorage.put(value, ctx)
+				return result
+			} catch (err) {
+				console.error('LocalFirstStorageAdapter.put: remote failed, queuing pending', err)
+			}
+		}
+
+		await this.enqueue({ type: 'put', value })
+		return result
+	}
+
+	async remove(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false
 		}
 
-		await this.dataStore.delete(id)
+		await this.options.localStorage.remove(id, ctx)
 
 		const online = await this.options.isOnline()
 		if (online) {
@@ -140,7 +143,7 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 	}
 
 	async clear(ctx: StorageAdapterContext<T>): Promise<void> {
-		await this.dataStore.clear()
+		await this.options.localStorage.clear(ctx)
 
 		const online = await this.options.isOnline()
 		if (online) {

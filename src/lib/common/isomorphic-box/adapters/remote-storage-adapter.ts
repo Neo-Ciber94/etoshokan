@@ -1,10 +1,11 @@
-import { StorageAdapter } from '../storage-adapter';
+import { StorageAdapter, type StorageAdapterContext } from '../storage-adapter';
 import type { BaseModel } from '../types';
 
 type RemoteStorageAdapterOptions<T extends BaseModel> = {
 	getAll: () => Promise<T[]>;
-	getById: (id: string) => Promise<T | null>;
-	create: (input: Omit<T, 'id'>) => Promise<T>;
+	get: (id: string) => Promise<T | null>;
+	set: (value: Omit<T, 'id'>) => Promise<T>;
+	put?: (value: T) => Promise<T>;
 	remove: (id: string) => Promise<boolean>;
 	clear?: () => Promise<void>;
 };
@@ -15,31 +16,34 @@ export class RemoteStorageAdapter<T extends BaseModel> extends StorageAdapter<T>
 	}
 
 	async getAll(): Promise<T[]> {
-		const result = await this.options.getAll();
-		return result;
+		return this.options.getAll();
 	}
 
-	async getById(id: T['id']): Promise<T | null> {
-		const result = await this.options.getById(id);
-		return result;
+	async get(id: string): Promise<T | null> {
+		return this.options.get(id);
 	}
 
-	async add(value: Omit<T, 'id'>): Promise<T> {
-		const result = await this.options.create(value);
-		return result;
+	async set(value: Omit<T, 'id'>): Promise<T> {
+		return this.options.set(value);
 	}
 
-	async remove(id: T['id']): Promise<boolean> {
-		const result = await this.options.remove(id);
-		return result;
+	async put(value: T): Promise<T> {
+		if (this.options.put) {
+			return this.options.put(value);
+		}
+		const { id: _id, ...rest } = value as BaseModel & Omit<T, 'id'>;
+		return this.options.set(rest as Omit<T, 'id'>);
 	}
 
-	async has(id: T['id']): Promise<boolean> {
-		const result = await this.getById(id);
-		return result != null;
+	async remove(id: string): Promise<boolean> {
+		return this.options.remove(id);
 	}
 
-	async clear(): Promise<void> {
+	async has(id: string): Promise<boolean> {
+		return (await this.get(id)) != null;
+	}
+
+	async clear(_ctx: StorageAdapterContext<T>): Promise<void> {
 		if (this.options.clear) {
 			await this.options.clear();
 		}

@@ -155,36 +155,38 @@ export class GoogleDriveAdapter<T extends BaseModel> extends StorageAdapter<T> {
 		return Object.values(store);
 	}
 
-	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
+	async get(id: string, ctx: StorageAdapterContext<T>): Promise<T | null> {
 		const store = await this.readStore(ctx);
-		const record = store[id as string];
-
-		if (record === undefined) {
-			return null;
-		}
-
-		return record;
+		return store[id] ?? null;
 	}
 
-	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		return (await this.getById(id, ctx)) !== null;
+	async has(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
+		return (await this.get(id, ctx)) !== null;
 	}
 
-	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
-		const newValue = { id: crypto.randomUUID(), ...value } as T;
+	async set(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
+		const id = crypto.randomUUID();
+		const newValue = { id, ...value } as T;
 		const store = await this.readStore(ctx);
-		store[newValue.id as string] = newValue;
+		store[id] = newValue;
 		await this.writeStore(store);
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+		const store = await this.readStore(ctx);
+		store[value.id] = value;
+		await this.writeStore(store);
+		return value;
+	}
+
+	async remove(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}
 
 		const store = await this.readStore(ctx);
-		delete store[id as string];
+		delete store[id];
 		await this.writeStore(store);
 		return true;
 	}

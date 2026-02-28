@@ -28,7 +28,7 @@ export class IndexedDbStorageAdapter<T extends BaseModel> extends StorageAdapter
 		}
 	}
 
-	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
+	async get(id: string, ctx: StorageAdapterContext<T>): Promise<T | null> {
 		const item = await get(id, this.mainStore);
 		if (item === undefined) {
 			return null;
@@ -41,17 +41,23 @@ export class IndexedDbStorageAdapter<T extends BaseModel> extends StorageAdapter
 		}
 	}
 
-	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		return (await this.getById(id, ctx)) != null;
+	async has(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
+		return (await this.get(id, ctx)) != null;
 	}
 
-	async add(value: Omit<T, 'id'>): Promise<T> {
-		const newValue = { id: crypto.randomUUID(), ...value } as T;
-		await set(newValue.id, newValue, this.mainStore);
+	async set(value: Omit<T, 'id'>, _ctx: StorageAdapterContext<T>): Promise<T> {
+		const id = crypto.randomUUID();
+		const newValue = { id, ...value } as T;
+		await set(id, newValue, this.mainStore);
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+	async put(value: T, _ctx: StorageAdapterContext<T>): Promise<T> {
+		await set(value.id, value, this.mainStore);
+		return value;
+	}
+
+	async remove(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}

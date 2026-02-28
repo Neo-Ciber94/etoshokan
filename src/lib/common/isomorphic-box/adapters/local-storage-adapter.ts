@@ -56,19 +56,24 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 		}
 	}
 
-	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
+	async get(id: string, ctx: StorageAdapterContext<T>): Promise<T | null> {
 		const record = this.getJson(ctx);
 		return record[id] ?? null;
 	}
 
-	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
+	async set(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
 		const id = crypto.randomUUID();
 		const newValue = { id, ...value } as T;
 		this.mutate(ctx, (values) => ({ ...values, [id]: newValue }));
 		return newValue;
 	}
 
-	async remove(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
+	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+		this.mutate(ctx, (values) => ({ ...values, [value.id]: value }));
+		return value;
+	}
+
+	async remove(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
 		if (!(await this.has(id, ctx))) {
 			return false;
 		}
@@ -81,8 +86,8 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 		return true;
 	}
 
-	async has(id: T['id'], ctx: StorageAdapterContext<T>): Promise<boolean> {
-		const result = await this.getById(id, ctx);
+	async has(id: string, ctx: StorageAdapterContext<T>): Promise<boolean> {
+		const result = await this.get(id, ctx);
 		return result != null;
 	}
 
