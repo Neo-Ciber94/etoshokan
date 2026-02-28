@@ -1,19 +1,8 @@
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
-import type {
-	JMDict_KanaEntry,
-	JMDict_KanjiEntry,
-	JMDict_Root,
-	JMDict_Sense,
-	JMDict_Word
-} from './types';
+import type { JMDict_Root, JMDict_Sense } from './types';
 import { hashBase64 } from '$lib/utils/hash';
 import type { WordEntry, PartOfSpeech, Sense, Gloss, Language, Example } from '../core/dictionary';
 import * as ibkv from 'idb-keyval';
-
-function computeId(word: JMDict_Word, entry: JMDict_KanaEntry | JMDict_KanjiEntry) {
-	const glosses = word.sense.flatMap((s) => s.gloss).map((g) => g.text);
-	return hashBase64([...glosses, entry.text]);
-}
 
 type JmdictDataOptions = {
 	jmdictUrl: string;
@@ -53,7 +42,7 @@ export async function getJmdictData(options: JmdictDataOptions) {
 		const canonicalReading = w.kana[0]?.text ?? w.kanji[0]?.text ?? '';
 
 		for (const k of w.kanji) {
-			const id = computeId(w, k);
+			const id = computeId(lang, w.id, k.text);
 			const entry: WordEntry = {
 				id,
 				term,
@@ -67,7 +56,7 @@ export async function getJmdictData(options: JmdictDataOptions) {
 		}
 
 		for (const k of w.kana) {
-			const id = computeId(w, k);
+			const id = computeId(lang, w.id, k.text);
 			const entry: WordEntry = {
 				id,
 				term,
@@ -82,6 +71,10 @@ export async function getJmdictData(options: JmdictDataOptions) {
 	}
 
 	return { kanjiMap, kanaMap, wordsIndex };
+}
+
+function computeId(lang: string, jmdictId: string, text: string) {
+	return hashBase64([lang, jmdictId, text]);
 }
 
 function mapPartOfSpeech(posArr?: string[]): PartOfSpeech | undefined {
