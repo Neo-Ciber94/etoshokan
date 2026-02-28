@@ -38,7 +38,7 @@ export function persistSavedWords(categories: SavedCategory[]): void {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
 }
 
-export const savedWordsQueryKey = ['words', 'saved'] as const;
+const savedWordsQueryKey = ['words', 'saved'] as const;
 
 export function savedWordsQuery() {
 	return queryOptions({

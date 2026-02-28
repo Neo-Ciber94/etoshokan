@@ -1,30 +1,30 @@
-import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query'
-import { getLocalBooksMetadata } from './books.query'
+import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query';
+import { getLocalBooksMetadata } from './books.query';
 
-export const booksMetadataQueryKey = ['books', 'metadata'] as const
+const booksMetadataQueryKey = ['books', 'metadata'] as const;
 
-export function booksMetadataQuery() {
-  return queryOptions({
-    queryKey: booksMetadataQueryKey,
-    queryFn: getLocalBooksMetadata,
-  })
+function booksMetadataQuery() {
+	return queryOptions({
+		queryKey: booksMetadataQueryKey,
+		queryFn: getLocalBooksMetadata
+	});
 }
 
 export function useBooksMetadata() {
-  const query = createQuery(() => booksMetadataQuery())
-  const queryClient = useQueryClient()
+	const query = createQuery(() => booksMetadataQuery());
+	const queryClient = useQueryClient();
 
-  return {
-    get loading() {
-      return query.isPending
-    },
+	return {
+		get loading() {
+			return query.isPending;
+		},
 
-    get value() {
-      return query.data ?? []
-    },
+		get value() {
+			return query.data ?? [];
+		},
 
-    invalidate() {
-      return queryClient.invalidateQueries({ queryKey: booksMetadataQueryKey })
-    },
-  }
+		invalidate() {
+			return queryClient.invalidateQueries({ queryKey: booksMetadataQueryKey });
+		}
+	};
 }

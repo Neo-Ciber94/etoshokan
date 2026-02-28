@@ -1,30 +1,30 @@
-import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query'
-import { initSyncData } from './sync.mutation'
+import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query';
+import { initSyncData } from './sync.mutation';
 
-export const syncEntriesQueryKey = ['books', 'sync'] as const
+const syncEntriesQueryKey = ['books', 'sync'] as const;
 
-export function syncEntriesQuery() {
-  return queryOptions({
-    queryKey: syncEntriesQueryKey,
-    queryFn: initSyncData,
-  })
+function syncEntriesQuery() {
+	return queryOptions({
+		queryKey: syncEntriesQueryKey,
+		queryFn: initSyncData
+	});
 }
 
 export function useSyncBookEntries() {
-  const query = createQuery(() => syncEntriesQuery())
-  const queryClient = useQueryClient()
+	const query = createQuery(() => syncEntriesQuery());
+	const queryClient = useQueryClient();
 
-  return {
-    get loading() {
-      return query.isPending
-    },
+	return {
+		get loading() {
+			return query.isPending;
+		},
 
-    get value() {
-      return query.data ?? []
-    },
+		get value() {
+			return query.data ?? [];
+		},
 
-    invalidate() {
-      return queryClient.invalidateQueries({ queryKey: syncEntriesQueryKey })
-    },
-  }
+		invalidate() {
+			return queryClient.invalidateQueries({ queryKey: syncEntriesQueryKey });
+		}
+	};
 }
