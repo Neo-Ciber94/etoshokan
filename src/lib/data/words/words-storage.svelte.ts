@@ -2,11 +2,12 @@ import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 import type { WordEntry } from '$lib/dictionary/core/dictionary';
 import {
 	DEFAULT_CATEGORY,
-	loadSavedWords,
-	persistSavedWords,
+	loadStoredCategories,
+	persistStoredCategories,
 	savedWordsQuery,
 	savedWordsQueryKey,
-	type SavedCategory
+	type SavedCategory,
+	type StoredCategory
 } from './words.queries';
 
 export type { SavedCategory };
@@ -16,8 +17,8 @@ export function useSavedWords() {
 	const query = createQuery(() => savedWordsQuery());
 	const queryClient = useQueryClient();
 
-	function mutate(updater: (categories: SavedCategory[]) => SavedCategory[]) {
-		persistSavedWords(updater(loadSavedWords()));
+	function mutate(updater: (categories: StoredCategory[]) => StoredCategory[]) {
+		persistStoredCategories(updater(loadStoredCategories()));
 		queryClient.invalidateQueries({ queryKey: savedWordsQueryKey });
 	}
 
@@ -30,36 +31,34 @@ export function useSavedWords() {
 			return (query.data ?? []).map((c) => c.category);
 		},
 
-		isSaved(term: string, language: string) {
-			return (query.data ?? []).some((c) =>
-				c.words.some((w) => w.term === term && w.language === language)
-			);
+		isSaved(id: string) {
+			return (query.data ?? []).some((c) => c.words.some((w) => w.id === id));
 		},
 
 		save(entry: WordEntry, category = DEFAULT_CATEGORY) {
 			mutate((categories) => {
 				const withoutEntry = categories.map((c) => ({
 					...c,
-					words: c.words.filter((w) => !(w.term === entry.term && w.language === entry.language))
+					words: c.words.filter((id) => id !== entry.id)
 				}));
 
 				const idx = withoutEntry.findIndex((c) => c.category === category);
 
 				if (idx >= 0) {
 					const updated = [...withoutEntry];
-					updated[idx] = { ...updated[idx], words: [...updated[idx].words, entry] };
+					updated[idx] = { ...updated[idx], words: [...updated[idx].words, entry.id] };
 					return updated;
 				} else {
-					return [...withoutEntry, { category, words: [entry] }];
+					return [...withoutEntry, { category, words: [entry.id] }];
 				}
 			});
 		},
 
-		delete(term: string, language: string) {
+		delete(id: string) {
 			mutate((categories) =>
 				categories.map((c) => ({
 					...c,
-					words: c.words.filter((w) => !(w.term === term && w.language === language))
+					words: c.words.filter((wordId) => wordId !== id)
 				}))
 			);
 		},
