@@ -61,18 +61,19 @@ export async function deleteLocalBook(id: string): Promise<void> {
 	}
 }
 
-export async function mergeLocalBooksMetadata(books: BookMetadata[]): Promise<void> {
+export async function mergeLocalBooksMetadata(books: BookMetadata[]): Promise<boolean> {
 	const existing = await getLocalBooksMetadata();
 	const existingIds = new Set(existing.map((b) => b.id));
 	const newBooks = books.filter((b) => !existingIds.has(b.id));
 
 	if (newBooks.length === 0) {
-		return;
+		return false;
 	}
 
 	const merged = [...existing, ...newBooks];
 	merged.sort((a, b) => (b.lastReadAt ?? b.addedAt) - (a.lastReadAt ?? a.addedAt));
 	await set(METADATA_KEY, merged);
+	return true;
 }
 
 const bookMutex = new Mutex();

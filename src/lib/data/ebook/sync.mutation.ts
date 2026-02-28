@@ -106,14 +106,14 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 }
 
 // Fetches remote metadata and saves it locally for books not already present (no book file data)
-export async function syncRemoteMetadata(): Promise<void> {
+export async function syncRemoteMetadata() {
 	const result = await getBooksMetadata();
 	if (!result.success) {
 		console.error('Failed to fetch remote metadata:', result.error);
-		return;
+		return false;
 	}
 
-	await mergeLocalBooksMetadata(result.metadata);
+	return await mergeLocalBooksMetadata(result.metadata);
 }
 
 // Upload a missing book
