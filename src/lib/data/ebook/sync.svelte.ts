@@ -1,34 +1,30 @@
-import { initSyncData } from './sync.mutation';
-import type { BookSyncEntry } from './sync.types';
+import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query'
+import { initSyncData } from './sync.mutation'
 
-let loading = $state(true);
-let syncEntries = $state<BookSyncEntry[]>([]);
+export const syncEntriesQueryKey = ['books', 'sync'] as const
 
-$effect.root(() => {
-	invalidate();
-});
-
-async function invalidate() {
-	loading = true;
-
-	try {
-		syncEntries = await initSyncData();
-	} catch (err) {
-		console.error(err);
-	} finally {
-		loading = false;
-	}
+export function syncEntriesQuery() {
+  return queryOptions({
+    queryKey: syncEntriesQueryKey,
+    queryFn: initSyncData,
+  })
 }
 
 export function useSyncBookEntries() {
-	return {
-		invalidate,
-		get loading() {
-			return loading;
-		},
+  const query = createQuery(() => syncEntriesQuery())
+  const queryClient = useQueryClient()
 
-		get value() {
-			return syncEntries;
-		}
-	};
+  return {
+    get loading() {
+      return query.isPending
+    },
+
+    get value() {
+      return query.data ?? []
+    },
+
+    invalidate() {
+      return queryClient.invalidateQueries({ queryKey: syncEntriesQueryKey })
+    },
+  }
 }

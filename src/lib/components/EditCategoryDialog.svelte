@@ -2,10 +2,12 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { wordsStorage } from '$lib/data/words/words-storage.svelte';
+	import { useSavedWords } from '$lib/data/words/words-storage.svelte';
 	import { editCategoryDialog } from './edit-category-dialog.svelte';
 
 	let newName = $state('');
+
+	const savedWords = useSavedWords();
 
 	$effect(() => {
 		if (editCategoryDialog.open) {
@@ -20,7 +22,7 @@
 			return;
 		}
 
-		wordsStorage.renameCategory(editCategoryDialog.categoryName, trimmed);
+		savedWords.renameCategory(editCategoryDialog.categoryName, trimmed);
 		editCategoryDialog.close();
 	}
 
@@ -29,7 +31,7 @@
 			return;
 		}
 
-		wordsStorage.deleteCategory(editCategoryDialog.categoryName);
+		savedWords.deleteCategory(editCategoryDialog.categoryName);
 		editCategoryDialog.close();
 	}
 </script>

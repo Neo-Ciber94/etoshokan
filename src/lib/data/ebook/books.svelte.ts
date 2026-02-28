@@ -1,34 +1,30 @@
-import { getLocalBooksMetadata } from './books.query';
-import type { BookMetadata } from './ebook.types';
+import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query'
+import { getLocalBooksMetadata } from './books.query'
 
-let loading = $state(true);
-let books = $state<BookMetadata[]>([]);
+export const booksMetadataQueryKey = ['books', 'metadata'] as const
 
-$effect.root(() => {
-	invalidate();
-});
-
-async function invalidate() {
-	loading = true;
-
-	try {
-		books = await getLocalBooksMetadata();
-	} catch (err) {
-		console.error(err);
-	} finally {
-		loading = false;
-	}
+export function booksMetadataQuery() {
+  return queryOptions({
+    queryKey: booksMetadataQueryKey,
+    queryFn: getLocalBooksMetadata,
+  })
 }
 
 export function useBooksMetadata() {
-	return {
-		invalidate,
-		get loading() {
-			return loading;
-		},
+  const query = createQuery(() => booksMetadataQuery())
+  const queryClient = useQueryClient()
 
-		get value() {
-			return books;
-		}
-	};
+  return {
+    get loading() {
+      return query.isPending
+    },
+
+    get value() {
+      return query.data ?? []
+    },
+
+    invalidate() {
+      return queryClient.invalidateQueries({ queryKey: booksMetadataQueryKey })
+    },
+  }
 }

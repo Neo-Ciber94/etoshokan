@@ -1,34 +1,26 @@
-import type { WordEntry } from '$lib/dictionary/core/dictionary';
-import { wordsStorage } from '$lib/data/words/words-storage.svelte';
+import type { WordEntry } from '$lib/dictionary/core/dictionary'
 
 class SaveAsDialogState {
-	open = $state(false);
-	entry = $state<WordEntry | null>(null);
+  open = $state(false)
+  entry = $state<WordEntry | null>(null)
 
-	show(entry: WordEntry) {
-		this.entry = entry;
-		this.open = true;
-	}
+  show(entry: WordEntry) {
+    this.entry = entry
+    this.open = true
+  }
 
-	close() {
-		this.open = false;
-		this.entry = null;
-	}
+  close() {
+    this.open = false
+    this.entry = null
+  }
 
-	saveToCategory(category: string) {
-		if (this.entry) {
-			wordsStorage.save(this.entry, category);
-		}
-		this.close();
-	}
+  promptAddCategory() {
+    const name = prompt('Category name:')
 
-	promptAddCategory() {
-		const name = prompt('Category name:');
-
-		if (!name?.trim()) {
-			return;
-		}
-	}
+    if (!name?.trim()) {
+      return
+    }
+  }
 }
 
-export const saveAsDialog = new SaveAsDialogState();
+export const saveAsDialog = new SaveAsDialogState()

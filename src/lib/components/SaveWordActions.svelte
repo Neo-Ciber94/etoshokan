@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
-	import { wordsStorage, DEFAULT_CATEGORY } from '$lib/data/words/words-storage.svelte';
+	import { useSavedWords, DEFAULT_CATEGORY } from '$lib/data/words/words-storage.svelte';
 	import { saveAsDialog } from './save-as-dialog.svelte';
 
 	interface Props {
@@ -10,16 +10,18 @@
 
 	let { entry }: Props = $props();
 
+	const savedWords = useSavedWords();
+
 	function save() {
-		wordsStorage.save(entry, DEFAULT_CATEGORY);
+		savedWords.save(entry, DEFAULT_CATEGORY);
 	}
 
 	function removeWord() {
-		wordsStorage.delete(entry.term, entry.language);
+		savedWords.delete(entry.term, entry.language);
 	}
 </script>
 
-{#if wordsStorage.isSaved(entry.term, entry.language)}
+{#if savedWords.isSaved(entry.term, entry.language)}
 	<DropdownMenu.Item onclick={removeWord}>Remove</DropdownMenu.Item>
 {:else}
 	<DropdownMenu.Item onclick={save}>Save</DropdownMenu.Item>

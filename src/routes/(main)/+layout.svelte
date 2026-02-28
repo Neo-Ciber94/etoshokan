@@ -9,8 +9,10 @@
 	import { syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
 	import { dev } from '$app/environment';
 	import { authClient } from '$lib/client/auth-client';
+	import { useQueryClient } from '@tanstack/svelte-query';
 
 	const session = authClient.useSession();
+	const queryClient = useQueryClient();
 
 	$effect.pre(() => {
 		dictionary.initialize();
@@ -18,7 +20,10 @@
 
 	$effect.pre(() => {
 		async function run() {
-			await syncRemoteMetadata();
+			const changed = await syncRemoteMetadata();
+			if (changed) {
+				await queryClient.invalidateQueries();
+			}
 		}
 
 		const unsubscribe = session.subscribe(run);

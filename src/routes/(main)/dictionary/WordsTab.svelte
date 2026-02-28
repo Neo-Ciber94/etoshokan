@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Badge } from '$lib/components/ui/badge';
-	import { wordsStorage } from '$lib/data/words/words-storage.svelte';
+	import { useSavedWords } from '$lib/data/words/words-storage.svelte';
 	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 	import { editCategoryDialog } from '$lib/components/edit-category-dialog.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -11,12 +11,14 @@
 
 	let filter = $state<string>('all');
 
-	const totalWords = $derived(wordsStorage.categories.reduce((sum, c) => sum + c.words.length, 0));
+	const savedWords = useSavedWords();
+
+	const totalWords = $derived(savedWords.categories.reduce((sum, c) => sum + c.words.length, 0));
 
 	const displayCategories = $derived(
 		filter === 'all'
-			? wordsStorage.categories.filter((c) => c.words.length > 0)
-			: wordsStorage.categories.filter((c) => c.category === filter && c.words.length > 0)
+			? savedWords.categories.filter((c) => c.words.length > 0)
+			: savedWords.categories.filter((c) => c.category === filter && c.words.length > 0)
 	);
 </script>
 
@@ -30,7 +32,7 @@
 		>
 			All
 		</button>
-		{#each wordsStorage.categoryNames as cat (cat)}
+		{#each savedWords.categoryNames as cat (cat)}
 			<button
 				onclick={() => (filter = cat)}
 				class="rounded-full border px-3 py-1 text-sm transition-colors {filter === cat
