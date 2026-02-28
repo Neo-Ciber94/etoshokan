@@ -4,6 +4,7 @@ import type { WordEntry } from '$lib/dictionary/core/dictionary';
 export const DEFAULT_CATEGORY = '⭐ Common';
 
 const STORAGE_KEY = 'etoshokan:saved-words';
+export const savedWordsQueryKey = ['words', 'saved'] as const;
 
 export interface SavedCategory {
 	category: string;
@@ -37,8 +38,6 @@ export function loadSavedWords(): SavedCategory[] {
 export function persistSavedWords(categories: SavedCategory[]): void {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
 }
-
-const savedWordsQueryKey = ['words', 'saved'] as const;
 
 export function savedWordsQuery() {
 	return queryOptions({
