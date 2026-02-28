@@ -1,8 +1,8 @@
 import { z, type ZodType } from 'zod';
 import type { StorageAdapter } from './storage-adapter';
-import type { HasId } from './types';
+import type { BaseModel } from './types';
 
-type IsomorphicStorageContext<E extends HasId, TSchema extends ZodType<E>> = {
+type IsomorphicStorageContext<E extends BaseModel, TSchema extends ZodType<E>> = {
 	schema: TSchema;
 	adapter: StorageAdapter<z.output<TSchema>>;
 };
@@ -10,7 +10,7 @@ type IsomorphicStorageContext<E extends HasId, TSchema extends ZodType<E>> = {
 type AnyRecord = Record<string, unknown>;
 
 type Initializer<
-	E extends HasId,
+	E extends BaseModel,
 	TSchema extends ZodType<E>,
 	TOutput extends AnyRecord = AnyRecord
 > = {
@@ -18,36 +18,24 @@ type Initializer<
 };
 
 type IsomorphicStorageOptions<
-	E extends HasId,
+	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TQuery extends Initializer<E, TSchema>,
-	TMutation extends Initializer<E, TSchema>
+	TMethods extends Initializer<E, TSchema>
 > = {
 	schema: TSchema;
-	prepare: {
-		query: TQuery;
-		mutation: TMutation;
-	};
+	methods: TMethods;
 };
 
 export function createIsometricStorage<
-	E extends HasId,
+	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TQuery extends Initializer<E, TSchema>,
-	TMutation extends Initializer<E, TSchema>
->(options: IsomorphicStorageOptions<E, TSchema, TQuery, TMutation>) {
+	TMethods extends Initializer<E, TSchema>
+>(options: IsomorphicStorageOptions<E, TSchema, TMethods>) {
 	return {
 		adapt(adapter: StorageAdapter<z.output<TSchema>>) {
 			const ctx: IsomorphicStorageContext<E, TSchema> = { schema: options.schema, adapter };
-			const query = options.prepare.query(ctx);
-			const mutation = options.prepare.mutation(ctx);
-			return {
-				query,
-				mutation
-			} as {
-				query: ReturnType<TQuery>;
-				mutation: ReturnType<TMutation>;
-			};
+			const methods = options.methods(ctx);
+			return methods as ReturnType<TMethods>;
 		}
 	};
 }
