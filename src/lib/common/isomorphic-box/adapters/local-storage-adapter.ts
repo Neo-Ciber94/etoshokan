@@ -21,31 +21,35 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 		const raw = storage.getItem(key);
 
 		if (raw == null) {
-			return [];
+			return {} as Record<string, T>;
 		}
 
-		const result = z.array(ctx.schema).parse(JSON.parse(raw));
+		const result = z.record(z.string(), ctx.schema).parse(JSON.parse(raw));
 		return result;
 	}
 
-	private mutate(ctx: StorageAdapterContext<T>, updater: (values: T[]) => T[]) {
+	private mutate(
+		ctx: StorageAdapterContext<T>,
+		updater: (values: Record<string, T>) => Record<string, T>
+	) {
 		const key = this.key;
+		const storage = this.storage();
 
 		try {
 			const value = this.getJson(ctx);
 			const result = updater(value);
-			localStorage.setItem(key, JSON.stringify(result));
+			storage.setItem(key, JSON.stringify(result));
 		} catch (err) {
 			console.error(err);
-			const result = updater([]);
-			localStorage.setItem(key, JSON.stringify(result));
+			const result = updater({});
+			storage.setItem(key, JSON.stringify(result));
 		}
 	}
 
 	getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {
 		try {
 			const result = this.getJson(ctx);
-			return Promise.resolve(result);
+			return Promise.resolve(Object.values(result));
 		} catch (err) {
 			console.error(err);
 			return Promise.resolve([]);
@@ -53,14 +57,14 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 	}
 
 	async getById(id: T['id'], ctx: StorageAdapterContext<T>): Promise<T | null> {
-		const results = await this.getAll(ctx);
-		return results.find((x) => x.id === id) ?? null;
+		const record = this.getJson(ctx);
+		return record[id] ?? null;
 	}
 
 	async add(value: Omit<T, 'id'>, ctx: StorageAdapterContext<T>): Promise<T> {
 		const id = crypto.randomUUID();
 		const newValue = { id, ...value } as T;
-		this.mutate(ctx, (values) => [...values, newValue]);
+		this.mutate(ctx, (values) => ({ ...values, [id]: newValue }));
 		return newValue;
 	}
 
@@ -69,7 +73,11 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 			return false;
 		}
 
-		this.mutate(ctx, (values) => values.filter((x) => x.id !== id));
+		this.mutate(ctx, (obj) => {
+			delete obj[id];
+			return obj;
+		});
+
 		return true;
 	}
 
