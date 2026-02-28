@@ -13,8 +13,8 @@
 	import LanguageFlag from '$lib/components/LanguageFlag.svelte';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
 
-	const MAX_SENSES = 3;
-	const MAX_GLOSSES = 3;
+	const MAX_SENSES_PER_WORD = 3;
+	const MAX_GLOSSES_PER_WORD = 3;
 
 	const results = $derived(dictionaryState.results);
 	const error = $derived(dictionaryState.error);
@@ -208,7 +208,7 @@
 									</div>
 
 									<div class="space-y-2 md:space-y-4">
-										{#each entry.senses.slice(0, MAX_SENSES) as sense, senseIdx (senseIdx)}
+										{#each entry.senses.slice(0, MAX_SENSES_PER_WORD) as sense, senseIdx (senseIdx)}
 											<div class="space-y-1 md:space-y-2">
 												<div class="flex items-center gap-2">
 													<span class="text-lg font-semibold text-foreground">
@@ -225,7 +225,7 @@
 
 												{#if sense.glosses}
 													<div class="space-y-1">
-														{#each sense.glosses.slice(0, MAX_GLOSSES) as gloss, glossIdx}
+														{#each sense.glosses.slice(0, MAX_GLOSSES_PER_WORD) as gloss, glossIdx}
 															<div class="text-sm text-foreground md:text-base">
 																{#if sense.glosses.length > 1}
 																	<span class="text-muted-foreground">{glossIdx + 1}.</span>

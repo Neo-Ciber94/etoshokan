@@ -130,7 +130,7 @@
 											<div class="space-y-0.5">
 												{#each example.sentences as sentence}
 													<p
-														class="text-sm {sentence.lang === entry.language
+														class="text-base {sentence.lang === entry.language
 															? 'text-foreground'
 															: 'text-muted-foreground italic'}"
 													>

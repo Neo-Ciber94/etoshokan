@@ -17,11 +17,11 @@
 	}
 
 	function removeWord() {
-		savedWords.delete(entry.term, entry.language);
+		savedWords.delete(entry.id);
 	}
 </script>
 
-{#if savedWords.isSaved(entry.term, entry.language)}
+{#if savedWords.isSaved(entry.id)}
 	<DropdownMenu.Item onclick={removeWord}>Remove</DropdownMenu.Item>
 {:else}
 	<DropdownMenu.Item onclick={save}>Save</DropdownMenu.Item>
