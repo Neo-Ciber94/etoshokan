@@ -63,19 +63,14 @@
 		let unlisten: (() => void) | undefined;
 
 		async function handleAuthDeepLinking() {
-			async function setup() {
-				const { onOpenUrl, getCurrent } = await import('@tauri-apps/plugin-deep-link');
+			const { onOpenUrl, getCurrent } = await import('@tauri-apps/plugin-deep-link');
 
-				const current = await getCurrent();
-				if (current) {
-					await handleUrls(current);
-				}
-
-				return await onOpenUrl(handleUrls);
+			const current = await getCurrent();
+			if (current) {
+				await handleUrls(current);
 			}
 
-			const unlisten = setup();
-			return unlisten;
+			unlisten = await onOpenUrl(handleUrls);
 		}
 
 		handleAuthDeepLinking();
