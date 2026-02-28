@@ -1,4 +1,4 @@
-export * from './createIsomorphicStorage';
+export * from './collection';
 export * from './storage-adapter';
 export * from './types';
 export * from './helper';

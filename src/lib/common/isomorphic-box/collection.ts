@@ -2,7 +2,7 @@ import { z, type ZodType } from 'zod';
 import type { StorageAdapter } from './storage-adapter';
 import type { BaseModel } from './types';
 
-type IsomorphicStorageContext<E extends BaseModel, TSchema extends ZodType<E>> = {
+type CollectionContext<E extends BaseModel, TSchema extends ZodType<E>> = {
 	schema: TSchema;
 	adapter: StorageAdapter<z.output<TSchema>>;
 };
@@ -14,10 +14,10 @@ type Initializer<
 	TSchema extends ZodType<E>,
 	TOutput extends AnyRecord = AnyRecord
 > = {
-	(ctx: IsomorphicStorageContext<E, TSchema>): TOutput;
+	(ctx: CollectionContext<E, TSchema>): TOutput;
 };
 
-type IsomorphicStorageOptions<
+type CollectionOptions<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
 	TMethods extends Initializer<E, TSchema>
@@ -26,14 +26,14 @@ type IsomorphicStorageOptions<
 	methods: TMethods;
 };
 
-export function createIsometricStorage<
+export function createCollection<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
 	TMethods extends Initializer<E, TSchema>
->(options: IsomorphicStorageOptions<E, TSchema, TMethods>) {
+>(options: CollectionOptions<E, TSchema, TMethods>) {
 	return {
 		adapt(adapter: StorageAdapter<z.output<TSchema>>) {
-			const ctx: IsomorphicStorageContext<E, TSchema> = { schema: options.schema, adapter };
+			const ctx: CollectionContext<E, TSchema> = { schema: options.schema, adapter };
 			const methods = options.methods(ctx);
 			return methods as ReturnType<TMethods>;
 		}
