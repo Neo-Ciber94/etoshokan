@@ -33,13 +33,12 @@ This is a ebook reader that support translations from english to japanese with o
 
 ## Development Workflow
 
-## Technology-Specific Guidelines
-
 ### SvelteKit & Svelte 5
 
 - Use **runes** (`$state`, `$derived`, `$effect`) instead of legacy reactive declarations
 - Prefer `let { children } = $props()` over `$$slots`
 - Use `{@render children?.()}` for slot rendering
+- Run `bun run check` to ensure no errors
 
 ### Tailwind CSS
 
