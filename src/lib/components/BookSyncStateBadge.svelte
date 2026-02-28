@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { useSyncBookEntries } from '$lib/ebook/sync.svelte';
+	import { useSyncBookEntries } from '$lib/data/ebook/sync.svelte';
 	import { badgeVariants } from '$lib/components/ui/badge';
 	import { cn } from '$lib/utils';
 	import CloudUploadIcon from '@lucide/svelte/icons/cloud-upload';
 	import CloudOffIcon from '@lucide/svelte/icons/cloud-off';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import DownloadIcon from '@lucide/svelte/icons/download';
-	import { useBooksMetadata } from '$lib/ebook/books.svelte';
-	import { downloadBookData, uploadMissingBook } from '$lib/ebook/sync.mutation';
+	import { useBooksMetadata } from '$lib/data/ebook/books.svelte';
+	import { downloadBookData, uploadMissingBook } from '$lib/data/ebook/sync.mutation';
 	import { openModal } from './modal';
-	import { hasLocalBookData } from '$lib/ebook/books.query';
+	import { hasLocalBookData } from '$lib/data/ebook/books.query';
 
 	let { bookId, class: className = '' }: { bookId: string; class?: string } = $props();
 

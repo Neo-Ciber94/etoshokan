@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { wordsStorage } from '$lib/dictionary/words-storage.svelte';
+	import { wordsStorage } from '$lib/data/words/words-storage.svelte';
 	import { saveAsDialog } from './save-as-dialog.svelte';
 	import Button from './ui/button/button.svelte';
 </script>

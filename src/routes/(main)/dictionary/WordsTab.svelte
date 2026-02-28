@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Badge } from '$lib/components/ui/badge';
-	import { wordsStorage } from '$lib/dictionary/words-storage.svelte';
+	import { wordsStorage } from '$lib/data/words/words-storage.svelte';
 	import SaveWordActions from '$lib/components/SaveWordActions.svelte';
 	import { editCategoryDialog } from '$lib/components/edit-category-dialog.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';

@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { useBooksMetadata } from '$lib/ebook/books.svelte';
+	import { useBooksMetadata } from '$lib/data/ebook/books.svelte';
 	import { authClient } from '$lib/client/auth-client';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';

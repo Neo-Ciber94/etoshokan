@@ -3,8 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
 	import { authClient } from '$lib/client/auth-client';
-	import { clearSyncEntries, syncRemoteMetadata } from '$lib/ebook/sync.mutation';
-	import { clearLocalBooks } from '$lib/ebook/books.mutation';
+	import { clearSyncEntries, syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
+	import { clearLocalBooks } from '$lib/data/ebook/books.mutation';
 
 	const session = authClient.useSession();
 	const dict = dictionary;

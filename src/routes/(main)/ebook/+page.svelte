@@ -8,10 +8,10 @@
 		uploadBookFromFile,
 		UploadResultStatus,
 		type UploadResult
-	} from '$lib/ebook/books.mutation';
+	} from '$lib/data/ebook/books.mutation';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
-	import { useBooksMetadata } from '$lib/ebook/books.svelte';
+	import { useBooksMetadata } from '$lib/data/ebook/books.svelte';
 	import { openModal } from '$lib/components/modal';
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';

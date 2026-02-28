@@ -2,7 +2,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { wordsStorage } from '$lib/dictionary/words-storage.svelte';
+	import { wordsStorage } from '$lib/data/words/words-storage.svelte';
 	import { editCategoryDialog } from './edit-category-dialog.svelte';
 
 	let newName = $state('');

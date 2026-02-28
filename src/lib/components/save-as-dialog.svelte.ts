@@ -1,5 +1,5 @@
 import type { WordEntry } from '$lib/dictionary/core/dictionary';
-import { wordsStorage } from '$lib/dictionary/words-storage.svelte';
+import { wordsStorage } from '$lib/data/words/words-storage.svelte';
 
 class SaveAsDialogState {
 	open = $state(false);

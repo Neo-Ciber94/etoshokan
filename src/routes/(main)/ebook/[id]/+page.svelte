@@ -7,9 +7,9 @@
 		getLocalBookData,
 		getLocalBookMetadataById,
 		hasLocalBookData
-	} from '$lib/ebook/books.query';
-	import { updateLocalBookProgress, updateLocalBookZoom } from '$lib/ebook/books.mutation';
-	import type { BookMetadata, TocItem } from '$lib/ebook/ebook.types';
+	} from '$lib/data/ebook/books.query';
+	import { updateLocalBookProgress, updateLocalBookZoom } from '$lib/data/ebook/books.mutation';
+	import type { BookMetadata, TocItem } from '$lib/data/ebook/ebook.types';
 	import { createFoliateView, type FoliateView } from '$lib/types/view';
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
@@ -26,7 +26,7 @@
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import { isMobile } from '$lib/utils/isMobile';
-	import { downloadBookData } from '$lib/ebook/sync.mutation';
+	import { downloadBookData } from '$lib/data/ebook/sync.mutation';
 	import { openModal } from '$lib/components/modal';
 
 	// svelte-ignore non_reactive_update
