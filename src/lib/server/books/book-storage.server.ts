@@ -3,7 +3,7 @@ import {
   type StoredBook,
   type UploadBookFormData,
   BookMetadataSchema
-} from '$lib/ebook/ebook.types'
+} from '$lib/data/ebook/ebook.types'
 import { logger } from '$lib/logging/logger'
 import {
   findFileByName,
