@@ -49,10 +49,10 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 			try {
 				if (op.type === 'set') {
 					const remoteItem = await this.options.remoteStorage.set(op.value, ctx)
-					await this.options.localStorage.put(remoteItem, ctx)
+					await this.options.localStorage.update(remoteItem, ctx)
 					await this.options.localStorage.remove(op.localId, ctx)
 				} else if (op.type === 'put') {
-					await this.options.remoteStorage.put(op.value, ctx)
+					await this.options.remoteStorage.update(op.value, ctx)
 				} else if (op.type === 'remove') {
 					await this.options.remoteStorage.remove(op.id, ctx)
 				} else if (op.type === 'clear') {
@@ -70,7 +70,7 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 		const items = await this.options.remoteStorage.getAll(ctx)
 		await this.options.localStorage.clear(ctx)
 		for (const item of items) {
-			await this.options.localStorage.put(item, ctx)
+			await this.options.localStorage.update(item, ctx)
 		}
 	}
 
@@ -92,7 +92,7 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 		if (online) {
 			try {
 				const remoteItem = await this.options.remoteStorage.set(value, ctx)
-				await this.options.localStorage.put(remoteItem, ctx)
+				await this.options.localStorage.update(remoteItem, ctx)
 				return remoteItem
 			} catch (err) {
 				console.error('LocalFirstStorageAdapter.set: remote failed, falling back to local', err)
@@ -104,13 +104,13 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 		return localItem
 	}
 
-	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
-		const result = await this.options.localStorage.put(value, ctx)
+	async update(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+		const result = await this.options.localStorage.update(value, ctx)
 
 		const online = await this.options.isOnline()
 		if (online) {
 			try {
-				await this.options.remoteStorage.put(value, ctx)
+				await this.options.remoteStorage.update(value, ctx)
 				return result
 			} catch (err) {
 				console.error('LocalFirstStorageAdapter.put: remote failed, queuing pending', err)

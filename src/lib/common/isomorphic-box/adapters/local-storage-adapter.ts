@@ -68,7 +68,7 @@ export class LocalStorageAdapter<T extends BaseModel> extends StorageAdapter<T> 
 		return newValue;
 	}
 
-	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+	async update(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
 		this.mutate(ctx, (values) => ({ ...values, [value.id]: value }));
 		return value;
 	}

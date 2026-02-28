@@ -27,7 +27,7 @@ export class RemoteStorageAdapter<T extends BaseModel> extends StorageAdapter<T>
 		return this.options.set(value);
 	}
 
-	async put(value: T): Promise<T> {
+	async update(value: T): Promise<T> {
 		if (this.options.put) {
 			return this.options.put(value);
 		}

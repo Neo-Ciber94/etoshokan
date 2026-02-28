@@ -173,7 +173,7 @@ export class GoogleDriveAdapter<T extends BaseModel> extends StorageAdapter<T> {
 		return newValue;
 	}
 
-	async put(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
+	async update(value: T, ctx: StorageAdapterContext<T>): Promise<T> {
 		const store = await this.readStore(ctx);
 		store[value.id] = value;
 		await this.writeStore(store);

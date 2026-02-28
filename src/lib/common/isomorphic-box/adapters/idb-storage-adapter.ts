@@ -52,7 +52,7 @@ export class IndexedDbStorageAdapter<T extends BaseModel> extends StorageAdapter
 		return newValue;
 	}
 
-	async put(value: T, _ctx: StorageAdapterContext<T>): Promise<T> {
+	async update(value: T, _ctx: StorageAdapterContext<T>): Promise<T> {
 		await set(value.id, value, this.mainStore);
 		return value;
 	}
