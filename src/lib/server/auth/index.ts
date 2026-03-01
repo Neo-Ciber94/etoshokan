@@ -24,7 +24,7 @@ export const auth = betterAuth({
 	plugins: [googleAuthPlugin(), sveltekitCookies(getRequestEvent)],
 	account: {
 		storeAccountCookie: true,
-		storeStateStrategy: 'cookie'
+		storeStateStrategy: 'cookie',
 	},
 	socialProviders: {
 		google: {

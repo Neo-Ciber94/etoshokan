@@ -1,8 +1,9 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { type Account, type GenericEndpointContext } from 'better-auth';
-import { symmetricDecodeJWT } from 'better-auth/crypto';
+import { symmetricDecodeJWT, symmetricEncodeJWT } from 'better-auth/crypto';
 import { auth } from '.';
 import { z } from 'zod/v4';
+import { env } from '$env/dynamic/private';
 
 export async function getGoogleAccessToken(event: RequestEvent) {
 	const context = await auth.$context;
@@ -31,6 +32,46 @@ export async function getAccountFromCtx(ctx: GenericEndpointContext) {
 
 	const secret = ctx.context.secret;
 	return decodeAccountCookie(accountCookie, secret);
+}
+
+export async function validateAccountData(
+	accountData: Account,
+	ctx: GenericEndpointContext
+): Promise<boolean> {
+	if (accountData.accessTokenExpiresAt == null) {
+		console.warn("Access token don't have an expiration date");
+		return false;
+	}
+
+	const isExpired = new Date(accountData.accessTokenExpiresAt).getTime() <= Date.now();
+
+	if (!isExpired) {
+		return true;
+	}
+
+	try {
+		// const newToken = await refreshToken({
+		// 	headers: ctx.headers,
+		// 	body: {
+		// 		userId: accountData.userId,
+		// 		providerId: 'google'
+		// 	}
+		// });
+
+		const newToken = await refreshGoogleAccessToken(accountData.refreshToken || '');
+		const expiresAt = new Date(Date.now() + newToken.expires_in * 1000);
+
+		const accountDataCookie = ctx.context.authCookies.accountData;
+		accountData.accessToken = newToken.access_token;
+		accountData.accessTokenExpiresAt = expiresAt;
+		const jwt = await symmetricEncodeJWT(accountData, ctx.context.secret, 'better-auth-account');
+		ctx.setCookie(accountDataCookie.name, jwt, accountDataCookie.attributes);
+		console.log('Refresh account data');
+		return true;
+	} catch (err) {
+		console.error('Failed to refresh account token', err);
+		return false;
+	}
 }
 
 export async function getAccountFromCookie(accountCookie: string) {
@@ -96,4 +137,33 @@ async function decodeAccountCookie(accountCookie: string, secret: string) {
 	}
 
 	return result.data;
+}
+
+type GoogleTokenResponse = {
+	access_token: string;
+	expires_in: number;
+	token_type: string;
+	scope?: string;
+};
+
+async function refreshGoogleAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
+	const res = await fetch('https://oauth2.googleapis.com/token', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body: new URLSearchParams({
+			client_id: env.GOOGLE_CLIENT_ID,
+			client_secret: env.GOOGLE_CLIENT_SECRET,
+			refresh_token: refreshToken,
+			grant_type: 'refresh_token'
+		})
+	});
+
+	if (!res.ok) {
+		const errorText = await res.text();
+		throw new Error(`Failed to refresh Google token: ${errorText}`);
+	}
+
+	return res.json();
 }

@@ -1,7 +1,7 @@
 import { type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 import { deeplinkHandoff, exchangeToken } from './endpoints';
-import { getAccountFromCtx } from '../utils';
+import { getAccountFromCtx, validateAccountData } from '../utils';
 
 const IGNORE_ROUTES = [
 	'/callback/:id',
@@ -37,7 +37,9 @@ function handleCheckGoogleTokens() {
 		const accountData = await getAccountFromCtx(ctx);
 
 		if (accountData) {
-			return;
+			if (await validateAccountData(accountData, ctx)) {
+				return;
+			}
 		}
 
 		// Logout if cannot get account data, we remove all the auth cookies
