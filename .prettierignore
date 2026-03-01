@@ -13,5 +13,6 @@ bun.lockb
 /.svelte-kit/
 
 # Tauri
-/src-tauri/
-!/src-tauri/**/*.json
+/src-tauri/**
+!/src-tauri/tauri.conf.json
+!/src-tauri/capabilities/**/*.json

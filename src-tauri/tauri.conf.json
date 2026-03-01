@@ -8,12 +8,12 @@
 		"frontendDist": "https://etoshokan.pages.dev",
 		"beforeDevCommand": "bun dev"
 	},
-	"plugins":{
-		 "deep-link": {
+	"plugins": {
+		"deep-link": {
 			"mobile": [
 				{
-				"scheme": ["etoshokan"],
-				"appLink": false
+					"scheme": ["etoshokan"],
+					"appLink": false
 				}
 			]
 		}
