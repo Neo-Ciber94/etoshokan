@@ -72,6 +72,7 @@
 	// Page state
 	let currentPage = $state(0);
 	let totalPages = $state(0);
+	let progress = $state(0);
 
 	// Pointer tracking for fast-click detection
 	let pagePointer = $state({
@@ -196,14 +197,16 @@
 			// Listen for relocation events (progress tracking)
 			foliateView.addEventListener('relocate', async (e) => {
 				const detail = e.detail;
-				const progress = Math.round((detail.fraction || 0) * 100);
+				const newProgress = Math.round((detail.fraction || 0) * 100);
 				const cfi = detail.cfi || '';
 
-				await updateLocalBookProgress(bookId, cfi, progress);
+				progress = newProgress;
+
+				await updateLocalBookProgress(bookId, cfi, newProgress);
 
 				if (bookMetadata) {
 					bookMetadata.currentCfi = cfi;
-					bookMetadata.progress = progress;
+					bookMetadata.progress = newProgress;
 					bookMetadata.lastReadAt = Date.now();
 				}
 
@@ -508,12 +511,20 @@
 			onTranslate={handleTranslate}
 		/>
 
-		<!-- Page indicator -->
-		{#if showPageIndicator.value && totalPages > 0}
-			<div
-				class="pointer-events-none fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-border bg-card/85 px-3 py-1 text-xs text-muted-foreground tabular-nums backdrop-blur-sm"
-			>
-				{currentPage} / {totalPages}
+		<!-- Progress indicator -->
+		{#if showPageIndicator.value}
+			<div class="pointer-events-none fixed bottom-0 left-0 right-0 z-40">
+				<div class="flex justify-end px-3 pb-1">
+					<span class="text-xs tabular-nums text-muted-foreground">
+						{progress}%
+					</span>
+				</div>
+				<div class="h-1 bg-muted">
+					<div
+						class="h-full bg-primary transition-[width] duration-300"
+						style="width: {progress}%"
+					></div>
+				</div>
 			</div>
 		{/if}
 	{/if}
