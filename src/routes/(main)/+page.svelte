@@ -99,7 +99,7 @@
 			<!-- Android download card (web only) -->
 			{#if web}
 				<Button variant="outline" class="h-14 w-full gap-3 text-base" onclick={handleDownloadApp}>
-					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32">
+					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32" class="text-lime-500">
 						<rect width="4" height="10" x="2" y="12" fill="currentColor" rx="2" />
 						<rect width="4" height="10" x="26" y="12" fill="currentColor" rx="2" />
 						<path
