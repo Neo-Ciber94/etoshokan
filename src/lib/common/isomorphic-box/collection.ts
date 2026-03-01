@@ -9,7 +9,7 @@ type CollectionContext<E extends BaseModel, TSchema extends ZodType<E>> = {
 
 type AnyRecord = Record<string, unknown>;
 
-type Initializer<
+export type ActionsInitializer<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
 	TOutput extends AnyRecord = AnyRecord
@@ -20,7 +20,7 @@ type Initializer<
 type CollectionOptions<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TActions extends Initializer<E, TSchema>
+	TActions extends ActionsInitializer<E, TSchema>
 > = {
 	schema: TSchema;
 	actions: TActions;
@@ -29,18 +29,19 @@ type CollectionOptions<
 type CollectionInternals<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TActions extends Initializer<E, TSchema>,
+	TActions extends ActionsInitializer<E, TSchema>,
 	TAdapter extends StorageAdapter<E>
 > = {
 	schema: TSchema;
 	actions: ReturnType<TActions>;
 	adapter: TAdapter;
+	getContext(): CollectionContext<E, TSchema>;
 };
 
-type AdaptCollection<
+export type AdaptCollection<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TActions extends Initializer<E, TSchema>,
+	TActions extends ActionsInitializer<E, TSchema>,
 	TAdapter extends StorageAdapter<E>
 > = ReturnType<TActions> & {
 	$internals: CollectionInternals<E, TSchema, TActions, TAdapter>;
@@ -52,7 +53,7 @@ type AnyAdapter = StorageAdapter<any>;
 export function createCollection<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TActions extends Initializer<E, TSchema>
+	TActions extends ActionsInitializer<E, TSchema>
 >(options: CollectionOptions<E, TSchema, TActions>) {
 	return {
 		adapt<TAdapter extends AnyAdapter>(adapter: TAdapter) {
@@ -64,7 +65,10 @@ export function createCollection<
 			adapted.$internals = {
 				schema,
 				actions,
-				adapter
+				adapter,
+				getContext() {
+					return ctx;
+				}
 			};
 
 			return adapted;

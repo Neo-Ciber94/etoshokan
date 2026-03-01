@@ -21,6 +21,9 @@ type LocalFirstStorageAdapterOptions<T extends BaseModel> = {
 	remoteStorage: StorageAdapter<T>;
 };
 
+type OnPushChanges<T extends BaseModel> = (entries: ReadonlyArray<PendingOperation<T>>) => void;
+type OnPullChanges<T extends BaseModel> = (entries: ReadonlyArray<T>) => void;
+
 export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapter<T> {
 	private readonly options: Readonly<LocalFirstStorageAdapterOptions<T>>;
 	private readonly pendingStore: IndexDbStore<PendingOperation<T>>;
@@ -93,7 +96,10 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 		await Promise.all(promises);
 	}
 
-	async pushChanges(ctx: StorageAdapterContext<T>): Promise<void> {
+	async pushChanges(
+		ctx: StorageAdapterContext<T>,
+		onPushChanges?: OnPushChanges<T>
+	): Promise<void> {
 		await this.deduplicateEntries();
 		const entries = await this.pendingStore.entries();
 		const sorted = entries.map(([, op]) => op).sort((a, b) => a.timestamp - b.timestamp);
@@ -120,15 +126,22 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 				break;
 			}
 		}
+
+		onPushChanges?.(sorted);
 	}
 
-	async pullChanges(ctx: StorageAdapterContext<T>): Promise<void> {
+	async pullChanges(
+		ctx: StorageAdapterContext<T>,
+		onPullChanges?: OnPullChanges<T>
+	): Promise<void> {
 		const items = await this.options.remoteStorage.getAll(ctx);
 		await this.options.localStorage.clear(ctx);
 
 		for (const item of items) {
 			await this.options.localStorage.update(item, ctx);
 		}
+
+		onPullChanges?.(items);
 	}
 
 	getAll(ctx: StorageAdapterContext<T>): Promise<T[]> {

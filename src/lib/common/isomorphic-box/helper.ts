@@ -1,8 +1,8 @@
 import z, { ZodType, ZodVoid, ZodAny } from 'zod';
 
-type HelperOptions<TInput extends ZodType, TOuput extends ZodType> = {
+type HelperOptions<TInput extends ZodType, TOutput extends ZodType> = {
 	input?: TInput;
-	output?: TOuput;
+	output?: TOutput;
 };
 
 type HelperOutput<TInput extends ZodType = ZodVoid, TOutput extends ZodType = ZodAny> = (
