@@ -1,24 +1,40 @@
-import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query';
 import type { WordEntry } from '$lib/dictionary/core/dictionary';
-import {
-	DEFAULT_CATEGORY,
-	loadStoredCategories,
-	persistStoredCategories,
-	savedWordsQuery,
-	savedWordsQueryKey,
-	type SavedCategory,
-	type StoredCategory
-} from './words.queries';
+import { dictionary } from '$lib/dictionary';
+import { LocalStorageAdapter } from '$lib/common/isomorphic-box/adapters/local-storage-adapter';
+import { wordsCollection, DEFAULT_CATEGORY } from './words-collection';
+import { savedWordsQueryKey, type SavedCategory } from './words.queries';
 
 export type { SavedCategory };
 export { DEFAULT_CATEGORY };
+
+const wordStorage = wordsCollection.adapt(new LocalStorageAdapter('etoshokan:saved-words'));
+
+async function resolveCategories(): Promise<SavedCategory[]> {
+	await dictionary.initialize();
+	const stored = await wordStorage.getAll();
+	const result: SavedCategory[] = [];
+	for (const c of stored) {
+		const entries = await Promise.all(c.words.map((id) => dictionary.getById(id)));
+		const words = entries.filter((w): w is WordEntry => w !== null);
+		result.push({ category: c.category, words });
+	}
+	return result;
+}
+
+function savedWordsQuery() {
+	return queryOptions({
+		queryKey: savedWordsQueryKey,
+		queryFn: resolveCategories,
+		staleTime: Infinity
+	});
+}
 
 export function useSavedWords() {
 	const query = createQuery(() => savedWordsQuery());
 	const queryClient = useQueryClient();
 
-	function mutate(updater: (categories: StoredCategory[]) => StoredCategory[]) {
-		persistStoredCategories(updater(loadStoredCategories()));
+	function invalidate() {
 		queryClient.invalidateQueries({ queryKey: savedWordsQueryKey });
 	}
 
@@ -35,60 +51,29 @@ export function useSavedWords() {
 			return (query.data ?? []).some((c) => c.words.some((w) => w.id === id));
 		},
 
-		save(entry: WordEntry, category = DEFAULT_CATEGORY) {
-			mutate((categories) => {
-				const withoutEntry = categories.map((c) => ({
-					...c,
-					words: c.words.filter((id) => id !== entry.id)
-				}));
-
-				const idx = withoutEntry.findIndex((c) => c.category === category);
-
-				if (idx >= 0) {
-					const updated = [...withoutEntry];
-					updated[idx] = { ...updated[idx], words: [...updated[idx].words, entry.id] };
-					return updated;
-				} else {
-					return [...withoutEntry, { category, words: [entry.id] }];
-				}
-			});
+		async save(entry: WordEntry, category?: string) {
+			await wordStorage.save(entry, category);
+			invalidate();
 		},
 
-		delete(id: string) {
-			mutate((categories) =>
-				categories.map((c) => ({
-					...c,
-					words: c.words.filter((wordId) => wordId !== id)
-				}))
-			);
+		async delete(id: string) {
+			await wordStorage.delete(id);
+			invalidate();
 		},
 
-		addCategory(name: string) {
-			mutate((categories) => {
-				if (categories.some((c) => c.category === name)) {
-					return categories;
-				}
-				return [...categories, { category: name, words: [] }];
-			});
+		async addCategory(name: string) {
+			await wordStorage.addCategory(name);
+			invalidate();
 		},
 
-		renameCategory(oldName: string, newName: string) {
-			mutate((categories) => {
-				if (oldName === newName) {
-					return categories;
-				}
-				if (categories.some((c) => c.category === newName)) {
-					return categories;
-				}
-				return categories.map((c) => (c.category === oldName ? { ...c, category: newName } : c));
-			});
+		async renameCategory(oldName: string, newName: string) {
+			await wordStorage.renameCategory(oldName, newName);
+			invalidate();
 		},
 
-		deleteCategory(name: string) {
-			if (name === DEFAULT_CATEGORY) {
-				return;
-			}
-			mutate((categories) => categories.filter((c) => c.category !== name));
+		async deleteCategory(name: string) {
+			await wordStorage.deleteCategory(name);
+			invalidate();
 		}
 	};
 }

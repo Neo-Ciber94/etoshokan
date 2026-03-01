@@ -1,7 +1,8 @@
 import { createCollection } from '$lib/common/isomorphic-box';
 import { z } from 'zod';
 import type { WordEntry } from '$lib/dictionary/core/dictionary';
-import { DEFAULT_CATEGORY } from './words.queries';
+
+export const DEFAULT_CATEGORY = '⭐ Common';
 
 const storedCategorySchema = z.object({
   id: z.string(),
@@ -11,7 +12,7 @@ const storedCategorySchema = z.object({
 
 export const wordsCollection = createCollection({
   schema: storedCategorySchema,
-  methods(ctx) {
+  actions(ctx) {
     return {
       getCategories() {
         return ctx.adapter.query(ctx, {

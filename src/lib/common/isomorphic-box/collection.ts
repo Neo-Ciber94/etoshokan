@@ -20,22 +20,54 @@ type Initializer<
 type CollectionOptions<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TMethods extends Initializer<E, TSchema>
+	TActions extends Initializer<E, TSchema>
 > = {
 	schema: TSchema;
-	methods: TMethods;
+	actions: TActions;
 };
+
+type CollectionInternals<
+	E extends BaseModel,
+	TSchema extends ZodType<E>,
+	TActions extends Initializer<E, TSchema>,
+	TAdapter extends StorageAdapter<E>
+> = {
+	schema: TSchema;
+	actions: ReturnType<TActions>;
+	adapter: TAdapter;
+};
+
+type AdaptCollection<
+	E extends BaseModel,
+	TSchema extends ZodType<E>,
+	TActions extends Initializer<E, TSchema>,
+	TAdapter extends StorageAdapter<E>
+> = ReturnType<TActions> & {
+	$internals: CollectionInternals<E, TSchema, TActions, TAdapter>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyAdapter = StorageAdapter<any>;
 
 export function createCollection<
 	E extends BaseModel,
 	TSchema extends ZodType<E>,
-	TMethods extends Initializer<E, TSchema>
->(options: CollectionOptions<E, TSchema, TMethods>) {
+	TActions extends Initializer<E, TSchema>
+>(options: CollectionOptions<E, TSchema, TActions>) {
 	return {
-		adapt(adapter: StorageAdapter<z.output<TSchema>>) {
-			const ctx: CollectionContext<E, TSchema> = { schema: options.schema, adapter };
-			const methods = options.methods(ctx);
-			return methods as ReturnType<TMethods>;
+		adapt<TAdapter extends AnyAdapter>(adapter: TAdapter) {
+			const { schema } = options;
+			const ctx: CollectionContext<E, TSchema> = { schema, adapter };
+			const actions = options.actions(ctx) as ReturnType<TActions>;
+			const adapted = actions as AdaptCollection<E, TSchema, TActions, TAdapter>;
+
+			adapted.$internals = {
+				schema,
+				actions,
+				adapter
+			};
+
+			return adapted;
 		}
 	};
 }

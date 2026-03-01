@@ -40,7 +40,7 @@ type Note = z.infer<typeof NoteSchema>
 
 const noteCollection = createCollection({
   schema: NoteSchema,
-  methods: (ctx) => ({
+  actions: (ctx) => ({
     create: (data: Omit<Note, 'id'>) => ctx.adapter.set(data, ctx),
     findById: (id: string) => ctx.adapter.get(id, ctx),
     findAll: () => ctx.adapter.getAll(ctx),
