@@ -1,6 +1,8 @@
 # EToshokan
 
-A e-book reader.
+![Etoshokan](/assets/app-icon-256.png)
+
+A e-book reader with japanese translations.
 
 ## TODO
 
