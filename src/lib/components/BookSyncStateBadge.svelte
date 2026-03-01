@@ -116,7 +116,7 @@
 		onclick={downloadMissingBookData}
 		class={cn(
 			badgeVariants(),
-			'cursor-pointer border-transparent bg-blue-500 text-white',
+			'cursor-pointer border-transparent bg-indigo-500 text-white',
 			className
 		)}
 	>
