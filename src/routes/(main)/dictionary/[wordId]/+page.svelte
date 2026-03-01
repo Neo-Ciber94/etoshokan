@@ -69,9 +69,7 @@
 				<div class="flex items-center gap-2">
 					<LanguageFlag language={entry.language} class="size-6" />
 					{#if entry.common}
-						<Badge <Badge class="w-fit bg-yellow-500 px-1.5 py-0 text-[9px] text-black"
-							>common</Badge
-						>
+						<Badge class="w-fit bg-yellow-500 px-1.5 py-0 text-[9px] text-black">common</Badge>
 					{/if}
 				</div>
 
