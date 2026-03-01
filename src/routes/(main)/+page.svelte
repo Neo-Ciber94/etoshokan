@@ -1,40 +1,45 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import * as Card from '$lib/components/ui/card'
-	import { Button } from '$lib/components/ui/button'
-	import { useBooksMetadata } from '$lib/data/ebook/books.svelte'
-	import { authClient } from '$lib/client/auth-client'
-	import Loading from '$lib/components/Loading.svelte'
-	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte'
-	import { isWeb } from '$lib/utils/isWeb'
-	import { openBrowserTab } from '$lib/utils/openBrowserTab'
+	import { goto } from '$app/navigation';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { useBooksMetadata } from '$lib/data/ebook/books.svelte';
+	import { authClient } from '$lib/client/auth-client';
+	import Loading from '$lib/components/Loading.svelte';
+	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
+	import { isWeb } from '$lib/utils/isWeb';
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
-	const books = useBooksMetadata()
-	const session = authClient.useSession()
-	let web = $state(true)
+	const books = useBooksMetadata();
+	const session = authClient.useSession();
+	let web = $state(true);
 
 	$effect.pre(() => {
-		web = isWeb()
-	})
+		web = isWeb();
+	});
 
 	const recentBooks = $derived(
 		books.value
 			.filter((b) => b.lastReadAt)
 			.sort((a, b) => (b.lastReadAt || 0) - (a.lastReadAt || 0))
 			.slice(0, 4)
-	)
+	);
 
 	function openBook(id: string) {
-		goto(`/ebook/${id}`)
+		goto(`/ebook/${id}`);
 	}
 
 	async function loginWithGoogle() {
 		if (isWeb()) {
-			authClient.signIn.social({ provider: 'google' })
+			authClient.signIn.social({ provider: 'google' });
 		} else {
-			const url = new URL('/auth/sign-in/external', window.location.origin)
-			openBrowserTab(url.toString())
+			const url = new URL('/auth/sign-in/external', window.location.origin);
+			openBrowserTab(url.toString());
 		}
+	}
+
+	function handleDownloadApp() {
+		const LAST_RELEASE_URL = 'https://github.com/Neo-Ciber94/etoshokan/releases/latest';
+		window.open(LAST_RELEASE_URL, '_blank', 'noopener,noreferrer');
 	}
 </script>
 
@@ -49,7 +54,9 @@
 {:else if !$session.data}
 	<div class="space-y-4">
 		<!-- Hero section -->
-		<section class="rounded-2xl border border-border bg-card px-6 py-10 text-center sm:px-14 sm:py-12">
+		<section
+			class="rounded-2xl border border-border bg-card px-6 py-10 text-center sm:px-14 sm:py-12"
+		>
 			<span
 				class="mb-3 inline-block rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary uppercase"
 				>Japanese Reading</span
@@ -69,25 +76,36 @@
 				class="h-14 w-full gap-3 text-base text-primary"
 			>
 				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-					<path fill="currentColor" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-					<path fill="currentColor" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-					<path fill="currentColor" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.0 24.0 0 0 0 0 21.56l7.98-6.19z" />
-					<path fill="currentColor" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+					<path
+						fill="currentColor"
+						d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+					/>
+					<path
+						fill="currentColor"
+						d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+					/>
+					<path
+						fill="currentColor"
+						d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.0 24.0 0 0 0 0 21.56l7.98-6.19z"
+					/>
+					<path
+						fill="currentColor"
+						d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+					/>
 				</svg>
 				Sign in with Google
 			</Button>
 
 			<!-- Android download card (web only) -->
 			{#if web}
-				<Button
-					variant="outline"
-					class="h-14 w-full gap-3 text-base"
-					onclick={() => window.open('https://github.com/Neo-Ciber94/etoshokan/releases/tag/dev', '_blank', 'noopener,noreferrer')}
-				>
+				<Button variant="outline" class="h-14 w-full gap-3 text-base" onclick={handleDownloadApp}>
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32">
 						<rect width="4" height="10" x="2" y="12" fill="currentColor" rx="2" />
 						<rect width="4" height="10" x="26" y="12" fill="currentColor" rx="2" />
-						<path fill="currentColor" d="M8 12h16v12H8zm2 12h4v4a2 2 0 0 1-2 2a2 2 0 0 1-2-2zm8 0h4v4a2 2 0 0 1-2 2a2 2 0 0 1-2-2zm3.545-19.759l2.12-2.12A1 1 0 0 0 22.251.707l-2.326 2.326a7.97 7.97 0 0 0-7.85 0L9.75.707a1 1 0 1 0-1.414 1.414l2.12 2.12A7.97 7.97 0 0 0 8 10h16a7.97 7.97 0 0 0-2.455-5.759M14 8h-2V6h2Zm6 0h-2V6h2Z" />
+						<path
+							fill="currentColor"
+							d="M8 12h16v12H8zm2 12h4v4a2 2 0 0 1-2 2a2 2 0 0 1-2-2zm8 0h4v4a2 2 0 0 1-2 2a2 2 0 0 1-2-2zm3.545-19.759l2.12-2.12A1 1 0 0 0 22.251.707l-2.326 2.326a7.97 7.97 0 0 0-7.85 0L9.75.707a1 1 0 1 0-1.414 1.414l2.12 2.12A7.97 7.97 0 0 0 8 10h16a7.97 7.97 0 0 0-2.455-5.759M14 8h-2V6h2Zm6 0h-2V6h2Z"
+						/>
 					</svg>
 					Download Android APK
 				</Button>
