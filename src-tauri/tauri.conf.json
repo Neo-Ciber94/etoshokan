@@ -36,10 +36,7 @@
 		"active": true,
 		"targets": "all",
 		"android": {
-			"minSdkVersion": 28,
-			"ndk": {
-				"abiFilters": ["arm64-v8a"]
-			}
+			"minSdkVersion": 28
 		},
 		"icon": [
 			"icons/32x32.png",
