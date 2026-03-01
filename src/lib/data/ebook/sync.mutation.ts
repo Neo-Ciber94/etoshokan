@@ -6,6 +6,7 @@ import { getLocalBooksMetadata, getLocalBookMetadataById, getLocalBookData } fro
 import { saveLocalBook, mergeLocalBooksMetadata, uploadBook, migrateBook } from './books.mutation';
 import { SYNC_TABLE_KEY } from './storage.utils';
 import type { BookMetadata } from './ebook.types';
+import { QUERY_CLIENT } from '../../../routes/query';
 
 async function upsertSyncEntry(entry: BookSyncEntry): Promise<void> {
 	const entries = await getAllSyncEntries();
@@ -113,7 +114,13 @@ export async function syncRemoteMetadata() {
 		return false;
 	}
 
-	return await mergeLocalBooksMetadata(result.data);
+	const changed = await mergeLocalBooksMetadata(result.data);
+
+	if (changed) {
+		QUERY_CLIENT.invalidateQueries();
+	}
+
+	return changed;
 }
 
 // Upload a missing book

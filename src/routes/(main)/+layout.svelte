@@ -9,27 +9,25 @@
 	import { syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
 	import { dev } from '$app/environment';
 	import { authClient } from '$lib/client/auth-client';
-	import { useQueryClient } from '@tanstack/svelte-query';
+	import { synchronizeWordsCollection } from '$lib/data/words/words-storage.svelte';
 
 	const session = authClient.useSession();
-	const queryClient = useQueryClient();
 
 	$effect.pre(() => {
 		dictionary.initialize();
 	});
 
-	$effect.pre(() => {
-		async function run() {
-			const changed = await syncRemoteMetadata();
-			if (changed) {
-				await queryClient.invalidateQueries();
-			}
-		}
+	async function synchronize() {
+		await Promise.all([syncRemoteMetadata(), synchronizeWordsCollection()]);
+	}
 
-		const unsubscribe = session.subscribe(run);
+	$effect.pre(() => {
+		const unsubscribe = session.subscribe(synchronize);
+		window.addEventListener('online', synchronize);
 
 		return () => {
 			unsubscribe();
+			window.removeEventListener('online', synchronize);
 		};
 	});
 

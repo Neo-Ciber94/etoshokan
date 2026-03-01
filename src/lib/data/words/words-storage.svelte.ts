@@ -13,6 +13,7 @@ import {
 	updateWordCategory,
 	removeWordCategory
 } from '$lib/remote/words.remote';
+import { QUERY_CLIENT } from '../../../routes/query';
 
 export type { SavedCategory };
 export { DEFAULT_CATEGORY };
@@ -65,6 +66,11 @@ async function resolveCategories(): Promise<SavedCategory[]> {
 	return result;
 }
 
+export async function synchronizeWordsCollection() {
+	await synchronizeCollection(wordStorage);
+	QUERY_CLIENT.invalidateQueries({ queryKey: savedWordsQueryKey });
+}
+
 function savedWordsQuery() {
 	return queryOptions({
 		queryKey: savedWordsQueryKey,
@@ -80,15 +86,6 @@ export function useSavedWords() {
 	function invalidate() {
 		queryClient.invalidateQueries({ queryKey: savedWordsQueryKey });
 	}
-
-	async function synchronize() {
-		await synchronizeCollection(wordStorage);
-		invalidate();
-	}
-
-	$effect(() => {
-		synchronize().catch(console.error);
-	});
 
 	return {
 		get categories() {
@@ -126,8 +123,6 @@ export function useSavedWords() {
 		async deleteCategory(name: string) {
 			await wordStorage.deleteCategory(name);
 			invalidate();
-		},
-
-		synchronize
+		}
 	};
 }
