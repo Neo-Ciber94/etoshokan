@@ -512,21 +512,24 @@
 		/>
 
 		<!-- Progress indicator -->
-		{#if showPageIndicator.value}
-			<div class="pointer-events-none fixed bottom-0 left-0 right-0 z-40">
-				<div class="flex justify-end px-3 pb-1">
-					<span class="text-xs tabular-nums text-muted-foreground">
-						{progress}%
-					</span>
-				</div>
-				<div class="h-1 bg-muted">
-					<div
-						class="h-full bg-primary transition-[width] duration-300"
-						style="width: {progress}%"
-					></div>
-				</div>
+		<div
+			class={cn(
+				'pointer-events-none fixed bottom-0 left-0 right-0 z-40 transition-opacity duration-200',
+				showPageIndicator.value ? 'opacity-100' : 'opacity-0'
+			)}
+		>
+			<div class="flex justify-end px-3 pb-1">
+				<span class="text-xs tabular-nums text-muted-foreground">
+					{progress}%
+				</span>
 			</div>
-		{/if}
+			<div class="h-1 bg-muted">
+				<div
+					class="h-full bg-primary transition-[width] duration-300"
+					style="width: {progress}%"
+				></div>
+			</div>
+		</div>
 	{/if}
 </section>
 
