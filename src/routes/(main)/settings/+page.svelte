@@ -5,6 +5,8 @@
 	import { authClient } from '$lib/client/auth-client';
 	import { clearSyncEntries, syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
 	import { clearLocalBooks } from '$lib/data/ebook/books.mutation';
+	import { isTauri } from '$lib/utils/isWeb';
+	import { getVersion } from '@tauri-apps/api/app';
 
 	const session = authClient.useSession();
 	const dict = dictionary;
@@ -12,6 +14,13 @@
 	let loading = $state(false);
 	let error = $state('');
 	let success = $state('');
+	let tauriVersion = $state('<unknown>');
+
+	$effect.pre(() => {
+		getVersion().then((version) => {
+			tauriVersion = version;
+		});
+	});
 
 	async function clearCache() {
 		if (!confirm('Delete all cache data? (Remote data will NOT be deleted)')) {
@@ -116,7 +125,17 @@
 	<section class="space-y-4">
 		<h3 class="text-lg font-semibold">About</h3>
 		<div class="flex flex-col gap-3 rounded-md border border-border p-4">
-			<p class="text-sm text-muted-foreground">Etoshokan {__VERSION__ || 'v0.0.0'}</p>
+			<p class="text-sm text-muted-foreground">
+				Web version: {__VERSION__ || 'v0.0.0'}
+			</p>
 		</div>
+
+		{#if isTauri()}
+			<div class="flex flex-col gap-3 rounded-md border border-border p-4">
+				<p class="text-sm text-muted-foreground">
+					APK version: {tauriVersion}
+				</p>
+			</div>
+		{/if}
 	</section>
 </div>
