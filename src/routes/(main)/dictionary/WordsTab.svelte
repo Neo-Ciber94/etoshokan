@@ -69,8 +69,7 @@
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex items-center gap-1.5">
 										{#if entry.common}
-											<Badge
-												class="w-fit bg-emerald-800 px-1.5 py-0 text-[9px] text-white hover:bg-emerald-800"
+											<Badge class="w-fit bg-yellow-500 px-1.5 py-0 text-[9px] text-black"
 												>common</Badge
 											>
 										{/if}
