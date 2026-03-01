@@ -12,12 +12,17 @@ export function GET(): Response {
 		start_url: '/',
 		display: 'standalone',
 		background_color: '#0f172a',
-		theme_color: '#202020',
+		theme_color: '#ec003f',
 		icons: [
 			{
-				src: '/favicon.ico',
-				sizes: '48x48',
-				type: 'image/x-icon'
+				src: '/app-icon-32.png',
+				sizes: '32x32',
+				type: 'image/png'
+			},
+			{
+				src: '/app-icon-256.png',
+				sizes: '256x256',
+				type: 'image/png'
 			}
 		]
 	};

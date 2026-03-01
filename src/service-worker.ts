@@ -98,9 +98,12 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			// Try serve offline page
-			const offlineResponse = await cache.match(OFFLINE_URL);
-			if (offlineResponse) {
-				return offlineResponse;
+			if (event.request.mode === 'navigate') {
+				const offlineResponse = await cache.match(OFFLINE_URL);
+
+				if (offlineResponse) {
+					return offlineResponse;
+				}
 			}
 
 			// if there's no cache, then just error out
