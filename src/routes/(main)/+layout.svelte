@@ -6,6 +6,7 @@
 	import EditCategoryDialog from '$lib/components/EditCategoryDialog.svelte';
 	import { dictionary } from '$lib/dictionary';
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
+	import TranslateSelection from '$lib/components/TranslateSelection.svelte';
 	import { syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
 	import { dev } from '$app/environment';
 	import { authClient } from '$lib/client/auth-client';
@@ -61,6 +62,7 @@
 	</main>
 </div>
 
+<TranslateSelection />
 <PwaInstallPrompt />
 <ModalContainer />
 <SaveAsDialog />

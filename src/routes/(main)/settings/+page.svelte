@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { dictionary } from '$lib/dictionary';
 	import { Button } from '$lib/components/ui/button';
+	import { Switch } from '$lib/components/ui/switch';
 	import { themeStore, setTheme, type Theme } from '$lib/runes/theme.svelte';
+	import { translateSelectionEnabled } from '$lib/runes/translate-selection.svelte';
 	import { authClient } from '$lib/client/auth-client';
 	import { clearSyncEntries, syncRemoteMetadata } from '$lib/data/ebook/sync.mutation';
 	import { clearLocalBooks } from '$lib/data/ebook/books.mutation';
@@ -79,6 +81,15 @@
 
 	<section class="space-y-4">
 		<h3 class="text-lg font-semibold">Dictionary</h3>
+		<div class="flex items-center justify-between rounded-md border border-border p-4">
+			<div class="space-y-1">
+				<p class="text-sm font-medium">Translate on selection</p>
+				<p class="text-xs text-muted-foreground">
+					Show a quick translation card when text is selected outside the reader.
+				</p>
+			</div>
+			<Switch bind:checked={translateSelectionEnabled.value} />
+		</div>
 		<div class="flex flex-col gap-3 rounded-md border border-border p-4">
 			<div class="space-y-1">
 				<p class="text-sm font-medium">Reset Dictionary Cache</p>
