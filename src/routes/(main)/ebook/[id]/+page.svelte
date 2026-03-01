@@ -514,12 +514,12 @@
 		<!-- Progress indicator -->
 		<div
 			class={cn(
-				'pointer-events-none fixed bottom-0 left-0 right-0 z-40 transition-opacity duration-200',
+				'pointer-events-none fixed right-0 bottom-0 left-0 z-40 transition-opacity duration-200 select-none',
 				showPageIndicator.value ? 'opacity-100' : 'opacity-0'
 			)}
 		>
 			<div class="flex justify-end px-3 pb-1">
-				<span class="text-xs tabular-nums text-muted-foreground">
+				<span class="text-xs text-muted-foreground tabular-nums">
 					{progress}%
 				</span>
 			</div>
