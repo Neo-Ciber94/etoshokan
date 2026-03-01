@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      android-changes: ${{ steps.changes.outputs.android-changes }
+      android-changes: ${{ steps.changes.outputs.android-changes }}
     steps:
       - name: Setup repo
         uses: actions/checkout@v6
