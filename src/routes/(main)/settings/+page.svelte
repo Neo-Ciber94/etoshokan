@@ -19,6 +19,10 @@
 	let tauriVersion = $state('<unknown>');
 
 	$effect.pre(() => {
+		if (!isTauri()) {
+			return;
+		}
+
 		getVersion().then((version) => {
 			tauriVersion = version;
 		});
