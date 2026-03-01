@@ -1,4 +1,5 @@
 import { glob } from 'glob';
+import path from 'node:path';
 import fs from 'node:fs/promises';
 import fse from 'fs-extra';
 import * as githubCore from '@actions/core';
