@@ -32,6 +32,9 @@
 			"csp": null
 		}
 	},
+	"android": {
+      "abiFilters": ["arm64-v8a"]
+    },
 	"bundle": {
 		"active": true,
 		"targets": "all",
