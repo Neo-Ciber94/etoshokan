@@ -8,6 +8,7 @@
 	import { readingMode } from '$lib/runes/reading-mode.svelte';
 	import { authClient } from '$lib/client/auth-client';
 	import ThemeToggle from './ThemeToggle.svelte';
+	import AppTitle from './AppTitle.svelte';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
 
 	const session = authClient.useSession();
@@ -33,12 +34,7 @@
 	<header class="border-b border-border bg-card py-2">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6">
 			<div class="pl-0 max-lg:landscape:pl-16">
-				<a
-					href="/"
-					class="shrink-0 text-base font-bold transition-colors hover:text-primary lg:text-2xl"
-				>
-					@e-toshokan
-				</a>
+				<AppTitle />
 			</div>
 
 			<nav class="hidden items-center space-x-1 lg:flex">
