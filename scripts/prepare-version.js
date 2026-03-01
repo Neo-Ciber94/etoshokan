@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import * as githubCore from '@actions/core';
 
-const TAURI_CONF = path.join(process.cwd(), '/src-tauri/tauri.config.json');
+const TAURI_CONF = path.join(process.cwd(), '/src-tauri/tauri.conf.json');
 
 async function getVersion() {
 	const versionPath = path.join(process.cwd(), '.version');
