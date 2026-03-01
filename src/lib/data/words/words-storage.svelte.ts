@@ -4,7 +4,7 @@ import { dictionary } from '$lib/dictionary';
 import { RemoteStorageAdapter } from '$lib/common/isomorphic-box/adapters/remote-storage-adapter';
 import { LocalFirstStorageAdapter } from '$lib/common/isomorphic-box/adapters/local-first-storage-adapter';
 import { synchronizeCollection } from '$lib/common/isomorphic-box';
-import { wordsCollection, DEFAULT_CATEGORY } from './words-collection';
+import { wordsCollection } from './words-collection';
 import { savedWordsQueryKey, type SavedCategory } from './words.queries';
 import { IndexedDbStorageAdapter } from '$lib/common/isomorphic-box/adapters/idb-storage-adapter';
 import {
@@ -14,14 +14,14 @@ import {
 	removeWordCategory
 } from '$lib/remote/words.remote';
 import { QUERY_CLIENT } from '../../../routes/query';
+import { checkIsOnline } from '$lib/utils/checkIsOnline';
 
 export type { SavedCategory };
-export { DEFAULT_CATEGORY };
 
 const wordStorage = wordsCollection.adapt(
 	new LocalFirstStorageAdapter({
 		key: 'words',
-		isOnline: () => Promise.resolve(typeof navigator !== 'undefined' ? navigator.onLine : false),
+		isOnline: () => checkIsOnline(),
 		localStorage: new IndexedDbStorageAdapter({
 			dbName: 'etoshokan-words',
 			storeName: 'categories'

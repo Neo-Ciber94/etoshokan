@@ -8,6 +8,12 @@ export async function synchronizeCollection<
 	TSchema extends ZodType<E>,
 	TActions extends ActionsInitializer<E, TSchema>
 >(source: AdaptCollection<E, TSchema, TActions, LocalFirstStorageAdapter<E>>) {
+	const isOnline = await source.$internals.adapter.isOnline();
+
+	if (!isOnline) {
+		return;
+	}
+
 	const ctx = source.$internals.getContext();
 	const adapter = source.$internals.adapter;
 

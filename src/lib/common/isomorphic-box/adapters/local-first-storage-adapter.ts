@@ -44,6 +44,10 @@ export class LocalFirstStorageAdapter<T extends BaseModel> extends StorageAdapte
 		} as PendingOperation<T>);
 	}
 
+	isOnline() {
+		return this.options.isOnline()
+	}
+
 	async hasPending(): Promise<boolean> {
 		const keys = await this.pendingStore.keys();
 		return keys.length > 0;

@@ -7,6 +7,7 @@ import { saveLocalBook, mergeLocalBooksMetadata, uploadBook, migrateBook } from 
 import { SYNC_TABLE_KEY } from './storage.utils';
 import type { BookMetadata } from './ebook.types';
 import { QUERY_CLIENT } from '../../../routes/query';
+import { checkIsOnline } from '$lib/utils/checkIsOnline';
 
 async function upsertSyncEntry(entry: BookSyncEntry): Promise<void> {
 	const entries = await getAllSyncEntries();
@@ -108,6 +109,12 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 
 // Fetches remote metadata and saves it locally for books not already present (no book file data)
 export async function syncRemoteMetadata() {
+	const isOnline = await checkIsOnline();
+
+	if (!isOnline) {
+		return;
+	}
+
 	const result = await getBooksMetadata();
 	if (!result.success) {
 		console.error('Failed to fetch remote metadata:', result.error);
