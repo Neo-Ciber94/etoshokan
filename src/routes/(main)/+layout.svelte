@@ -11,6 +11,7 @@
 	import { dev } from '$app/environment';
 	import { authClient } from '$lib/client/auth-client';
 	import { synchronizeWordsCollection } from '$lib/data/words/words-storage.svelte';
+	import CheckApplicationVersion from './CheckApplicationVersion.svelte';
 
 	const session = authClient.useSession();
 
@@ -67,6 +68,7 @@
 <ModalContainer />
 <SaveAsDialog />
 <EditCategoryDialog />
+<CheckApplicationVersion />
 
 <style>
 	:global(html) {

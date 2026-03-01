@@ -10,6 +10,7 @@ export interface ModalOptions {
 	description?: string;
 	type: ModalType;
 	canClose?: boolean;
+	onClose?: () => void;
 	actions?: ModalAction[];
 }
 
@@ -28,6 +29,7 @@ export interface ModalState {
 	description: string;
 	type: ModalType;
 	canClose: boolean;
+	onClose?: () => void;
 	actions: ModalAction[];
 }
 
@@ -62,6 +64,7 @@ export function openModal(options: ModalOptions): ModalHandle {
 		description: options.description ?? '',
 		type: options.type ?? 'info',
 		canClose: options.canClose ?? true,
+		onClose: options.onClose,
 		actions: options.actions ?? [defaultModalAction(id)]
 	};
 
@@ -139,17 +142,17 @@ async function pending<T>(promise: Promise<T>, options?: PendingModalOptions<T>)
 
 export function closeModal(id: number) {
 	const index = modals.findIndex((m) => m.id === id);
+
 	if (index !== -1) {
+		modals[index]?.onClose?.();
 		modals.splice(index, 1);
 	}
 }
 
 export function closeTopModal() {
-	if (modals.length === 0) {
-		return;
-	}
-	const top = modals[modals.length - 1];
-	if (top.canClose) {
-		modals.pop();
+	const topModal = modals[modals.length - 1];
+
+	if (topModal && topModal.canClose) {
+		closeModal(topModal.id);
 	}
 }
