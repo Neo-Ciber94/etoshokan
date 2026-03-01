@@ -346,7 +346,7 @@
 	function getThemeCss(withZoom = false): string {
 		const isDark = document.documentElement.classList.contains('dark');
 		const fontSize = withZoom && zoom > 100 ? ` font-size: ${zoom}% !important;` : '';
-		return isDark
+		const themeCss = isDark
 			? `
 				body { color: #f1f5f9 !important; background: var(--background) !important;${fontSize} }
 				p, div, span, h1, h2, h3, h4, h5, h6 { color: #f1f5f9 !important; }
@@ -357,6 +357,20 @@
 				p, div, span, h1, h2, h3, h4, h5, h6 { color: var(--background) !important; }
 				a { color: #3b82f6 !important; }
 			`;
+
+		return `
+			${themeCss}
+
+			::selection {
+				color: white;
+				background-color: rgb(255, 32, 86);
+				text-shadow:
+					-2px 0 5px rgb(0, 0, 0, 0.5),
+					2px 0 5px rgb(0, 0, 0, 0.5),
+					0 -2px 5px rgb(0, 0, 0, 0.5),
+					0 2px 5px rgb(0, 0, 0, 0.5);
+			}
+		`
 	}
 
 	function applyTheme() {

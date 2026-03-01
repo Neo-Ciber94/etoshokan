@@ -123,6 +123,16 @@
 		@apply border-border outline-ring/50;
 	}
 
+	::selection {
+		color: var(--color-foreground);
+		background-color: var(--color-primary);
+		text-shadow:
+			-2px 0 5px rgb(0, 0, 0, 0.5),
+			2px 0 5px rgb(0, 0, 0, 0.5),
+			0 -2px 5px rgb(0, 0, 0, 0.5),
+			0 2px 5px rgb(0, 0, 0, 0.5);
+	}
+
 	body {
 		@apply bg-background text-foreground;
 		padding-top: env(safe-area-inset-top);
