@@ -161,7 +161,7 @@ jobs:
       # Move apk
       - name: 'Generate apk with version'
         id: prepare-apk
-        run: ./scripts/prepare-apk.js
+        run: node ./scripts/prepare-apk.js
 
       # Upload apk
       - uses: actions/upload-artifact@v4
