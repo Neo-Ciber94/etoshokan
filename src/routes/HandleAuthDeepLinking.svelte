@@ -1,12 +1,7 @@
 <script lang="ts">
+	import { authClient } from '$lib/client/auth-client';
+	import { hashBase64 } from '$lib/utils/hash';
 	import { isTauri } from '$lib/utils/isWeb';
-
-	async function hashToken(token: string): Promise<string> {
-		const data = new TextEncoder().encode(token);
-		const hash = await crypto.subtle.digest('SHA-256', data);
-		const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
-		return base64;
-	}
 
 	async function handleUrls(urls: string[]) {
 		console.log('Deep-linking to: ', urls);
@@ -20,12 +15,15 @@
 					const token = url.searchParams.get('token');
 
 					if (token) {
+						const session = await authClient.getSession();
+						const isLoggedIn = session.data != null;
+
 						// Prevent re-exchange of the same token — getCurrent() keeps returning
 						// the launch URL on every reload, so we scope the flag to a hash of the token
-						const hash = await hashToken(token);
+						const hash = hashBase64([token]);
 						const key = `token-exchanged-${hash}`;
 
-						if (sessionStorage.getItem(key)) {
+						if (isLoggedIn && sessionStorage.getItem(key)) {
 							return;
 						}
 
