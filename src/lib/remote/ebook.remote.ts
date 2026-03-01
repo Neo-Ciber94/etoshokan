@@ -1,6 +1,5 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { UploadBookFormDataSchema } from '$lib/data/ebook/ebook.types';
-import { logger } from '$lib/logging/logger';
 import { getGoogleAccessToken } from '$lib/server/auth/utils';
 import {
 	deleteBookFromDrive,
@@ -36,7 +35,7 @@ export const uploadBookToServer = command(UploadBookFormDataSchema, async (input
 
 		return Result.ok(result);
 	} catch (err) {
-		logger.error(err);
+		console.error(err);
 		return Result.err(err);
 	}
 });
@@ -53,7 +52,7 @@ export const deleteBook = command(z.object({ id: z.string() }), async ({ id }) =
 
 		return Result.ok();
 	} catch (err) {
-		logger.error(err);
+		console.error(err);
 		return Result.err(err);
 	}
 });
@@ -70,7 +69,7 @@ export const getBooksMetadata = query(async () => {
 
 		return Result.ok(metadata)
 	} catch (err) {
-		logger.error(err);
+		console.error(err);
 		return Result.err(err);
 	}
 });
@@ -99,7 +98,7 @@ export const getBooksMetadataWithoutCover = query(async () => {
 
 		return Result.ok(metadataWithoutCover);
 	} catch (err) {
-		logger.error(err);
+		console.error(err);
 		return Result.err(err);
 	}
 });
@@ -116,7 +115,7 @@ export const getBookData = query(z.object({ id: z.string() }), async ({ id }) =>
 
 		return Result.ok(data);
 	} catch (err) {
-		logger.error(err);
+		console.error(err);
 		return Result.err(err);
 	}
 });
@@ -152,7 +151,7 @@ export const updateProgress = command(
 			await updateDriveBookProgress({ id, cfi, progress, token });
 			return Result.ok();
 		} catch (err) {
-			logger.error(err);
+			console.error(err);
 			return Result.err(err);
 		}
 	}
