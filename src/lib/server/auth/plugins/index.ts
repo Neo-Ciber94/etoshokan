@@ -37,9 +37,9 @@ function handleCheckGoogleTokens() {
 		const accountData = await getAccountFromCtx(ctx);
 
 		if (accountData) {
-			if (await validateAccountData(accountData, ctx)) {
-				return;
-			}
+			// FIXME: Probably we should logout here if the validation fails
+			await validateAccountData(accountData, ctx);
+			return;
 		}
 
 		// Logout if cannot get account data, we remove all the auth cookies
