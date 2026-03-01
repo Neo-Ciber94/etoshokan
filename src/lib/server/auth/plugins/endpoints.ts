@@ -18,6 +18,7 @@ export const deeplinkHandoff = createAuthEndpoint(
 			throw ctx.redirect('/');
 		}
 
+		console.log('handoff token created, redirecting');
 		throw ctx.redirect(`etoshokan://auth/callback?token=${handoffToken}`);
 	}
 );
@@ -55,6 +56,7 @@ export const exchangeToken = createAuthEndpoint(
 				...accountData.attributes
 			});
 
+			console.log('handoff token received, setting cookies');
 			return ctx.json({ success: true });
 		} catch (err) {
 			console.error('Failed to exchange token', err);
