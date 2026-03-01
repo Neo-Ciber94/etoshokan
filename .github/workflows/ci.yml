@@ -189,4 +189,4 @@ jobs:
           APK_PATH: ${{ steps.prepare-apk.outputs.apk-path }}
           NOTES: Released at $(date -u '+%Y-%m-%d %H:%M:%S') UTC
         run: |
-          gh release create --tag "$VERSION" --title "$VERSION" --notes "$NOTES" "$APK_PATH"
+          gh release create "$VERSION" --title "$VERSION" --notes "$NOTES" "$APK_PATH"

@@ -7,7 +7,7 @@
 	import Loading from '$lib/components/Loading.svelte';
 	import BookSyncStateBadge from '$lib/components/BookSyncStateBadge.svelte';
 	import { isWeb } from '$lib/utils/isWeb';
-	import { openBrowserTab } from '$lib/utils/openBrowserTab';;
+	import { openBrowserTab } from '$lib/utils/openBrowserTab';
 
 	const books = useBooksMetadata();
 	const session = authClient.useSession();
@@ -52,7 +52,7 @@
 	</section>
 
 	{#if $session.isPending}
-		<Loading />
+		<Loading class="mx-auto" />
 	{:else if !$session.data}
 		<section>
 			<Button onclick={loginWithGoogle} variant="outline" class="w-full gap-3 sm:w-auto">
