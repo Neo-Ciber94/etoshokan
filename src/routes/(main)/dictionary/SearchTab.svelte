@@ -153,8 +153,7 @@
 							<Card.Content class="flex flex-col gap-2 px-4 py-1 md:px-6">
 								<div class="flex items-start justify-between gap-2">
 									{#if entry.common}
-										<Badge
-											class="w-fit bg-yellow-500 px-1.5 py-0 text-[9px] text-black"
+										<Badge class="w-fit bg-yellow-500 px-1.5 py-0 text-[9px] text-black"
 											>common</Badge
 										>
 									{:else}

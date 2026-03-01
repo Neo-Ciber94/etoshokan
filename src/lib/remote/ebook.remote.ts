@@ -67,7 +67,7 @@ export const getBooksMetadata = query(async () => {
 
 		const metadata = await getDriveBooksMetadata(token);
 
-		return Result.ok(metadata)
+		return Result.ok(metadata);
 	} catch (err) {
 		console.error(err);
 		return Result.err(err);

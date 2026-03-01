@@ -370,7 +370,7 @@
 					0 -2px 5px rgb(0, 0, 0, 0.5),
 					0 2px 5px rgb(0, 0, 0, 0.5);
 			}
-		`
+		`;
 	}
 
 	function applyTheme() {
