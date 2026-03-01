@@ -58,11 +58,8 @@
 	let showTranslation = $state(false);
 
 	// Options persisted in localStorage
-	const disableContextMenu = useStorage('reader:disableContextMenu', { defaultValue: false });
-	const selectionTime = useStorage('reader:selectionTime', { defaultValue: 100 });
 	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
-	const invertDirection = useStorage('reader:invertDirection', { defaultValue: false });
 	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: true });
 
 	// We only search on selection on mobile
@@ -84,20 +81,17 @@
 	});
 
 	// Debounced context menu trigger on pointer up
-	const showContextMenuIfSelection = debounce(
-		() => selectionTime.value,
-		(doc: Document) => {
-			if (disableContextMenu.value || contextMenu.isOpen) {
-				return;
-			}
-
-			const selection = doc.getSelection();
-			if (selection && selection.toString().trim()) {
-				contextMenu.text = selection.toString().trim();
-				contextMenu.isOpen = true;
-			}
+	const showContextMenuIfSelection = debounce(100, (doc: Document) => {
+		if (contextMenu.isOpen) {
+			return;
 		}
-	);
+
+		const selection = doc.getSelection();
+		if (selection && selection.toString().trim()) {
+			contextMenu.text = selection.toString().trim();
+			contextMenu.isOpen = true;
+		}
+	});
 
 	onMount(async () => {
 		await renderBook();
@@ -386,11 +380,7 @@
 			return;
 		}
 
-		if (invertDirection.value) {
-			view.prev();
-		} else {
-			view.next();
-		}
+		view.next();
 	}
 
 	function prevPage() {
@@ -398,11 +388,7 @@
 			return;
 		}
 
-		if (invertDirection.value) {
-			view.next();
-		} else {
-			view.prev();
-		}
+		view.prev();
 	}
 
 	// Zoom functions
@@ -537,9 +523,6 @@
 	onZoomIn={handleZoomIn}
 	onZoomOut={handleZoomOut}
 	{showPageIndicator}
-	{selectionTime}
-	{disableContextMenu}
 	{swipeNavigation}
-	{invertDirection}
 	{pageTransitions}
 />

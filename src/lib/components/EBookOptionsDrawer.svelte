@@ -11,10 +11,7 @@
 		onZoomIn: () => void;
 		onZoomOut: () => void;
 		showPageIndicator: { value: boolean };
-		selectionTime: { value: number };
-		disableContextMenu: { value: boolean };
 		swipeNavigation: { value: boolean };
-		invertDirection: { value: boolean };
 		pageTransitions: { value: boolean };
 	}
 
@@ -24,10 +21,7 @@
 		onZoomIn,
 		onZoomOut,
 		showPageIndicator,
-		selectionTime,
-		disableContextMenu,
 		swipeNavigation,
-		invertDirection,
 		pageTransitions
 	}: Props = $props();
 </script>
@@ -61,44 +55,11 @@
 				<span class="text-sm font-medium">Show page number</span>
 				<Switch bind:checked={showPageIndicator.value} />
 			</label>
-			<!-- Selection time control -->
-			<div class="flex items-center justify-between">
-				<span class="text-sm font-medium">Selection time</span>
-				<div class="flex items-center gap-3">
-					<Button
-						onclick={() => (selectionTime.value = Math.max(0, selectionTime.value - 50))}
-						variant="outline"
-						size="icon-sm"
-						disabled={selectionTime.value <= 0}
-					>
-						<MinusIcon class="size-4" />
-					</Button>
-					<span class="w-16 text-center text-sm tabular-nums">{selectionTime.value}ms</span>
-					<Button
-						onclick={() => (selectionTime.value = Math.min(500, selectionTime.value + 50))}
-						variant="outline"
-						size="icon-sm"
-						disabled={selectionTime.value >= 500}
-					>
-						<PlusIcon class="size-4" />
-					</Button>
-				</div>
-			</div>
 
-			<!-- Invert direction -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Invert direction</span>
-				<Switch bind:checked={invertDirection.value} />
-			</label>
 			<!-- Swipe navigation -->
 			<label class="flex items-center justify-between">
 				<span class="text-sm font-medium">Swipe navigation</span>
 				<Switch bind:checked={swipeNavigation.value} />
-			</label>
-			<!-- Disable context menu -->
-			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Disable context menu</span>
-				<Switch bind:checked={disableContextMenu.value} />
 			</label>
 		</div>
 	</Drawer.Content>
