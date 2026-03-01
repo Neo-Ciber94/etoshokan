@@ -87,7 +87,7 @@
 
 <div
 	bind:this={boxEl}
-	class="fixed right-4 bottom-4 left-4 z-41 mx-auto max-w-lg touch-none rounded-xl border border-border bg-card shadow-lg select-none"
+	class="fixed right-4 bottom-4 left-4 z-41 mx-auto max-w-lg touch-none rounded-xl border border-border bg-card shadow-lg"
 	class:shadow-xl={isDragging}
 	style="transform: translateY({offsetY}px)"
 	onclick={(e) => e.stopPropagation()}
