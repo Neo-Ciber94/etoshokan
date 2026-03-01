@@ -144,24 +144,6 @@ jobs:
       - name: Build Android (Release)
         run: bun run build:android
 
-      # Date
-      # - name: Generate date
-      #   id: date
-      #   run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      # Move apk
-      # - name: Rename APK
-      #   run: |
-      #     APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-      #     APK_FILE=$(ls $APK_DIR/*.apk | head -n 1)
-
-      #     if [ ! -f "$APK_FILE" ]; then
-      #       echo "APK not found in $APK_DIR"
-      #       exit 1
-      #     fi
-
-      #     mv "$APK_FILE" "etoshokan.apk"
-
       # Move apk
       - name: 'Generate apk with version'
         id: prepare-apk
@@ -172,16 +154,6 @@ jobs:
         with:
           name: etoshokan-apk
           path: ${{ steps.prepare-apk.outputs.apk-path }}
-
-      # Create release
-      # - name: Create Release
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     name: Release Etoshokan
-      #     tag_name: dev
-      #     overwrite_files: true
-      #     files: |
-      #       etoshokan.apk
 
       - name: Create Release
         env:
