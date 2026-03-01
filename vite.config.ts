@@ -2,7 +2,8 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-// import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import path from 'node:path';
+import fs from 'node:fs';
 
 export default defineConfig(() => {
 	return {
@@ -15,33 +16,23 @@ export default defineConfig(() => {
 			__VERSION__: `'${getVersion()}'`
 		},
 		test: {},
-		plugins: [
-			tailwindcss(),
-			sveltekit()
-			// SvelteKitPWA({
-			// 	registerType: 'autoUpdate',
-			// 	injectRegister: false,
-			// 	devOptions: {
-			// 		enabled: true
-			// 	},
-			// 	manifest: {
-			// 		name: 'Etoshokan',
-			// 		short_name: 'Etoshokan',
-			// 		start_url: '/',
-			// 		display: 'standalone',
-			// 		background_color: '#0f172a',
-			// 		theme_color: '#202020'
-			// 	}
-			// })
-		]
+		plugins: [tailwindcss(), sveltekit()]
 	};
 });
 
 function getVersion() {
+	const versionPath = path.join(process.cwd(), '.version');
+	const baseVersion = fs.readFileSync(versionPath, 'utf-8').trim();
+
 	const now = new Date();
-	const day = now.getDate();
-	const month = now.getMonth() + 1;
-	const year = now.getFullYear();
-	const ms = now.getMilliseconds();
-	return `v${year}.${month}.${day}.${ms}`;
+	const dateVersion = [
+		now.getUTCFullYear(),
+		String(now.getUTCMonth() + 1).padStart(2, '0'),
+		String(now.getUTCDate()).padStart(2, '0'),
+		String(now.getUTCHours()).padStart(2, '0'),
+		String(now.getUTCMinutes()).padStart(2, '0')
+	].join('');
+
+	const version = `${baseVersion}+${dateVersion}`;
+	return version;
 }
