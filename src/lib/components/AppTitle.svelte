@@ -26,7 +26,7 @@
   onmouseleave={() => (hovered = false)}
 >
   <img src="/app-icon-32.png" alt="図書館" class="size-8" />
-  <span class="hidden items-baseline text-xl font-bold text-primary lg:inline-flex gap-1">
+  <span class="hidden items-baseline text-xl font-mono font-medium text-primary lg:inline-flex gap-1">
     {#each chars as char, i}
       <span>{showKana[i] ? char.kana : char.kanji}</span>
     {/each}
