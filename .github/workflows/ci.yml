@@ -152,8 +152,8 @@ jobs:
       # Move apk
       - name: Rename apk
         id: prepare-apk
-        with:
-          version: ${{ steps.apk-version.outputs.version }}
+        env:
+          VERSION: ${{ steps.apk-version.outputs.version }}
         run: node ./scripts/prepare-apk.js
 
       # Upload apk

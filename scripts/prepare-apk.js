@@ -23,7 +23,7 @@ async function main() {
 		return;
 	}
 
-	const version = githubCore.getInput("version");
+	const version = process.env.VERSION;
 	const newPath = `etoshokan-${version}.apk`;
 
 	githubCore.info(`🌐 move file from '${apkFilePath}' to '${newPath}'`);
