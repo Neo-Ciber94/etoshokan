@@ -27,6 +27,8 @@
 				alert('Failed to upload book remotely, but was saved locally');
 				break;
 		}
+
+		books.invalidate()
 	}
 
 	async function handleFileUpload(event: Event) {
