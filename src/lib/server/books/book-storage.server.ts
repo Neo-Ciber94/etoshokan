@@ -27,7 +27,8 @@ const DriveBookZoomSchema = z.object({
   zoom: z.number()
 })
 
-const FOLDER_NAME = 'etoshokan-data'
+import { DRIVE_FOLDER_NAME } from '$lib/constants.server'
+
 const EBOOKS_FOLDER_NAME = 'ebooks'
 const METADATA_FILE_NAME = 'ebook-data.json'
 
@@ -177,7 +178,7 @@ export async function uploadBookToDrive(
 // -- Helpers --
 
 async function getRootFolderId(token: string): Promise<string> {
-  return findOrCreateFolder(token, FOLDER_NAME)
+  return findOrCreateFolder(token, DRIVE_FOLDER_NAME)
 }
 
 async function getEbooksFolderId(token: string): Promise<string> {

@@ -1,14 +1,57 @@
 import { createQuery, queryOptions, useQueryClient } from '@tanstack/svelte-query';
 import type { WordEntry } from '$lib/dictionary/core/dictionary';
 import { dictionary } from '$lib/dictionary';
-import { LocalStorageAdapter } from '$lib/common/isomorphic-box/adapters/local-storage-adapter';
+import { RemoteStorageAdapter } from '$lib/common/isomorphic-box/adapters/remote-storage-adapter';
+import { LocalFirstStorageAdapter } from '$lib/common/isomorphic-box/adapters/local-first-storage-adapter';
+import { synchronizeCollection } from '$lib/common/isomorphic-box';
 import { wordsCollection, DEFAULT_CATEGORY } from './words-collection';
 import { savedWordsQueryKey, type SavedCategory } from './words.queries';
+import { IndexedDbStorageAdapter } from '$lib/common/isomorphic-box/adapters/idb-storage-adapter';
+import {
+	getAllWordCategories,
+	createWordCategory,
+	updateWordCategory,
+	removeWordCategory
+} from '$lib/remote/words.remote';
 
 export type { SavedCategory };
 export { DEFAULT_CATEGORY };
 
-const wordStorage = wordsCollection.adapt(new LocalStorageAdapter('etoshokan:saved-words'));
+const wordStorage = wordsCollection.adapt(
+	new LocalFirstStorageAdapter({
+		key: 'words',
+		isOnline: () => Promise.resolve(typeof navigator !== 'undefined' ? navigator.onLine : false),
+		localStorage: new IndexedDbStorageAdapter({
+			dbName: 'etoshokan-words',
+			storeName: 'categories'
+		}),
+		remoteStorage: new RemoteStorageAdapter({
+			get: () => {
+				throw new Error('No implemented');
+			},
+			getAll: async () => {
+				const result = await getAllWordCategories();
+				if (!result.success) throw new Error(result.error);
+				return result.data;
+			},
+			create: async (value) => {
+				const result = await createWordCategory(value);
+				if (!result.success) throw new Error(result.error);
+				return result.data;
+			},
+			update: async (value) => {
+				const result = await updateWordCategory(value);
+				if (!result.success) throw new Error(result.error);
+				return result.data;
+			},
+			remove: async (id) => {
+				const result = await removeWordCategory({ id });
+				if (!result.success) throw new Error(result.error);
+				return result.data;
+			}
+		})
+	})
+);
 
 async function resolveCategories(): Promise<SavedCategory[]> {
 	await dictionary.initialize();
@@ -37,6 +80,15 @@ export function useSavedWords() {
 	function invalidate() {
 		queryClient.invalidateQueries({ queryKey: savedWordsQueryKey });
 	}
+
+	async function synchronize() {
+		await synchronizeCollection(wordStorage);
+		invalidate();
+	}
+
+	$effect(() => {
+		synchronize().catch(console.error);
+	});
 
 	return {
 		get categories() {
@@ -74,6 +126,8 @@ export function useSavedWords() {
 		async deleteCategory(name: string) {
 			await wordStorage.deleteCategory(name);
 			invalidate();
-		}
+		},
+
+		synchronize
 	};
 }

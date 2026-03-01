@@ -4,11 +4,13 @@ import type { WordEntry } from '$lib/dictionary/core/dictionary';
 
 export const DEFAULT_CATEGORY = '⭐ Common';
 
-const storedCategorySchema = z.object({
+export const storedCategorySchema = z.object({
   id: z.string(),
   category: z.string(),
   words: z.array(z.string())
 });
+
+export type StoredCategory = z.infer<typeof storedCategorySchema>;
 
 export const wordsCollection = createCollection({
   schema: storedCategorySchema,

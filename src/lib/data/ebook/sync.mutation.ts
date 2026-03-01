@@ -66,7 +66,7 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 	const syncEntriesMap = new Map<BookHash, BookSyncEntry>();
 
 	// Check remote that don't exist on local
-	for (const book of result.metadata) {
+	for (const book of result.data) {
 		const bookBash = getBookHash(book);
 
 		if (localIds.has(book.id)) {
@@ -85,7 +85,7 @@ export async function initSyncData(): Promise<BookSyncEntry[]> {
 	}
 
 	// Check local that do not exists on remote
-	const remoteIds = new Set(result.metadata.map((b) => b.id));
+	const remoteIds = new Set(result.data.map((b) => b.id));
 	for (const book of localMetadata) {
 		// Ignore already exists
 		if (remoteIds.has(book.id)) {
@@ -113,7 +113,7 @@ export async function syncRemoteMetadata() {
 		return false;
 	}
 
-	return await mergeLocalBooksMetadata(result.metadata);
+	return await mergeLocalBooksMetadata(result.data);
 }
 
 // Upload a missing book

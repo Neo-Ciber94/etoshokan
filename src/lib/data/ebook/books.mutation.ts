@@ -248,7 +248,7 @@ export async function uploadBook(
 		});
 
 		if (uploadResult.success) {
-			const bookMetadata = uploadResult.result;
+			const bookMetadata = uploadResult.data;
 
 			await saveLocalBook({
 				metadata: bookMetadata,

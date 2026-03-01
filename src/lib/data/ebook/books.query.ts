@@ -33,7 +33,7 @@ export async function getRemoteBooksNotInLocal() {
 	const localMetadata = await getLocalBooksMetadata();
 	const localIds = new Set(localMetadata.map((b) => b.id));
 
-	return result.metadata.filter((b) => !localIds.has(b.id));
+	return result.data.filter((b) => !localIds.has(b.id));
 }
 
 export async function hasLocalBooksMetadata() {
