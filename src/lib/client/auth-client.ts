@@ -5,6 +5,11 @@ export const authClient = createAuthClient({
 });
 
 export async function isLoggedIn(): Promise<boolean> {
-	const session = await authClient.getSession();
-	return session.data != null;
+	try {
+		const session = await authClient.getSession();
+		return session.data != null;
+	} catch (err) {
+		console.error('Failed to fetch session', err);
+		return false;
+	}
 }

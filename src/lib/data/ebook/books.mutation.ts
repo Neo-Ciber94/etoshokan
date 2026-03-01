@@ -240,7 +240,7 @@ export async function uploadBook(
 	const tryUploadBookLocally = () => uploadLocalBook(metadata, bookData, 'pending');
 
 	const isLogged = await isLoggedIn();
-
+	
 	if (isLogged) {
 		const uploadResult = await uploadBookToServer({
 			...metadata,
