@@ -4,9 +4,9 @@ import fs from 'node:fs/promises';
 import fse from 'fs-extra';
 import * as githubCore from '@actions/core';
 
-const APK_DIR = path.resolve(
+const APK_DIR = path.join(
 	process.cwd(),
-	'../src-tauri/gen/android/app/build/outputs/apk/universal/release'
+	'/src-tauri/gen/android/app/build/outputs/apk/universal/release'
 );
 
 async function getAndroidApkPath() {
@@ -16,7 +16,8 @@ async function getAndroidApkPath() {
 }
 
 async function getVersion() {
-	const baseVersion = await fs.readFile('../.version', { encoding: 'utf-8' }).then((x) => x.trim());
+	const versionPath = path.join(process.cwd(), '.version');
+	const baseVersion = await fs.readFile(versionPath, { encoding: 'utf-8' }).then((x) => x.trim());
 	githubCore.info(`🌐 base version: ${baseVersion}`);
 
 	const now = new Date();
