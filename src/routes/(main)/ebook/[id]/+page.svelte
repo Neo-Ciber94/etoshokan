@@ -14,12 +14,14 @@
 	import EBookContextMenu from '$lib/components/EBookContextMenu.svelte';
 	import EBookOptionsDrawer from '$lib/components/EBookOptionsDrawer.svelte';
 	import EBookTableOfContents from '$lib/components/EBookTableOfContents.svelte';
+	import EBookSavedWordsDrawer from '$lib/components/EBookSavedWordsDrawer.svelte';
 	import { usePointer } from '$lib/runes/pointer.svelte';
 	import { useStorage } from '$lib/runes/local-storage.svelte';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 	import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import BookMarkedIcon from '@lucide/svelte/icons/book-marked';
 	import { debounce } from '$lib/runes/debounce.svelte';
 	import TranslationBox from '$lib/components/TranslationBox.svelte';
 	import { cn } from '$lib/utils';
@@ -56,6 +58,7 @@
 	// Drawer state
 	let optionsDrawerOpen = $state(false);
 	let tocDrawerOpen = $state(false);
+	let savedWordsDrawerOpen = $state(false);
 
 	// Table of contents
 	let toc = $state<TocItem[]>([]);
@@ -537,6 +540,20 @@
 				></div>
 			</div>
 		</div>
+
+		<!-- Saved words floating button -->
+		<Button
+			variant="outline"
+			size="icon"
+			class={cn(
+				'fixed right-6 bottom-10 z-50 rounded-full shadow-lg transition-all duration-200 border-primary',
+				showPageIndicator.value ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 translate-y-4'
+			)}
+			onclick={() => (savedWordsDrawerOpen = true)}
+			aria-label="Saved words"
+		>
+			<BookMarkedIcon class="size-5 text-primary" />
+		</Button>
 	{/if}
 </section>
 
@@ -565,3 +582,5 @@
 	{swipeNavigation}
 	{pageTransitions}
 />
+
+<EBookSavedWordsDrawer bind:open={savedWordsDrawerOpen} category={wordCategory} />
