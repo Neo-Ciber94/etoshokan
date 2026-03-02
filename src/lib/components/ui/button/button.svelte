@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import { isTauri } from '$lib/utils/isWeb';
-	import { impactFeedback } from '@tauri-apps/plugin-haptics';
+	import { selectionFeedback } from '@tauri-apps/plugin-haptics';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import { type VariantProps, tv } from 'tailwind-variants';
 
@@ -63,7 +63,11 @@
 			return;
 		}
 
-		impactFeedback('light');
+		if (isTauri()) {
+			selectionFeedback();
+		} else {
+			navigator.vibrate(20);
+		}
 	}
 </script>
 
