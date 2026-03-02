@@ -10,11 +10,12 @@
 	const MAX_GLOSSES = 3;
 
 	interface Props {
+		category?: string;
 		searchTerm: string;
 		onClose: () => void;
 	}
 
-	let { searchTerm, onClose }: Props = $props();
+	let { searchTerm, onClose, category }: Props = $props();
 
 	let boxEl: HTMLDivElement;
 	let isDragging = $state(false);
@@ -154,7 +155,7 @@
 									</button>
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content align="end">
-									<SaveWordActions {entry} />
+									<SaveWordActions {entry} category={category} />
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
 						</div>

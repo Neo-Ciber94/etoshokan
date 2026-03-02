@@ -6,15 +6,16 @@
 	import { DEFAULT_CATEGORY } from '$lib/data/words/words-collection';
 
 	interface Props {
+		category?: string;
 		entry: WordEntry;
 	}
 
-	let { entry }: Props = $props();
+	let { entry, category }: Props = $props();
 
 	const savedWords = useSavedWords();
 
 	function save() {
-		savedWords.save(entry, DEFAULT_CATEGORY);
+		savedWords.save(entry, category ?? DEFAULT_CATEGORY);
 	}
 
 	function removeWord() {

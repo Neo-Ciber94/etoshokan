@@ -39,6 +39,13 @@
 	let notFound = $state(false);
 	let isReady = $state(false);
 	let bookMetadata = $state<BookMetadata | null>(null);
+	const wordCategory = $derived.by(() => {
+		if (bookMetadata == null) {
+			return undefined;
+		}
+
+		return `Words from '${bookMetadata.title}'`;
+	});
 
 	// Context menu state
 	let contextMenu = $state({ text: '', isOpen: false });
@@ -535,7 +542,11 @@
 
 <!-- Translation box -->
 {#if showTranslation}
-	<TranslationBox searchTerm={contextMenu.text} onClose={() => (showTranslation = false)} />
+	<TranslationBox
+		searchTerm={contextMenu.text}
+		onClose={() => (showTranslation = false)}
+		category={wordCategory}
+	/>
 {/if}
 
 <EBookTableOfContents
