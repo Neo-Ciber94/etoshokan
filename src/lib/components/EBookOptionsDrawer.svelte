@@ -10,7 +10,7 @@
 		zoom: number;
 		onZoomIn: () => void;
 		onZoomOut: () => void;
-		showPageIndicator: { value: boolean };
+		showPageProgress: { value: boolean };
 		swipeNavigation: { value: boolean };
 		pageTransitions: { value: boolean };
 	}
@@ -20,7 +20,7 @@
 		zoom,
 		onZoomIn,
 		onZoomOut,
-		showPageIndicator,
+		showPageProgress,
 		swipeNavigation,
 		pageTransitions
 	}: Props = $props();
@@ -52,8 +52,8 @@
 			</label>
 			<!-- Page indicator toggle -->
 			<label class="flex items-center justify-between">
-				<span class="text-sm font-medium">Show page number</span>
-				<Switch bind:checked={showPageIndicator.value} />
+				<span class="text-sm font-medium">Show progress</span>
+				<Switch bind:checked={showPageProgress.value} />
 			</label>
 
 			<!-- Swipe navigation -->

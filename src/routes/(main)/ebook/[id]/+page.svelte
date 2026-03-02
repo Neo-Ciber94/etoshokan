@@ -68,7 +68,7 @@
 	let showTranslation = $state(false);
 
 	// Options persisted in localStorage
-	const showPageIndicator = useStorage('reader:showPageIndicator', { defaultValue: false });
+	const showPageProgress = useStorage('reader:showPageProgress', { defaultValue: false });
 	const swipeNavigation = useStorage('reader:swipeNavigation', { defaultValue: true });
 	const pageTransitions = useStorage('reader:pageTransitions', { defaultValue: true });
 
@@ -92,7 +92,9 @@
 	});
 
 	const debouncedUpdateProgress = debounce(1000, (id: string, cfi: string, progress: number) => {
-		updateLocalBookProgress(id, cfi, progress).catch((e) => console.error('Failed to update progress:', e));
+		updateLocalBookProgress(id, cfi, progress).catch((e) =>
+			console.error('Failed to update progress:', e)
+		);
 	});
 
 	const debouncedUpdateZoom = debounce(1000, (id: string, zoom: number) => {
@@ -323,7 +325,7 @@
 			const hasSelection = selection && selection.toString().trim().length > 0;
 
 			if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
-				showPageIndicator.value = !showPageIndicator.value;
+				showPageProgress.value = !showPageProgress.value;
 			}
 
 			// Swipe navigation
@@ -533,7 +535,7 @@
 		<div
 			class={cn(
 				'pointer-events-none fixed right-0 bottom-0 left-0 z-40 transition-opacity duration-200 select-none',
-				showPageIndicator.value ? 'opacity-100' : 'opacity-0'
+				showPageProgress.value ? 'opacity-100' : 'opacity-0'
 			)}
 		>
 			<div class="flex justify-end px-3 pb-1">
@@ -554,8 +556,10 @@
 			variant="outline"
 			size="icon"
 			class={cn(
-				'fixed right-6 bottom-10 z-50 rounded-full shadow-lg transition-all duration-200 border-primary',
-				showPageIndicator.value ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 translate-y-4'
+				'fixed right-6 bottom-10 z-50 rounded-full border-primary shadow-lg transition-all duration-200',
+				showPageProgress.value
+					? 'translate-y-0 opacity-100'
+					: 'pointer-events-none translate-y-4 opacity-0'
 			)}
 			onclick={() => (savedWordsDrawerOpen = true)}
 			aria-label="Saved words"
@@ -586,7 +590,7 @@
 	{zoom}
 	onZoomIn={handleZoomIn}
 	onZoomOut={handleZoomOut}
-	{showPageIndicator}
+	{showPageProgress}
 	{swipeNavigation}
 	{pageTransitions}
 />
