@@ -91,6 +91,14 @@
 		pointerDownTime: 0
 	});
 
+	const debouncedUpdateProgress = debounce(1000, (id: string, cfi: string, progress: number) => {
+		updateLocalBookProgress(id, cfi, progress).catch((e) => console.error('Failed to update progress:', e));
+	});
+
+	const debouncedUpdateZoom = debounce(1000, (id: string, zoom: number) => {
+		updateLocalBookZoom(id, zoom).catch((e) => console.error('Failed to update zoom:', e));
+	});
+
 	// Debounced context menu trigger on pointer up
 	const showContextMenuIfSelection = debounce(100, (doc: Document) => {
 		if (contextMenu.isOpen) {
@@ -205,14 +213,14 @@
 			});
 
 			// Listen for relocation events (progress tracking)
-			foliateView.addEventListener('relocate', async (e) => {
+			foliateView.addEventListener('relocate', (e) => {
 				const detail = e.detail;
 				const newProgress = Math.round((detail.fraction || 0) * 100);
 				const cfi = detail.cfi || '';
 
 				progress = newProgress;
 
-				await updateLocalBookProgress(bookId, cfi, newProgress);
+				debouncedUpdateProgress(bookId, cfi, newProgress);
 
 				if (bookMetadata) {
 					bookMetadata.currentCfi = cfi;
@@ -419,10 +427,10 @@
 	}
 
 	// Zoom functions
-	async function applyZoom(newZoom: number) {
+	function applyZoom(newZoom: number) {
 		zoom = Math.min(200, Math.max(100, Math.round(newZoom / 10) * 10));
 		applyZoomStyle();
-		await updateLocalBookZoom(bookId, zoom);
+		debouncedUpdateZoom(bookId, zoom);
 	}
 
 	function handleZoomIn() {
