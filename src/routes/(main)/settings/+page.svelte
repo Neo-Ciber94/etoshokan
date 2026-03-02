@@ -153,10 +153,10 @@
 			</div>
 		{/if}
 
-		<div class="flex gap-3 rounded-md border border-border p-4">
+		<div class="flex flex-col gap-3 rounded-md border border-border p-4 sm:flex-row">
 			<Button
 				variant="outline"
-				class="w-40"
+				class="w-full sm:w-40"
 				onclick={() => window.open('https://github.com/Neo-Ciber94/etoshokan', '_blank')}
 			>
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -169,11 +169,17 @@
 			</Button>
 			<Button
 				variant="outline"
-				class="w-40"
+				class="w-full sm:w-40"
 				onclick={() =>
 					window.open('https://github.com/Neo-Ciber94/etoshokan/releases/latest', '_blank')}
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" class="text-green-500">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					class="text-green-500"
+				>
 					<path
 						fill="none"
 						stroke="currentColor"
