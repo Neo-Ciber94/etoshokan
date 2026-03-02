@@ -51,7 +51,7 @@
 
 	// Context menu state
 	let contextMenu = $state({ text: '', isOpen: false });
-	const isTextSelected = $derived.by(() => contextMenu.text.trim().length > 0);
+	let isTextSelected = $state(false);
 
 	// Zoom state
 	let zoom = $state(100);
@@ -104,7 +104,7 @@
 	});
 
 	// Page state
-	let currentPage = $state(0);
+	let currentPage = $state(0); // unused
 	let totalPages = $state(0);
 	let progress = $state(0);
 
@@ -152,18 +152,6 @@
 				view.close();
 			}
 		};
-	});
-
-	$effect(() => {
-		if (view == null) {
-			return;
-		}
-
-		if (pageTransitions.value) {
-			view.renderer.setAttribute('animated', '');
-		} else {
-			view.renderer.removeAttribute('animated');
-		}
 	});
 
 	// Sync pageTransitions option with renderer's animated attribute
@@ -359,21 +347,25 @@
 			const duration = Date.now() - pagePointer.pointerDownTime;
 			const selection = doc.getSelection();
 			const hasSelection = selection && selection.toString().trim().length > 0;
+			isTextSelected = Boolean(hasSelection);
 
 			if (distance <= 10 && duration <= 500 && !hasSelection && !contextMenu.isOpen) {
 				showPageProgress.value = !showPageProgress.value;
 			}
 
 			// Swipe navigation
-			// if (
-			// 	swipeNavigation.value &&
-			// 	!hasSelection &&
-			// 	Math.abs(dy) > 50 &&
-			// 	Math.abs(dy) > Math.abs(dx) * 1.5
-			// ) {
-			// 	if (dy > 0) prevPage();
-			// 	else nextPage();
-			// }
+			if (
+				swipeNavigation.value &&
+				!hasSelection &&
+				Math.abs(dy) > 50 &&
+				Math.abs(dy) > Math.abs(dx) * 1.5
+			) {
+				if (dy > 0) {
+					prevPage();
+				} else {
+					nextPage();
+				}
+			}
 		});
 
 		// Handle text selection for search-on-selection
@@ -449,6 +441,7 @@
 	}
 
 	function nextPage() {
+		console.log({ isTextSelected })
 		if (!view || isTextSelected) {
 			return;
 		}
