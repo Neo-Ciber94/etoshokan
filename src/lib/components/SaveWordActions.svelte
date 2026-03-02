@@ -1,8 +1,9 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { WordEntry } from '$lib/dictionary/core/dictionary';
-	import { useSavedWords, DEFAULT_CATEGORY } from '$lib/data/words/words-storage.svelte';
+	import { useSavedWords } from '$lib/data/words/words-storage.svelte';
 	import { saveAsDialog } from './save-as-dialog.svelte';
+	import { DEFAULT_CATEGORY } from '$lib/data/words/words-collection';
 
 	interface Props {
 		entry: WordEntry;
