@@ -51,7 +51,7 @@
 
 	// Context menu state
 	let contextMenu = $state({ text: '', isOpen: false });
-	const isTextSelected = $derived.by(() => contextMenu.text.trim().length > 0)
+	const isTextSelected = $derived.by(() => contextMenu.text.trim().length > 0);
 
 	// Zoom state
 	let zoom = $state(100);
@@ -152,6 +152,18 @@
 				view.close();
 			}
 		};
+	});
+
+	$effect(() => {
+		if (view == null) {
+			return;
+		}
+
+		if (pageTransitions.value) {
+			view.renderer.setAttribute('animated', '');
+		} else {
+			view.renderer.removeAttribute('animated');
+		}
 	});
 
 	// Sync pageTransitions option with renderer's animated attribute
@@ -353,15 +365,15 @@
 			}
 
 			// Swipe navigation
-			if (
-				swipeNavigation.value &&
-				!hasSelection &&
-				Math.abs(dx) > 50 &&
-				Math.abs(dx) > Math.abs(dy) * 1.5
-			) {
-				if (dx > 0) prevPage();
-				else nextPage();
-			}
+			// if (
+			// 	swipeNavigation.value &&
+			// 	!hasSelection &&
+			// 	Math.abs(dy) > 50 &&
+			// 	Math.abs(dy) > Math.abs(dx) * 1.5
+			// ) {
+			// 	if (dy > 0) prevPage();
+			// 	else nextPage();
+			// }
 		});
 
 		// Handle text selection for search-on-selection
