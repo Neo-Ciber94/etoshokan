@@ -1,5 +1,4 @@
 <script lang="ts">
-	import PwaInstallPrompt from '$lib/components/PwaInstallPrompt.svelte';
 	import AppNav from '$lib/components/AppNav.svelte';
 	import { ModalContainer } from '$lib/components/modal';
 	import SaveAsDialog from '$lib/components/SaveAsDialog.svelte';
@@ -64,7 +63,6 @@
 </div>
 
 <TranslateSelection />
-<PwaInstallPrompt />
 <ModalContainer />
 <SaveAsDialog />
 <EditCategoryDialog />
