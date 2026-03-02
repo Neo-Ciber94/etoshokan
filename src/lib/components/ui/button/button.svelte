@@ -1,5 +1,7 @@
 <script lang="ts" module>
+	import { browser } from '$app/environment';
 	import { cn, type WithElementRef } from '$lib/utils.js';
+	import { isTauri } from '$lib/utils/isWeb';
 	import { impactFeedback } from '@tauri-apps/plugin-haptics';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import { type VariantProps, tv } from 'tailwind-variants';
@@ -55,6 +57,14 @@
 		onclick,
 		...restProps
 	}: ButtonProps = $props();
+
+	function hapticsFeedback() {
+		if (!browser) {
+			return;
+		}
+
+		impactFeedback('light');
+	}
 </script>
 
 {#if href}
@@ -68,7 +78,7 @@
 		tabindex={disabled ? -1 : undefined}
 		onclick={(ev) => {
 			onclick?.(ev);
-			impactFeedback('light');
+			hapticsFeedback();
 		}}
 		{...restProps}
 	>
@@ -83,7 +93,7 @@
 		{disabled}
 		onclick={(ev) => {
 			onclick?.(ev);
-			impactFeedback('light');
+			hapticsFeedback();
 		}}
 		{...restProps}
 	>

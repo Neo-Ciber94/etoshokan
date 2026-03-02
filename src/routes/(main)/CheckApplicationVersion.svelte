@@ -1,51 +1,78 @@
 <script lang="ts">
-	import { openModal } from '$lib/components/modal';
-	import { isTauri } from '$lib/utils/isWeb';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+	import { useLatestAppRelease } from '$lib/data/app/app.svelte';
 	import { Version } from '$lib/utils/version';
-	import { getLatestAppRelease } from '$remote/app.remote';
 	import { getVersion } from '@tauri-apps/api/app';
 
+	const SESSION_KEY = 'app-update-dismissed';
+	const release = useLatestAppRelease();
+
+	let open = $state(false);
+	let downloadUrl = $state<string>();
+
 	async function getTauriVersion() {
-		//const currentVersion = await getVersion();
-		return Version.parse('0.0.1+100');
+		const currentVersion = await getVersion();
+		return Version.parse(currentVersion);
 	}
 
-	async function getAndParseLatestRelease() {
-		const result = await getLatestAppRelease();
-
-		if (!result.success) {
-			throw new Error(result.error);
+	$effect(() => {
+		if (release.loading || release.value == null) {
+			return;
 		}
 
-		return {
-			downloadUrl: result.data.downloadUrl,
-			version: Version.from(result.data.version)
-		};
-	}
+		if (sessionStorage.getItem(SESSION_KEY)) {
+			return;
+		}
 
-	$effect.pre(() => {
-		// if (!isTauri()) {
-		// 	return;
-		// }
+		const latestRelease = release.value;
 
 		async function run() {
-			const [tauriVersion, latestRelease] = await Promise.all([
-				getTauriVersion(),
-				getAndParseLatestRelease()
-			]);
+			const tauriVersion = await getTauriVersion();
 
-			const { downloadUrl, version: latestVersion } = latestRelease;
-
-			if (latestVersion.isNewerThan(tauriVersion)) {
-				openModal({
-					title: 'New apk version available',
-					type: 'info'
-				});
+			if (latestRelease.version.isNewerThan(tauriVersion)) {
+				downloadUrl = latestRelease.downloadUrl;
+				open = true;
 			}
-
-			console.log(latestVersion);
 		}
 
 		run().catch(console.error);
 	});
+
+	function handleClose() {
+		if (!open) {
+			return;
+		}
+		sessionStorage.setItem(SESSION_KEY, 'true');
+		open = false;
+	}
 </script>
+
+<Dialog.Root
+	{open}
+	onOpenChange={(v) => {
+		if (!v) handleClose();
+	}}
+>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>New Version Available</Dialog.Title>
+			<Dialog.Description>
+				A new version of Etoshokan is available. Download it to get the latest features and fixes.
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Footer>
+			<Button variant="outline" onclick={handleClose}>Close</Button>
+			{#if downloadUrl}
+				<Button
+					onclick={() => {
+						window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+						handleClose();
+					}}
+				>
+					Download
+				</Button>
+			{/if}
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
