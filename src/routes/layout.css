@@ -112,9 +112,9 @@
 }
 
 @theme {
-	--spacing-safe-area-inset-x-max: max(
-		env(safe-area-inset-right, 0),
-		env(safe-area-inset-right, 0)
+	--spacing-safe-area-inset-x-max: min(
+		32px,
+		max(env(safe-area-inset-right, 0), env(safe-area-inset-right, 0))
 	);
 }
 
