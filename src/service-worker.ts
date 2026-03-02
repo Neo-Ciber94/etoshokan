@@ -62,6 +62,11 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	// Ignore unsupported schemes
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		return;
+	}
+
 	async function respond() {
 		const cache = await caches.open(CACHE_NAME);
 
