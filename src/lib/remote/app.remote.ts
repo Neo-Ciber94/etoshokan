@@ -51,6 +51,12 @@ async function getLatestGithubApkRelease() {
 			}
 		});
 
+		if (!res.ok) {
+			const error = await res.text();
+			console.error(error);
+			return Result.err(`Failed to fetch latest release: ${res.status}`);
+		}
+
 		const raw = await res.json();
 		const data = GitHubReleaseSchema.parse(raw);
 		return Result.ok(data);
