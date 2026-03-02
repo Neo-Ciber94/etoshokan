@@ -26,11 +26,23 @@
 
 	let selectedWord = $state<WordEntry | null>(null)
 	let wordDrawerOpen = $state(false)
+	let showWordDrawer = $state(false)
 
 	function openWordDetails(word: WordEntry) {
 		selectedWord = word
+		showWordDrawer = true
 		wordDrawerOpen = true
 	}
+
+	$effect(() => {
+		if (!wordDrawerOpen && showWordDrawer) {
+			const timer = setTimeout(() => {
+				showWordDrawer = false
+				selectedWord = null
+			}, 300)
+			return () => clearTimeout(timer)
+		}
+	})
 </script>
 
 <Drawer.Root bind:open direction="bottom">
@@ -75,6 +87,7 @@
 			{/if}
 		</div>
 
+		{#if showWordDrawer}
 		<Drawer.NestedRoot bind:open={wordDrawerOpen} direction="bottom">
 			<Drawer.Content class="max-h-[90vh]! md:max-h-[60vh]!">
 				<Drawer.Header>
@@ -174,5 +187,6 @@
 				</div>
 			</Drawer.Content>
 		</Drawer.NestedRoot>
+		{/if}
 	</Drawer.Content>
 </Drawer.Root>
