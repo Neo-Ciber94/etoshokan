@@ -79,6 +79,29 @@
 		searchOnSelection = isMobile();
 	});
 
+	$effect(() => {
+		function handleKeyUp(ev: KeyboardEvent) {
+			switch (ev.key) {
+				case 'ArrowDown':
+				case ' ':
+				case 'Spacebar': // for older browsers
+					ev.preventDefault();
+					nextPage();
+					break;
+
+				case 'ArrowUp':
+					ev.preventDefault();
+					prevPage();
+					break;
+			}
+		}
+
+		window.addEventListener('keyup', handleKeyUp);
+		return () => {
+			window.removeEventListener('keyup', handleKeyUp);
+		};
+	});
+
 	// Page state
 	let currentPage = $state(0);
 	let totalPages = $state(0);
