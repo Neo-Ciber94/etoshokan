@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authClient } from '$lib/client/auth-client';
+	import { getSession } from '$lib/client/auth-client';
 	import { hashBase64 } from '$lib/utils/hash';
 	import { isTauri } from '$lib/utils/isWeb';
 
@@ -15,8 +15,8 @@
 					const token = url.searchParams.get('token');
 
 					if (token) {
-						const session = await authClient.getSession();
-						const isLoggedIn = session.data != null;
+						const session = await getSession();
+						const isLoggedIn = session != null;
 
 						// Prevent re-exchange of the same token — getCurrent() keeps returning
 						// the launch URL on every reload, so we scope the flag to a hash of the token
