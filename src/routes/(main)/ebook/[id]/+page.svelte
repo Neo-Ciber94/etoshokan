@@ -51,6 +51,7 @@
 
 	// Context menu state
 	let contextMenu = $state({ text: '', isOpen: false });
+	const isTextSelected = $derived.by(() => contextMenu.text.trim().length > 0)
 
 	// Zoom state
 	let zoom = $state(100);
@@ -436,7 +437,7 @@
 	}
 
 	function nextPage() {
-		if (!view) {
+		if (!view || isTextSelected) {
 			return;
 		}
 
@@ -444,7 +445,7 @@
 	}
 
 	function prevPage() {
-		if (!view) {
+		if (!view || isTextSelected) {
 			return;
 		}
 
